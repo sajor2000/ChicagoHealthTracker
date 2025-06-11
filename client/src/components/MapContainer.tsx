@@ -86,23 +86,22 @@ export default function MapContainer({
           const count = diseaseData?.count || 0;
           const rate = diseaseData?.rate || 0;
           
-
-          
           return {
             ...feature,
             properties: {
               ...feature.properties,
               [`${selectedDisease}_count`]: count,
               [`${selectedDisease}_rate`]: rate,
-            }
-          };
+            },
+            geometry: feature.geometry as GeoJSON.Geometry
+          } as GeoJSON.Feature;
         })
       };
 
       // Filter suppressed data if needed
       if (!showSuppressed) {
         processedData.features = processedData.features.filter(feature => 
-          feature.properties[`${selectedDisease}_count`] >= 11
+          feature.properties && feature.properties[`${selectedDisease}_count`] >= 11
         );
       }
 
