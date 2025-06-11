@@ -29,21 +29,34 @@ export default function ChicagoDataVisualization({
     let minLat = Infinity, maxLat = -Infinity;
 
     geoData.features.forEach(feature => {
-      const coords = feature.geometry.coordinates;
-      const flatCoords = coords.flat(4);
+      const processCoordinates = (coords: any) => {
+        if (Array.isArray(coords[0])) {
+          coords.forEach(processCoordinates);
+        } else if (Array.isArray(coords) && coords.length >= 2) {
+          const lng = coords[0];
+          const lat = coords[1];
+          if (typeof lng === 'number' && typeof lat === 'number') {
+            if (lng < minLng) minLng = lng;
+            if (lng > maxLng) maxLng = lng;
+            if (lat < minLat) minLat = lat;
+            if (lat > maxLat) maxLat = lat;
+          }
+        }
+      };
       
-      for (let i = 0; i < flatCoords.length; i += 2) {
-        const lng = flatCoords[i];
-        const lat = flatCoords[i + 1];
-        if (lng < minLng) minLng = lng;
-        if (lng > maxLng) maxLng = lng;
-        if (lat < minLat) minLat = lat;
-        if (lat > maxLat) maxLat = lat;
-      }
+      processCoordinates(feature.geometry.coordinates);
     });
 
-    const width = 800;
-    const height = 600;
+    // Use Chicago-specific bounds if calculation fails
+    if (minLng === Infinity) {
+      minLng = -87.94;
+      maxLng = -87.52;
+      minLat = 41.64;
+      maxLat = 42.02;
+    }
+
+    const width = 1000;
+    const height = 800;
     const padding = 40;
 
     const scaleX = (width - 2 * padding) / (maxLng - minLng);
@@ -105,6 +118,8 @@ export default function ChicagoDataVisualization({
   }
 
   if (error || !geoData?.features) {
+    console.error('Geographic data error:', error);
+    console.log('GeoData available:', !!geoData, 'Features count:', geoData?.features?.length);
     return (
       <div className="flex items-center justify-center h-full text-center p-8">
         <div>
@@ -112,18 +127,30 @@ export default function ChicagoDataVisualization({
           <div className="text-text-tertiary text-sm">
             Unable to load authentic Chicago community boundaries
           </div>
+          <div className="text-text-tertiary text-xs mt-2">
+            View: {activeView} | Features: {geoData?.features?.length || 0}
+          </div>
         </div>
       </div>
     );
   }
 
   if (!svgBounds) {
+    console.log('SVG bounds calculation failed, geoData:', geoData);
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-text-tertiary">Processing geographic boundaries...</div>
       </div>
     );
   }
+
+  console.log('Rendering Chicago boundaries:', {
+    view: activeView,
+    featureCount: geoData.features.length,
+    bounds: svgBounds,
+    firstFeature: geoData.features[0]?.properties,
+    firstGeometry: geoData.features[0]?.geometry?.type
+  });
 
   const diseaseInfo = getDiseaseInfo(selectedDisease);
 
@@ -134,24 +161,41 @@ export default function ChicagoDataVisualization({
         height="100%"
         viewBox={`0 0 ${svgBounds.width} ${svgBounds.height}`}
         className="absolute inset-0"
+        style={{ background: '#0a0a0a' }}
       >
-        {geoData.features.map((feature) => {
+        {geoData.features.map((feature, index) => {
           const area = feature.properties;
           const disease = area.diseases[selectedDisease];
           const value = visualizationMode === 'count' ? disease?.count || 0 : disease?.rate || 0;
           const maxValue = visualizationMode === 'count' ? 5000 : 25;
           const fillColor = value > 0 ? getDiseaseColor(value / maxValue * 100) : '#374151';
           const isHovered = hoveredArea === area.id;
+          const pathData = geometryToPath(feature.geometry);
+
+          // Debug first few features
+          if (index < 3) {
+            console.log(`Feature ${index}:`, {
+              name: area.name,
+              pathLength: pathData.length,
+              pathStart: pathData.substring(0, 50),
+              geometry: feature.geometry.type
+            });
+          }
+
+          if (!pathData) {
+            console.warn(`No path data for feature: ${area.name}`);
+            return null;
+          }
 
           return (
             <g key={area.id}>
               <path
-                d={geometryToPath(feature.geometry)}
+                d={pathData}
                 fill={fillColor}
                 stroke="#006747"
-                strokeWidth={isHovered ? 2 : 0.5}
-                strokeOpacity={0.8}
-                fillOpacity={0.8}
+                strokeWidth={isHovered ? 2 : 1}
+                strokeOpacity={0.9}
+                fillOpacity={0.7}
                 className="cursor-pointer transition-all duration-200"
                 onMouseEnter={() => setHoveredArea(area.id)}
                 onMouseLeave={() => setHoveredArea(null)}

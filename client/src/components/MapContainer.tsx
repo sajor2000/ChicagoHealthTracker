@@ -31,18 +31,17 @@ export default function MapContainer({
   // Check if Mapbox token is available
   const hasMapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
-  // Use SVG visualization if no Mapbox token or fallback is triggered
-  if (!hasMapboxToken || useMapboxFallback) {
-    return (
-      <ChicagoDataVisualization
-        activeView={activeView}
-        selectedDisease={selectedDisease}
-        visualizationMode={visualizationMode}
-        showSuppressed={showSuppressed}
-        onAreaSelect={onAreaSelect}
-      />
-    );
-  }
+  // Use SVG visualization temporarily to ensure boundaries are visible
+  // TODO: Debug Mapbox integration
+  return (
+    <ChicagoDataVisualization
+      activeView={activeView}
+      selectedDisease={selectedDisease}
+      visualizationMode={visualizationMode}
+      showSuppressed={showSuppressed}
+      onAreaSelect={onAreaSelect}
+    />
+  );
 
   // Initialize map
   useEffect(() => {
@@ -52,8 +51,21 @@ export default function MapContainer({
       const containerElement = mapContainer.current;
       containerElement.id = 'map';
       
+      // Clear any existing content
+      containerElement.innerHTML = '';
+      
       map.current = createMap('map');
       tooltip.current = createTooltip();
+
+      // Add map load event listener
+      map.current.on('load', () => {
+        console.log('Mapbox map loaded successfully');
+      });
+
+      map.current.on('error', (e) => {
+        console.error('Mapbox error:', e.error);
+        setUseMapboxFallback(true);
+      });
 
       return () => {
         if (map.current) {

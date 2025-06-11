@@ -10,7 +10,7 @@ interface PopulationData {
 
 export function useChicagoGeoData(viewMode: ViewMode) {
   return useQuery<ChicagoGeoData>({
-    queryKey: ['/api/chicago-areas', viewMode],
+    queryKey: [`/api/chicago-areas/${viewMode}`, viewMode],
     enabled: true,
   });
 }
