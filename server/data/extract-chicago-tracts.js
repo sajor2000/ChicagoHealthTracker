@@ -25,7 +25,17 @@ function isWithinChicagoBounds(coordinates) {
            lat <= CHICAGO_BOUNDS.maxLat;
   }
   
-  return checkCoords(coordinates);
+  // Additional check: reject tracts that extend too far over Lake Michigan
+  function hasExcessiveLakeExtension(coords) {
+    if (Array.isArray(coords[0])) {
+      return coords.some(hasExcessiveLakeExtension);
+    }
+    const [lng, lat] = coords;
+    // Reject if extends more than 10km east of the lakefront (roughly -87.6)
+    return lng > -87.5;
+  }
+  
+  return checkCoords(coordinates) && !hasExcessiveLakeExtension(coordinates);
 }
 
 function generateTractMetadata(tractIndex, coordinates) {
