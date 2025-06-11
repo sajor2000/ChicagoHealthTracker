@@ -9,7 +9,7 @@ import { AppState, AreaData, ViewMode, DiseaseType, VisualizationMode } from '@/
 export default function Home() {
   const [appState, setAppState] = useState<AppState>({
     selectedArea: null,
-    activeView: 'census',
+    activeView: 'community',
     selectedDisease: 'diabetes',
     visualizationMode: 'count',
     showSuppressed: true,

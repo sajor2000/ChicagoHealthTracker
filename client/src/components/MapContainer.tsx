@@ -31,18 +31,6 @@ export default function MapContainer({
   // Check if Mapbox token is available
   const hasMapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
-  // Use SVG visualization temporarily to ensure boundaries are visible
-  // TODO: Debug Mapbox integration
-  return (
-    <ChicagoDataVisualization
-      activeView={activeView}
-      selectedDisease={selectedDisease}
-      visualizationMode={visualizationMode}
-      showSuppressed={showSuppressed}
-      onAreaSelect={onAreaSelect}
-    />
-  );
-
   // Initialize map
   useEffect(() => {
     if (!mapContainer.current) return;
@@ -215,6 +203,19 @@ export default function MapContainer({
           </div>
         </div>
       </div>
+    );
+  }
+
+  // Use Mapbox if token is available and not using fallback, otherwise fall back to SVG
+  if (!hasMapboxToken || useMapboxFallback) {
+    return (
+      <ChicagoDataVisualization
+        activeView={activeView}
+        selectedDisease={selectedDisease}
+        visualizationMode={visualizationMode}
+        showSuppressed={showSuppressed}
+        onAreaSelect={onAreaSelect}
+      />
     );
   }
 
