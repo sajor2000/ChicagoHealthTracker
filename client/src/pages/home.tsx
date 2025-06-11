@@ -9,12 +9,14 @@ import { AppState, AreaData, ViewMode, DiseaseType, VisualizationMode } from '@/
 export default function Home() {
   const [appState, setAppState] = useState<AppState>({
     selectedArea: null,
-    activeView: 'census',
+    activeView: 'community',
     selectedDisease: 'diabetes',
     visualizationMode: 'count',
     showSuppressed: true,
     isInfoPanelOpen: false,
   });
+  
+  const [isControlPanelCollapsed, setIsControlPanelCollapsed] = useState(false);
 
   const handleViewChange = (view: ViewMode) => {
     setAppState(prev => ({ ...prev, activeView: view }));
@@ -42,6 +44,10 @@ export default function Home() {
 
   const handleInfoPanelClose = () => {
     setAppState(prev => ({ ...prev, isInfoPanelOpen: false }));
+  };
+
+  const handleToggleControlPanelCollapse = () => {
+    setIsControlPanelCollapsed(prev => !prev);
   };
 
   // Close info panel when clicking outside (handled by MapContainer clicks)
