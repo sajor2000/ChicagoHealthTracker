@@ -125,16 +125,18 @@ export function addDataLayer(
           'interpolate',
           ['linear'],
           ['zoom'],
-          8, 10,
-          12, 14,
-          16, 18
+          8, 9,
+          10, 12,
+          12, 15,
+          16, 20
         ] : 8,
         'text-offset': [0, 0],
         'text-anchor': 'center',
         'text-allow-overlap': isCommunityView,
         'text-ignore-placement': isCommunityView,
         'text-transform': 'uppercase',
-        'text-padding': isCommunityView ? 10 : 2
+        'text-padding': isCommunityView ? 5 : 2,
+        'text-optional': true
       },
       paint: {
         'text-color': '#ffffff',
