@@ -7,10 +7,11 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Load authentic Chicago Community Areas data
-let chicagoCommunitiesData: any = null;
+export async function registerRoutes(app: Express): Promise<Server> {
+  // Load authentic Chicago Community Areas data
+  let chicagoCommunitiesData: any = null;
 
-try {
+  try {
   const dataPath = path.join(__dirname, 'data', 'chicago-community-areas.json');
   const rawData = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
   
@@ -262,10 +263,6 @@ try {
   console.error('Failed to load Chicago community areas data:', error);
 }
 
-} catch (error) {
-  console.error('Failed to load Chicago community areas data:', error);
-}
-
 // Load authentic Chicago Census Tracts data
 let chicagoCensusTractsData: any = null;
 
@@ -412,8 +409,6 @@ try {
   console.error('Failed to load Chicago census tracts data:', error);
 }
 
-export async function registerRoutes(app: Express): Promise<Server> {
-  
   app.get('/api/chicago-areas/:viewMode', async (req, res) => {
     try {
       const { viewMode } = req.params;
