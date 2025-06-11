@@ -23,33 +23,42 @@ export const mapConfig = {
 };
 
 export function createMap(container: string): mapboxgl.Map {
-  const map = new mapboxgl.Map({
-    ...mapConfig,
-    container,
-  });
+  try {
+    const map = new mapboxgl.Map({
+      ...mapConfig,
+      container,
+    });
 
-  // Custom map styling overrides
-  map.on('load', () => {
-    // Darken the base map
-    if (map.getLayer('background')) {
-      map.setPaintProperty('background', 'background-color', '#0a0a0a');
-    }
-    
-    // Reduce road visibility
-    const roadLayers = ['road-primary', 'road-secondary', 'road-street', 'road-trunk'];
-    roadLayers.forEach(layer => {
-      if (map.getLayer(layer)) {
-        map.setPaintProperty(layer, 'line-opacity', 0.3);
+    // Custom map styling overrides
+    map.on('load', () => {
+      try {
+        // Darken the base map
+        if (map.getLayer('background')) {
+          map.setPaintProperty('background', 'background-color', '#0a0a0a');
+        }
+        
+        // Reduce road visibility
+        const roadLayers = ['road-primary', 'road-secondary', 'road-street', 'road-trunk'];
+        roadLayers.forEach(layer => {
+          if (map.getLayer(layer)) {
+            map.setPaintProperty(layer, 'line-opacity', 0.3);
+          }
+        });
+        
+        // Emphasize water features
+        if (map.getLayer('water')) {
+          map.setPaintProperty('water', 'fill-color', '#001f3f');
+        }
+      } catch (error) {
+        console.warn('Failed to apply custom map styling:', error);
       }
     });
-    
-    // Emphasize water features
-    if (map.getLayer('water')) {
-      map.setPaintProperty('water', 'fill-color', '#001f3f');
-    }
-  });
 
-  return map;
+    return map;
+  } catch (error) {
+    console.error('Failed to create map:', error);
+    throw error;
+  }
 }
 
 export function addDataLayer(

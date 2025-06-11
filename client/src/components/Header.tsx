@@ -31,74 +31,70 @@ export default function Header({ className = '' }: HeaderProps) {
           </div>
           
           <nav className="header-nav hidden md:flex gap-8">
-            <Link href="#about">
-              <a 
-                className="text-sm uppercase tracking-wider transition-colors duration-200 hover:no-underline"
-                style={{ 
-                  color: 'var(--text-tertiary)',
-                  letterSpacing: '0.05em'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = 'var(--rush-primary-light)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = 'var(--text-tertiary)';
-                }}
-              >
-                About
-              </a>
-            </Link>
-            <Link href="#methodology">
-              <a 
-                className="text-sm uppercase tracking-wider transition-colors duration-200 hover:no-underline"
-                style={{ 
-                  color: 'var(--text-tertiary)',
-                  letterSpacing: '0.05em'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = 'var(--rush-primary-light)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = 'var(--text-tertiary)';
-                }}
-              >
-                Methodology
-              </a>
-            </Link>
-            <Link href="#download">
-              <a 
-                className="text-sm uppercase tracking-wider transition-colors duration-200 hover:no-underline"
-                style={{ 
-                  color: 'var(--text-tertiary)',
-                  letterSpacing: '0.05em'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = 'var(--rush-primary-light)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = 'var(--text-tertiary)';
-                }}
-              >
-                Download Data
-              </a>
-            </Link>
-            <Link href="#api">
-              <a 
-                className="text-sm uppercase tracking-wider transition-colors duration-200 hover:no-underline"
-                style={{ 
-                  color: 'var(--text-tertiary)',
-                  letterSpacing: '0.05em'
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = 'var(--rush-primary-light)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = 'var(--text-tertiary)';
-                }}
-              >
-                API Access
-              </a>
-            </Link>
+            <a 
+              href="#about"
+              className="text-sm uppercase tracking-wider transition-colors duration-200 hover:no-underline"
+              style={{ 
+                color: 'var(--text-tertiary)',
+                letterSpacing: '0.05em'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = 'var(--rush-primary-light)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'var(--text-tertiary)';
+              }}
+            >
+              About
+            </a>
+            <a 
+              href="#methodology"
+              className="text-sm uppercase tracking-wider transition-colors duration-200 hover:no-underline"
+              style={{ 
+                color: 'var(--text-tertiary)',
+                letterSpacing: '0.05em'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = 'var(--rush-primary-light)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'var(--text-tertiary)';
+              }}
+            >
+              Methodology
+            </a>
+            <a 
+              href="#download"
+              className="text-sm uppercase tracking-wider transition-colors duration-200 hover:no-underline"
+              style={{ 
+                color: 'var(--text-tertiary)',
+                letterSpacing: '0.05em'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = 'var(--rush-primary-light)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'var(--text-tertiary)';
+              }}
+            >
+              Download Data
+            </a>
+            <a 
+              href="#api"
+              className="text-sm uppercase tracking-wider transition-colors duration-200 hover:no-underline"
+              style={{ 
+                color: 'var(--text-tertiary)',
+                letterSpacing: '0.05em'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = 'var(--rush-primary-light)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = 'var(--text-tertiary)';
+              }}
+            >
+              API Access
+            </a>
           </nav>
         </div>
       </div>
