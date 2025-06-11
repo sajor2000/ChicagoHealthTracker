@@ -115,7 +115,7 @@ export function addDataLayer(
       type: 'symbol',
       source: layerId,
       layout: {
-        'text-field': isCommunityView ? ['get', 'area_name'] : [
+        'text-field': isCommunityView ? ['get', 'name'] : [
           'concat',
           'Tract ',
           ['get', 'tractce']
