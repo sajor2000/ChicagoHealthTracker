@@ -1,0 +1,58 @@
+export interface Disease {
+  id: string;
+  name: string;
+  icdCodes: string;
+  count: number;
+  rate: number;
+}
+
+export interface AreaData {
+  id: string;
+  name: string;
+  geoid: string;
+  population: number;
+  density: number;
+  diseases: Record<string, Disease>;
+  dataQuality: number;
+  geometry?: any;
+}
+
+export interface MapFeature {
+  id: string;
+  type: 'Feature';
+  properties: AreaData;
+  geometry: {
+    type: 'Polygon' | 'MultiPolygon';
+    coordinates: number[][][] | number[][][][];
+  };
+}
+
+export interface ChicagoGeoData {
+  type: 'FeatureCollection';
+  features: MapFeature[];
+}
+
+export type ViewMode = 'census' | 'community';
+export type DiseaseType = 'diabetes' | 'hypertension' | 'heart' | 'copd' | 'asthma';
+export type VisualizationMode = 'count' | 'rate';
+
+export interface AppState {
+  selectedArea: AreaData | null;
+  activeView: ViewMode;
+  selectedDisease: DiseaseType;
+  visualizationMode: VisualizationMode;
+  showSuppressed: boolean;
+  isInfoPanelOpen: boolean;
+}
+
+export interface TooltipData {
+  name: string;
+  population: number;
+  patientCount: number;
+  rate: number;
+}
+
+export interface CensusData {
+  population: number;
+  density: number;
+}

@@ -1,0 +1,234 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Import academic-appropriate fonts */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root {
+  /* Rush University Brand Colors */
+  --rush-primary: hsl(157, 100%, 20%);        /* #006747 - Primary green */
+  --rush-primary-hover: hsl(157, 100%, 16%);  /* #00513a - Darker green for hover states */
+  --rush-primary-light: hsl(157, 100%, 26%);  /* #008759 - Lighter green for accents */
+  --rush-primary-faded: hsl(157, 100%, 20%, 0.12); /* 12% opacity for backgrounds */
+  
+  /* Dark Mode Background Hierarchy */
+  --bg-base: hsl(0, 0%, 4%);            /* #0a0a0a - Darkest - main background */
+  --bg-elevated: hsl(0, 0%, 8%);         /* #141414 - Panels and cards */
+  --bg-overlay: hsl(0, 0%, 12%);          /* #1e1e1e - Dropdowns and modals */
+  --bg-hover: hsl(0, 0%, 15%);            /* #252525 - Hover states */
+  
+  /* Borders and Dividers */
+  --border-subtle: hsl(0, 0%, 17%);       /* #2a2a2a - Subtle borders */
+  --border-default: hsl(0, 0%, 20%);      /* #333333 - Default borders */
+  --border-strong: hsl(0, 0%, 25%);       /* #404040 - Emphasized borders */
+  --border-rush: hsl(157, 100%, 20%);         /* #006747 - Rush green borders */
+  
+  /* Text Hierarchy */
+  --text-primary: hsl(0, 0%, 100%);        /* #ffffff - Headers and important text */
+  --text-secondary: hsl(0, 0%, 88%);      /* #e0e0e0 - Body text */
+  --text-tertiary: hsl(0, 0%, 69%);       /* #b0b0b0 - Subdued text */
+  --text-muted: hsl(0, 0%, 50%);          /* #808080 - Disabled/placeholder */
+  
+  /* Data Visualization - Disease Prevalence Gradient */
+  --data-lowest: hsl(157, 100%, 20%, 0.56);       /* 0-5% prevalence (Rush green 56% opacity) */
+  --data-low: hsl(89, 51%, 36%);           /* #4a8c2a - 5-10% prevalence */
+  --data-medium: hsl(70, 56%, 53%);         /* #a4c441 - 10-15% prevalence */
+  --data-high: hsl(55, 89%, 63%);           /* #f4e04d - 15-20% prevalence */
+  --data-highest: hsl(6, 84%, 67%);        /* #f76c5e - 20%+ prevalence */
+  
+  /* Status Colors */
+  --status-success: hsl(142, 76%, 47%);      /* #22c55e - Data complete */
+  --status-warning: hsl(45, 93%, 47%);      /* #eab308 - Data incomplete */
+  --status-error: hsl(0, 84%, 60%);        /* #ef4444 - Data unavailable */
+  --status-suppressed: hsl(220, 9%, 46%);   /* #6b7280 - Privacy suppressed */
+  
+  /* Interactive States */
+  --focus-ring: hsl(157, 100%, 20%, 0.38);        /* Focus outline color */
+  --selection-bg: hsl(157, 100%, 20%, 0.19);      /* Selected area highlight */
+
+  /* Font Stack */
+  --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'IBM Plex Mono', 'Consolas', monospace;
+  
+  /* Type Scale */
+  --text-xs: 0.75rem;      /* 12px - metadata */
+  --text-sm: 0.875rem;     /* 14px - labels */
+  --text-base: 1rem;       /* 16px - body */
+  --text-lg: 1.125rem;     /* 18px - subheadings */
+  --text-xl: 1.25rem;      /* 20px - section headers */
+  --text-2xl: 1.5rem;      /* 24px - page title */
+  --text-3xl: 2rem;        /* 32px - main title */
+  
+  /* Font Weights */
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  
+  /* Line Heights */
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.625;
+  
+  /* Consistent spacing scale */
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-5: 1.25rem;   /* 20px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-8: 2rem;      /* 32px */
+  --space-10: 2.5rem;   /* 40px */
+  --space-12: 3rem;     /* 48px */
+  --space-16: 4rem;     /* 64px */
+
+  /* Tailwind compatibility overrides */
+  --background: var(--bg-base);
+  --foreground: var(--text-secondary);
+  --muted: var(--bg-elevated);
+  --muted-foreground: var(--text-tertiary);
+  --popover: var(--bg-overlay);
+  --popover-foreground: var(--text-primary);
+  --card: var(--bg-elevated);
+  --card-foreground: var(--text-secondary);
+  --border: var(--border-default);
+  --input: var(--bg-overlay);
+  --primary: var(--rush-primary);
+  --primary-foreground: var(--text-primary);
+  --secondary: var(--bg-elevated);
+  --secondary-foreground: var(--text-secondary);
+  --accent: var(--bg-hover);
+  --accent-foreground: var(--text-primary);
+  --destructive: var(--status-error);
+  --destructive-foreground: var(--text-primary);
+  --ring: var(--focus-ring);
+  --radius: 0.5rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    font-family: var(--font-primary);
+    background-color: var(--bg-base);
+    color: var(--text-secondary);
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow: hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--text-primary);
+    font-weight: var(--font-semibold);
+  }
+}
+
+@layer components {
+  /* Custom scrollbar */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: var(--bg-overlay);
+    border-radius: 3px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: var(--border-strong);
+    border-radius: 3px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: var(--rush-primary);
+  }
+
+  /* Map tooltip styling */
+  .mapboxgl-popup-content {
+    background: var(--bg-overlay) !important;
+    border: 1px solid var(--border-rush) !important;
+    border-radius: 8px !important;
+    padding: var(--space-4) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+    color: var(--text-secondary) !important;
+  }
+
+  .mapboxgl-popup-anchor-top .mapboxgl-popup-tip,
+  .mapboxgl-popup-anchor-top-left .mapboxgl-popup-tip,
+  .mapboxgl-popup-anchor-top-right .mapboxgl-popup-tip {
+    border-bottom-color: var(--border-rush) !important;
+  }
+
+  .mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip,
+  .mapboxgl-popup-anchor-bottom-left .mapboxgl-popup-tip,
+  .mapboxgl-popup-anchor-bottom-right .mapboxgl-popup-tip {
+    border-top-color: var(--border-rush) !important;
+  }
+
+  .mapboxgl-popup-anchor-left .mapboxgl-popup-tip {
+    border-right-color: var(--border-rush) !important;
+  }
+
+  .mapboxgl-popup-anchor-right .mapboxgl-popup-tip {
+    border-left-color: var(--border-rush) !important;
+  }
+}
+
+@layer utilities {
+  .text-rush-primary {
+    color: var(--rush-primary);
+  }
+
+  .bg-rush-primary {
+    background-color: var(--rush-primary);
+  }
+
+  .border-rush-primary {
+    border-color: var(--rush-primary);
+  }
+
+  .font-mono {
+    font-family: var(--font-mono);
+  }
+
+  /* Loading Animation */
+  @keyframes pulse-custom {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+
+  .loading {
+    animation: pulse-custom 2s infinite;
+  }
+
+  /* Slide animations */
+  .slide-in-right {
+    animation: slideInRight 0.3s ease;
+  }
+
+  .slide-in-left {
+    animation: slideInLeft 0.3s ease;
+  }
+
+  @keyframes slideInRight {
+    from {
+      transform: translateX(400px);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes slideInLeft {
+    from {
+      transform: translateX(-400px);
+    }
+    to {
+      transform: translateX(0);
+    }
+  }
+}
