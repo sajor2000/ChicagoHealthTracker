@@ -165,8 +165,14 @@ export default function InfoPanel({ selectedArea, isOpen, onClose }: InfoPanelPr
                     </span>
                   </div>
                   
-                  <div className="flex justify-between items-center mb-3">
-                    <div className="flex items-baseline gap-2">
+                  <div className="grid grid-cols-2 gap-4 mb-3">
+                    <div className="text-center">
+                      <span 
+                        className="block text-xs uppercase tracking-wider mb-1"
+                        style={{ color: 'var(--text-tertiary)' }}
+                      >
+                        Raw Count
+                      </span>
                       <span 
                         className="text-lg font-bold font-mono"
                         style={{ color: 'var(--text-primary)' }}
@@ -174,20 +180,42 @@ export default function InfoPanel({ selectedArea, isOpen, onClose }: InfoPanelPr
                         {formatNumber(disease.count)}
                       </span>
                       <span 
-                        className="text-xs"
+                        className="block text-xs"
                         style={{ color: 'var(--text-tertiary)' }}
                       >
                         patients
                       </span>
                     </div>
-                    <div>
+                    <div className="text-center">
                       <span 
-                        className="text-sm font-mono"
+                        className="block text-xs uppercase tracking-wider mb-1"
+                        style={{ color: 'var(--text-tertiary)' }}
+                      >
+                        Age-Adjusted Rate
+                      </span>
+                      <span 
+                        className="text-lg font-bold font-mono"
                         style={{ color: 'var(--rush-primary-light)' }}
                       >
-                        {formatRate(disease.rate)} per 1,000
+                        {formatRate(disease.rate)}
+                      </span>
+                      <span 
+                        className="block text-xs"
+                        style={{ color: 'var(--text-tertiary)' }}
+                      >
+                        per 1,000
                       </span>
                     </div>
+                  </div>
+                  
+                  <div className="text-center mb-3">
+                    <span 
+                      className="text-xs"
+                      style={{ color: 'var(--text-tertiary)' }}
+                    >
+                      Population: {formatNumber(selectedArea.population)} | 
+                      Prevalence: {((disease.count / selectedArea.population) * 100).toFixed(2)}%
+                    </span>
                   </div>
                   
                   <div 
