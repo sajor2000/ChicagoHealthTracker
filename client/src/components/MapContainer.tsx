@@ -31,7 +31,7 @@ export default function MapContainer({
   // Check if Mapbox token is available
   const hasMapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
-  // Use SVG visualization if no Mapbox token
+  // Use SVG visualization if no Mapbox token or fallback is triggered
   if (!hasMapboxToken || useMapboxFallback) {
     return (
       <ChicagoDataVisualization

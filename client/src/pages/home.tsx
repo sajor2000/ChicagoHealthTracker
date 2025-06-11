@@ -74,10 +74,12 @@ export default function Home() {
         selectedDisease={appState.selectedDisease}
         visualizationMode={appState.visualizationMode}
         showSuppressed={appState.showSuppressed}
+        isCollapsed={isControlPanelCollapsed}
         onViewChange={handleViewChange}
         onDiseaseChange={handleDiseaseChange}
         onVisualizationModeChange={handleVisualizationModeChange}
         onShowSuppressedChange={handleShowSuppressedChange}
+        onToggleCollapse={handleToggleControlPanelCollapse}
       />
       
       <InfoPanel
