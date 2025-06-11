@@ -1,77 +1,22 @@
 import mapboxgl from 'mapbox-gl';
-import { MapFeature, TooltipData } from '@/types';
+import type { MapFeature, TooltipData } from '@/types';
 
-// Set Mapbox access token from environment variables
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
-
-if (!MAPBOX_TOKEN) {
-  console.error('Mapbox access token not found. Please set VITE_MAPBOX_ACCESS_TOKEN environment variable.');
-} else {
-  mapboxgl.accessToken = MAPBOX_TOKEN;
-}
+// Configure Mapbox
+mapboxgl.accessToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
 export const mapConfig = {
-  container: 'map',
   style: 'mapbox://styles/mapbox/dark-v11',
-  center: [-87.6298, 41.8781] as [number, number], // Chicago coordinates
+  center: [-87.6298, 41.8781] as [number, number],
   zoom: 10,
   minZoom: 8,
   maxZoom: 16,
-  pitch: 0,
-  bearing: 0,
-  attributionControl: false, // Custom attribution
 };
 
 export function createMap(container: string): mapboxgl.Map {
-  if (!MAPBOX_TOKEN) {
-    throw new Error('Mapbox access token is required. Please configure VITE_MAPBOX_ACCESS_TOKEN.');
-  }
-
-  try {
-    const map = new mapboxgl.Map({
-      ...mapConfig,
-      container,
-      accessToken: MAPBOX_TOKEN,
-    });
-
-    // Handle map load errors
-    map.on('error', (e) => {
-      console.error('Mapbox GL error:', e.error);
-    });
-
-    // Custom map styling overrides
-    map.on('load', () => {
-      try {
-        // Darken the base map
-        if (map.getLayer('background')) {
-          map.setPaintProperty('background', 'background-color', '#0a0a0a');
-        }
-        
-        // Reduce road visibility
-        const roadLayers = ['road-primary', 'road-secondary', 'road-street', 'road-trunk'];
-        roadLayers.forEach(layer => {
-          if (map.getLayer(layer)) {
-            map.setPaintProperty(layer, 'line-opacity', 0.3);
-          }
-        });
-        
-        // Emphasize water features
-        if (map.getLayer('water')) {
-          map.setPaintProperty('water', 'fill-color', '#001f3f');
-        }
-      } catch (error) {
-        console.warn('Failed to apply custom map styling:', error);
-      }
-    });
-
-    return map;
-  } catch (error) {
-    console.error('Failed to create map:', error);
-    if (error instanceof Error && error.message.includes('token')) {
-      throw new Error('Invalid Mapbox access token. Please check your VITE_MAPBOX_ACCESS_TOKEN configuration.');
-    }
-    throw error;
-  }
+  return new mapboxgl.Map({
+    container,
+    ...mapConfig,
+  });
 }
 
 export function addDataLayer(
@@ -110,117 +55,111 @@ export function addDataLayer(
     }
 
     // Add fill layer
-  map.addLayer({
-    id: `${layerId}-fill`,
-    type: 'fill',
-    source: layerId,
-    paint: {
-      'fill-color': [
-        'case',
-        ['>', ['get', `${selectedDisease}_${visualizationMode}`], 0],
-        [
-          'interpolate',
-          ['linear'],
-          ['get', `${selectedDisease}_${visualizationMode}`],
-          0, '#006747',      // Dark green for low values
-          50, '#4a8c2a',     // Medium green
-          100, '#a4c441',    // Yellow-green
-          150, '#f4e04d',    // Yellow
-          200, '#ff8c42',    // Orange
-          300, '#f76c5e',    // Red
-          400, '#d32f2f'     // Dark red for highest values
+    map.addLayer({
+      id: `${layerId}-fill`,
+      type: 'fill',
+      source: layerId,
+      paint: {
+        'fill-color': [
+          'case',
+          ['>', ['get', `${selectedDisease}_${visualizationMode}`], 0],
+          [
+            'interpolate',
+            ['linear'],
+            ['get', `${selectedDisease}_${visualizationMode}`],
+            0, '#006747',      // Dark green for low values
+            50, '#4a8c2a',     // Medium green
+            100, '#a4c441',    // Yellow-green
+            150, '#f4e04d',    // Yellow
+            200, '#ff8c42',    // Orange
+            300, '#f76c5e',    // Red
+            400, '#d32f2f'     // Dark red for highest values
+          ],
+          'rgba(107, 114, 128, 0.3)' // Suppressed data color
         ],
-        'rgba(107, 114, 128, 0.3)' // Suppressed data color
-      ],
-      'fill-opacity': 0.8
-    }
-  });
+        'fill-opacity': 0.8
+      }
+    });
 
-  // Add border layer
-  map.addLayer({
-    id: `${layerId}-border`,
-    type: 'line',
-    source: layerId,
-    paint: {
-      'line-color': '#006747',
-      'line-width': [
-        'case',
-        ['boolean', ['feature-state', 'hover'], false],
-        3,
-        1
-      ],
-      'line-opacity': 0.8
-    }
-  });
+    // Add border layer
+    map.addLayer({
+      id: `${layerId}-border`,
+      type: 'line',
+      source: layerId,
+      paint: {
+        'line-color': '#374151',
+        'line-width': 0.5,
+        'line-opacity': 0.8
+      }
+    });
 
-  // Add hover layer
-  map.addLayer({
-    id: `${layerId}-hover`,
-    type: 'fill',
-    source: layerId,
-    paint: {
-      'fill-color': '#006747',
-      'fill-opacity': [
-        'case',
-        ['boolean', ['feature-state', 'hover'], false],
-        0.3,
-        0
-      ]
-    }
-  });
+    // Add hover layer
+    map.addLayer({
+      id: `${layerId}-hover`,
+      type: 'line',
+      source: layerId,
+      paint: {
+        'line-color': '#ffffff',
+        'line-width': 2,
+        'line-opacity': 0
+      },
+      filter: ['==', ['get', 'id'], '']
+    });
 
-  // Determine if this is community or census view based on layerId
-  const isCommunityView = layerId.includes('community');
-  
-  // Add area name labels
-  map.addLayer({
-    id: `${layerId}-labels`,
-    type: 'symbol',
-    source: layerId,
-    layout: {
-      'text-field': isCommunityView 
-        ? ['get', 'name']
-        : ['concat', 'Tract ', ['slice', ['get', 'geoid'], -4]],
-      'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
-      'text-size': isCommunityView ? 12 : 9,
-      'text-offset': [0, -0.5],
-      'text-anchor': 'center',
-      'text-allow-overlap': false,
-      'text-ignore-placement': false
-    },
-    paint: {
-      'text-color': '#ffffff',
-      'text-halo-color': 'rgba(0, 0, 0, 0.8)',
-      'text-halo-width': 2
-    }
-  });
+    // Determine if this is community view for label sizing
+    const isCommunityView = layerId.includes('community');
 
-  // Add population labels
-  map.addLayer({
-    id: `${layerId}-population`,
-    type: 'symbol',
-    source: layerId,
-    layout: {
-      'text-field': [
-        'concat',
-        'Pop: ',
-        ['to-string', ['round', ['/', ['get', 'population'], 1000]]],
-        'k'
-      ],
-      'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
-      'text-size': isCommunityView ? 9 : 7,
-      'text-offset': [0, 0.8],
-      'text-anchor': 'center',
-      'text-allow-overlap': false,
-      'text-ignore-placement': false
-    },
-    paint: {
-      'text-color': '#e5e7eb',
-      'text-halo-color': 'rgba(0, 0, 0, 0.6)',
-      'text-halo-width': 1
-    }
-  });
-  
+    // Add name labels
+    map.addLayer({
+      id: `${layerId}-labels`,
+      type: 'symbol',
+      source: layerId,
+      layout: {
+        'text-field': isCommunityView ? ['get', 'area_name'] : [
+          'concat',
+          'Tract ',
+          ['get', 'tractce']
+        ],
+        'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+        'text-size': isCommunityView ? 11 : 8,
+        'text-offset': [0, -0.5],
+        'text-anchor': 'center',
+        'text-allow-overlap': false,
+        'text-ignore-placement': false
+      },
+      paint: {
+        'text-color': '#ffffff',
+        'text-halo-color': 'rgba(0, 0, 0, 0.8)',
+        'text-halo-width': 2
+      }
+    });
+
+    // Add population labels
+    map.addLayer({
+      id: `${layerId}-population`,
+      type: 'symbol',
+      source: layerId,
+      layout: {
+        'text-field': [
+          'concat',
+          'Pop: ',
+          ['to-string', ['round', ['/', ['get', 'population'], 1000]]],
+          'k'
+        ],
+        'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
+        'text-size': isCommunityView ? 9 : 7,
+        'text-offset': [0, 0.8],
+        'text-anchor': 'center',
+        'text-allow-overlap': false,
+        'text-ignore-placement': false
+      },
+      paint: {
+        'text-color': '#e5e7eb',
+        'text-halo-color': 'rgba(0, 0, 0, 0.6)',
+        'text-halo-width': 1
+      }
+    });
+    
   } catch (error) {
     console.error('Error adding data layer:', error);
   }
@@ -236,37 +175,38 @@ export function createTooltip(): mapboxgl.Popup {
 
 export function updateTooltipContent(data: TooltipData): string {
   return `
-    <div style="font-family: var(--font-primary); color: var(--text-secondary);">
-      <h5 style="color: var(--text-primary); font-weight: 600; margin-bottom: 12px; font-size: 14px;">${data.name}</h5>
-      <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 12px;">
-        <span style="color: var(--text-tertiary);">Population:</span>
-        <strong style="color: var(--text-primary); font-family: var(--font-mono);">${data.population.toLocaleString()}</strong>
-      </div>
-      <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 12px;">
-        <span style="color: var(--text-tertiary);">Patients:</span>
-        <strong style="color: var(--text-primary); font-family: var(--font-mono);">${data.patientCount.toLocaleString()}</strong>
-      </div>
-      <div style="display: flex; justify-content: space-between; font-size: 12px;">
-        <span style="color: var(--text-tertiary);">Rate:</span>
-        <strong style="color: var(--rush-primary-light); font-family: var(--font-mono);">${data.rate.toFixed(1)} per 1,000</strong>
+    <div class="bg-gray-900 text-white p-3 rounded shadow-lg border border-gray-700 min-w-48">
+      <div class="font-semibold text-base mb-2">${data.name}</div>
+      <div class="space-y-1 text-sm">
+        <div class="flex justify-between">
+          <span class="text-gray-300">Population:</span>
+          <span class="font-medium">${data.population.toLocaleString()}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-300">Patient Count:</span>
+          <span class="font-medium">${data.patientCount.toLocaleString()}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-gray-300">Rate per 1,000:</span>
+          <span class="font-medium">${data.rate.toFixed(1)}</span>
+        </div>
       </div>
     </div>
   `;
 }
 
 export function fitBoundsToFeature(map: mapboxgl.Map, feature: MapFeature) {
-  const coordinates = feature.geometry.coordinates;
   const bounds = new mapboxgl.LngLatBounds();
   
   function addCoordinatesToBounds(coords: any) {
     if (Array.isArray(coords[0])) {
-      coords.forEach(addCoordinatesToBounds);
+      coords.forEach((coord: any) => addCoordinatesToBounds(coord));
     } else {
-      bounds.extend(coords as [number, number]);
+      bounds.extend([coords[0], coords[1]]);
     }
   }
   
-  addCoordinatesToBounds(coordinates);
+  addCoordinatesToBounds(feature.geometry.coordinates);
   
   map.fitBounds(bounds, {
     padding: { top: 100, bottom: 100, left: 400, right: 450 },
