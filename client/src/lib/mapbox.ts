@@ -4,7 +4,6 @@ import { MapFeature, TooltipData } from '@/types';
 // Set Mapbox access token from environment variables
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || 
                     import.meta.env.VITE_MAPBOX_API_KEY || 
-                    process.env.MAPBOX_ACCESS_TOKEN ||
                     'default_token';
 
 if (MAPBOX_TOKEN && MAPBOX_TOKEN !== 'default_token') {
