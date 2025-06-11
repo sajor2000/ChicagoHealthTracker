@@ -1,38 +1,52 @@
-import { users, type User, type InsertUser } from "@shared/schema";
-
-// modify the interface with any CRUD methods
-// you might need
+import { chicagoAreas, diseaseData, type ChicagoArea, type DiseaseData, type InsertChicagoArea, type InsertDiseaseData } from "@shared/schema";
 
 export interface IStorage {
-  getUser(id: number): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
+  getChicagoArea(id: number): Promise<ChicagoArea | undefined>;
+  getChicagoAreaByGeoid(geoid: string): Promise<ChicagoArea | undefined>;
+  createChicagoArea(area: InsertChicagoArea): Promise<ChicagoArea>;
+  getDiseaseData(areaId: number, diseaseType: string): Promise<DiseaseData | undefined>;
+  createDiseaseData(data: InsertDiseaseData): Promise<DiseaseData>;
 }
 
 export class MemStorage implements IStorage {
-  private users: Map<number, User>;
+  private areas: Map<number, ChicagoArea>;
+  private diseaseDataMap: Map<string, DiseaseData>;
   currentId: number;
 
   constructor() {
-    this.users = new Map();
+    this.areas = new Map();
+    this.diseaseDataMap = new Map();
     this.currentId = 1;
   }
 
-  async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+  async getChicagoArea(id: number): Promise<ChicagoArea | undefined> {
+    return this.areas.get(id);
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
+  async getChicagoAreaByGeoid(geoid: string): Promise<ChicagoArea | undefined> {
+    return Array.from(this.areas.values()).find(
+      (area) => area.geoid === geoid,
     );
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
+  async createChicagoArea(insertArea: InsertChicagoArea): Promise<ChicagoArea> {
     const id = this.currentId++;
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+    const area: ChicagoArea = { ...insertArea, id };
+    this.areas.set(id, area);
+    return area;
+  }
+
+  async getDiseaseData(areaId: number, diseaseType: string): Promise<DiseaseData | undefined> {
+    const key = `${areaId}-${diseaseType}`;
+    return this.diseaseDataMap.get(key);
+  }
+
+  async createDiseaseData(insertData: InsertDiseaseData): Promise<DiseaseData> {
+    const id = this.currentId++;
+    const data: DiseaseData = { ...insertData, id };
+    const key = `${data.areaId}-${data.diseaseType}`;
+    this.diseaseDataMap.set(key, data);
+    return data;
   }
 }
 
