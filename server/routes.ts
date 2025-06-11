@@ -35,36 +35,106 @@ try {
               id: 'diabetes',
               name: 'Diabetes',
               icdCodes: 'E10-E14',
-              count: Math.floor(estimatedPopulation * (0.08 + Math.random() * 0.04)),
-              rate: parseFloat(((estimatedPopulation * (0.08 + Math.random() * 0.04)) / estimatedPopulation * 1000).toFixed(1))
+              count: Math.floor(estimatedPopulation * (0.08 + Math.random() * 0.06)),
+              rate: parseFloat(((0.08 + Math.random() * 0.06) * 1000).toFixed(1))
             },
             hypertension: {
               id: 'hypertension',
               name: 'Hypertension',
               icdCodes: 'I10-I15',
-              count: Math.floor(estimatedPopulation * (0.15 + Math.random() * 0.08)),
-              rate: parseFloat(((estimatedPopulation * (0.15 + Math.random() * 0.08)) / estimatedPopulation * 1000).toFixed(1))
+              count: Math.floor(estimatedPopulation * (0.15 + Math.random() * 0.12)),
+              rate: parseFloat(((0.15 + Math.random() * 0.12) * 1000).toFixed(1))
             },
             heart: {
               id: 'heart',
               name: 'Heart Disease',
               icdCodes: 'I20-I25',
-              count: Math.floor(estimatedPopulation * (0.04 + Math.random() * 0.03)),
-              rate: parseFloat(((estimatedPopulation * (0.04 + Math.random() * 0.03)) / estimatedPopulation * 1000).toFixed(1))
+              count: Math.floor(estimatedPopulation * (0.04 + Math.random() * 0.05)),
+              rate: parseFloat(((0.04 + Math.random() * 0.05) * 1000).toFixed(1))
             },
             copd: {
               id: 'copd',
               name: 'COPD',
               icdCodes: 'J40-J44',
-              count: Math.floor(estimatedPopulation * (0.02 + Math.random() * 0.02)),
-              rate: parseFloat(((estimatedPopulation * (0.02 + Math.random() * 0.02)) / estimatedPopulation * 1000).toFixed(1))
+              count: Math.floor(estimatedPopulation * (0.015 + Math.random() * 0.025)),
+              rate: parseFloat(((0.015 + Math.random() * 0.025) * 1000).toFixed(1))
             },
             asthma: {
               id: 'asthma',
               name: 'Asthma',
               icdCodes: 'J45',
-              count: Math.floor(estimatedPopulation * (0.06 + Math.random() * 0.04)),
-              rate: parseFloat(((estimatedPopulation * (0.06 + Math.random() * 0.04)) / estimatedPopulation * 1000).toFixed(1))
+              count: Math.floor(estimatedPopulation * (0.06 + Math.random() * 0.06)),
+              rate: parseFloat(((0.06 + Math.random() * 0.06) * 1000).toFixed(1))
+            },
+            stroke: {
+              id: 'stroke',
+              name: 'Stroke',
+              icdCodes: 'I60-I69',
+              count: Math.floor(estimatedPopulation * (0.025 + Math.random() * 0.03)),
+              rate: parseFloat(((0.025 + Math.random() * 0.03) * 1000).toFixed(1))
+            },
+            ckd: {
+              id: 'ckd',
+              name: 'Chronic Kidney Disease',
+              icdCodes: 'N18',
+              count: Math.floor(estimatedPopulation * (0.035 + Math.random() * 0.04)),
+              rate: parseFloat(((0.035 + Math.random() * 0.04) * 1000).toFixed(1))
+            },
+            depression: {
+              id: 'depression',
+              name: 'Depression',
+              icdCodes: 'F32-F33',
+              count: Math.floor(estimatedPopulation * (0.12 + Math.random() * 0.08)),
+              rate: parseFloat(((0.12 + Math.random() * 0.08) * 1000).toFixed(1))
+            },
+            anxiety: {
+              id: 'anxiety',
+              name: 'Anxiety Disorders',
+              icdCodes: 'F40-F41',
+              count: Math.floor(estimatedPopulation * (0.10 + Math.random() * 0.07)),
+              rate: parseFloat(((0.10 + Math.random() * 0.07) * 1000).toFixed(1))
+            },
+            obesity: {
+              id: 'obesity',
+              name: 'Obesity',
+              icdCodes: 'E66',
+              count: Math.floor(estimatedPopulation * (0.25 + Math.random() * 0.15)),
+              rate: parseFloat(((0.25 + Math.random() * 0.15) * 1000).toFixed(1))
+            },
+            cancer: {
+              id: 'cancer',
+              name: 'Cancer',
+              icdCodes: 'C00-C97',
+              count: Math.floor(estimatedPopulation * (0.018 + Math.random() * 0.022)),
+              rate: parseFloat(((0.018 + Math.random() * 0.022) * 1000).toFixed(1))
+            },
+            arthritis: {
+              id: 'arthritis',
+              name: 'Arthritis',
+              icdCodes: 'M05-M06, M15-M19',
+              count: Math.floor(estimatedPopulation * (0.08 + Math.random() * 0.07)),
+              rate: parseFloat(((0.08 + Math.random() * 0.07) * 1000).toFixed(1))
+            },
+            osteoporosis: {
+              id: 'osteoporosis',
+              name: 'Osteoporosis',
+              icdCodes: 'M80-M81',
+              count: Math.floor(estimatedPopulation * (0.02 + Math.random() * 0.03)),
+              rate: parseFloat(((0.02 + Math.random() * 0.03) * 1000).toFixed(1))
+            },
+            liver: {
+              id: 'liver',
+              name: 'Liver Disease',
+              icdCodes: 'K70-K77',
+              count: Math.floor(estimatedPopulation * (0.012 + Math.random() * 0.018)),
+              rate: parseFloat(((0.012 + Math.random() * 0.018) * 1000).toFixed(1))
+            },
+            substance: {
+              id: 'substance',
+              name: 'Substance Use Disorder',
+              icdCodes: 'F10-F19',
+              count: Math.floor(estimatedPopulation * (0.045 + Math.random() * 0.055)),
+              rate: parseFloat(((0.045 + Math.random() * 0.055) * 1000).toFixed(1))
             }
           },
           dataQuality: 88 + Math.floor(Math.random() * 12)
@@ -77,11 +147,138 @@ try {
   chicagoCommunitiesData = null;
 }
 
-// Load authentic Illinois census tract data with real boundaries
+// Load authentic Illinois census tract data with real boundaries and add disease data
 let chicagoCensusTractsData = null;
 try {
   const data = fs.readFileSync(path.join(__dirname, 'data/chicago-census-tracts-real.json'), 'utf8');
-  chicagoCensusTractsData = JSON.parse(data);
+  const rawData = JSON.parse(data);
+  
+  // Add comprehensive disease data to each census tract
+  chicagoCensusTractsData = {
+    ...rawData,
+    features: rawData.features.map((feature: any, index: number) => {
+      const estimatedPopulation = 1500 + Math.floor(Math.random() * 6500);
+      const areaKm2 = feature.properties.shape_area / 1000000 || (0.5 + Math.random() * 2.5);
+      
+      return {
+        ...feature,
+        properties: {
+          ...feature.properties,
+          population: estimatedPopulation,
+          density: Math.floor(estimatedPopulation / areaKm2),
+          diseases: {
+            diabetes: {
+              id: 'diabetes',
+              name: 'Diabetes',
+              icdCodes: 'E10-E14',
+              count: Math.floor(estimatedPopulation * (0.06 + Math.random() * 0.08)),
+              rate: parseFloat(((0.06 + Math.random() * 0.08) * 1000).toFixed(1))
+            },
+            hypertension: {
+              id: 'hypertension',
+              name: 'Hypertension',
+              icdCodes: 'I10-I15',
+              count: Math.floor(estimatedPopulation * (0.12 + Math.random() * 0.16)),
+              rate: parseFloat(((0.12 + Math.random() * 0.16) * 1000).toFixed(1))
+            },
+            heart: {
+              id: 'heart',
+              name: 'Heart Disease',
+              icdCodes: 'I20-I25',
+              count: Math.floor(estimatedPopulation * (0.025 + Math.random() * 0.055)),
+              rate: parseFloat(((0.025 + Math.random() * 0.055) * 1000).toFixed(1))
+            },
+            copd: {
+              id: 'copd',
+              name: 'COPD',
+              icdCodes: 'J40-J44',
+              count: Math.floor(estimatedPopulation * (0.01 + Math.random() * 0.04)),
+              rate: parseFloat(((0.01 + Math.random() * 0.04) * 1000).toFixed(1))
+            },
+            asthma: {
+              id: 'asthma',
+              name: 'Asthma',
+              icdCodes: 'J45',
+              count: Math.floor(estimatedPopulation * (0.04 + Math.random() * 0.08)),
+              rate: parseFloat(((0.04 + Math.random() * 0.08) * 1000).toFixed(1))
+            },
+            stroke: {
+              id: 'stroke',
+              name: 'Stroke',
+              icdCodes: 'I60-I69',
+              count: Math.floor(estimatedPopulation * (0.015 + Math.random() * 0.045)),
+              rate: parseFloat(((0.015 + Math.random() * 0.045) * 1000).toFixed(1))
+            },
+            ckd: {
+              id: 'ckd',
+              name: 'Chronic Kidney Disease',
+              icdCodes: 'N18',
+              count: Math.floor(estimatedPopulation * (0.02 + Math.random() * 0.05)),
+              rate: parseFloat(((0.02 + Math.random() * 0.05) * 1000).toFixed(1))
+            },
+            depression: {
+              id: 'depression',
+              name: 'Depression',
+              icdCodes: 'F32-F33',
+              count: Math.floor(estimatedPopulation * (0.08 + Math.random() * 0.12)),
+              rate: parseFloat(((0.08 + Math.random() * 0.12) * 1000).toFixed(1))
+            },
+            anxiety: {
+              id: 'anxiety',
+              name: 'Anxiety Disorders',
+              icdCodes: 'F40-F41',
+              count: Math.floor(estimatedPopulation * (0.07 + Math.random() * 0.10)),
+              rate: parseFloat(((0.07 + Math.random() * 0.10) * 1000).toFixed(1))
+            },
+            obesity: {
+              id: 'obesity',
+              name: 'Obesity',
+              icdCodes: 'E66',
+              count: Math.floor(estimatedPopulation * (0.18 + Math.random() * 0.22)),
+              rate: parseFloat(((0.18 + Math.random() * 0.22) * 1000).toFixed(1))
+            },
+            cancer: {
+              id: 'cancer',
+              name: 'Cancer',
+              icdCodes: 'C00-C97',
+              count: Math.floor(estimatedPopulation * (0.008 + Math.random() * 0.032)),
+              rate: parseFloat(((0.008 + Math.random() * 0.032) * 1000).toFixed(1))
+            },
+            arthritis: {
+              id: 'arthritis',
+              name: 'Arthritis',
+              icdCodes: 'M05-M06, M15-M19',
+              count: Math.floor(estimatedPopulation * (0.05 + Math.random() * 0.10)),
+              rate: parseFloat(((0.05 + Math.random() * 0.10) * 1000).toFixed(1))
+            },
+            osteoporosis: {
+              id: 'osteoporosis',
+              name: 'Osteoporosis',
+              icdCodes: 'M80-M81',
+              count: Math.floor(estimatedPopulation * (0.005 + Math.random() * 0.045)),
+              rate: parseFloat(((0.005 + Math.random() * 0.045) * 1000).toFixed(1))
+            },
+            liver: {
+              id: 'liver',
+              name: 'Liver Disease',
+              icdCodes: 'K70-K77',
+              count: Math.floor(estimatedPopulation * (0.005 + Math.random() * 0.025)),
+              rate: parseFloat(((0.005 + Math.random() * 0.025) * 1000).toFixed(1))
+            },
+            substance: {
+              id: 'substance',
+              name: 'Substance Use Disorder',
+              icdCodes: 'F10-F19',
+              count: Math.floor(estimatedPopulation * (0.02 + Math.random() * 0.08)),
+              rate: parseFloat(((0.02 + Math.random() * 0.08) * 1000).toFixed(1))
+            }
+          },
+          dataQuality: 82 + Math.floor(Math.random() * 18)
+        }
+      };
+    })
+  };
+  
   console.log(`Loaded ${chicagoCensusTractsData.features.length} authentic Chicago census tracts with real boundaries`);
 } catch (error) {
   console.error('Failed to load Chicago census tracts data:', error);
@@ -121,35 +318,105 @@ function generateCensusTractData() {
             name: 'Diabetes',
             icdCodes: 'E10-E14',
             count: Math.floor(population * (0.07 + Math.random() * 0.05)),
-            rate: parseFloat(((population * (0.07 + Math.random() * 0.05)) / population * 1000).toFixed(1))
+            rate: parseFloat(((0.07 + Math.random() * 0.05) * 1000).toFixed(1))
           },
           hypertension: {
             id: 'hypertension',
             name: 'Hypertension',
             icdCodes: 'I10-I15',
             count: Math.floor(population * (0.14 + Math.random() * 0.09)),
-            rate: parseFloat(((population * (0.14 + Math.random() * 0.09)) / population * 1000).toFixed(1))
+            rate: parseFloat(((0.14 + Math.random() * 0.09) * 1000).toFixed(1))
           },
           heart: {
             id: 'heart',
             name: 'Heart Disease',
             icdCodes: 'I20-I25',
             count: Math.floor(population * (0.03 + Math.random() * 0.04)),
-            rate: parseFloat(((population * (0.03 + Math.random() * 0.04)) / population * 1000).toFixed(1))
+            rate: parseFloat(((0.03 + Math.random() * 0.04) * 1000).toFixed(1))
           },
           copd: {
             id: 'copd',
             name: 'COPD',
             icdCodes: 'J40-J44',
             count: Math.floor(population * (0.015 + Math.random() * 0.025)),
-            rate: parseFloat(((population * (0.015 + Math.random() * 0.025)) / population * 1000).toFixed(1))
+            rate: parseFloat(((0.015 + Math.random() * 0.025) * 1000).toFixed(1))
           },
           asthma: {
             id: 'asthma',
             name: 'Asthma',
             icdCodes: 'J45',
             count: Math.floor(population * (0.05 + Math.random() * 0.05)),
-            rate: parseFloat(((population * (0.05 + Math.random() * 0.05)) / population * 1000).toFixed(1))
+            rate: parseFloat(((0.05 + Math.random() * 0.05) * 1000).toFixed(1))
+          },
+          stroke: {
+            id: 'stroke',
+            name: 'Stroke',
+            icdCodes: 'I60-I69',
+            count: Math.floor(population * (0.022 + Math.random() * 0.028)),
+            rate: parseFloat(((0.022 + Math.random() * 0.028) * 1000).toFixed(1))
+          },
+          ckd: {
+            id: 'ckd',
+            name: 'Chronic Kidney Disease',
+            icdCodes: 'N18',
+            count: Math.floor(population * (0.03 + Math.random() * 0.035)),
+            rate: parseFloat(((0.03 + Math.random() * 0.035) * 1000).toFixed(1))
+          },
+          depression: {
+            id: 'depression',
+            name: 'Depression',
+            icdCodes: 'F32-F33',
+            count: Math.floor(population * (0.11 + Math.random() * 0.07)),
+            rate: parseFloat(((0.11 + Math.random() * 0.07) * 1000).toFixed(1))
+          },
+          anxiety: {
+            id: 'anxiety',
+            name: 'Anxiety Disorders',
+            icdCodes: 'F40-F41',
+            count: Math.floor(population * (0.09 + Math.random() * 0.06)),
+            rate: parseFloat(((0.09 + Math.random() * 0.06) * 1000).toFixed(1))
+          },
+          obesity: {
+            id: 'obesity',
+            name: 'Obesity',
+            icdCodes: 'E66',
+            count: Math.floor(population * (0.22 + Math.random() * 0.13)),
+            rate: parseFloat(((0.22 + Math.random() * 0.13) * 1000).toFixed(1))
+          },
+          cancer: {
+            id: 'cancer',
+            name: 'Cancer',
+            icdCodes: 'C00-C97',
+            count: Math.floor(population * (0.015 + Math.random() * 0.02)),
+            rate: parseFloat(((0.015 + Math.random() * 0.02) * 1000).toFixed(1))
+          },
+          arthritis: {
+            id: 'arthritis',
+            name: 'Arthritis',
+            icdCodes: 'M05-M06, M15-M19',
+            count: Math.floor(population * (0.075 + Math.random() * 0.065)),
+            rate: parseFloat(((0.075 + Math.random() * 0.065) * 1000).toFixed(1))
+          },
+          osteoporosis: {
+            id: 'osteoporosis',
+            name: 'Osteoporosis',
+            icdCodes: 'M80-M81',
+            count: Math.floor(population * (0.018 + Math.random() * 0.027)),
+            rate: parseFloat(((0.018 + Math.random() * 0.027) * 1000).toFixed(1))
+          },
+          liver: {
+            id: 'liver',
+            name: 'Liver Disease',
+            icdCodes: 'K70-K77',
+            count: Math.floor(population * (0.01 + Math.random() * 0.015)),
+            rate: parseFloat(((0.01 + Math.random() * 0.015) * 1000).toFixed(1))
+          },
+          substance: {
+            id: 'substance',
+            name: 'Substance Use Disorder',
+            icdCodes: 'F10-F19',
+            count: Math.floor(population * (0.04 + Math.random() * 0.05)),
+            rate: parseFloat(((0.04 + Math.random() * 0.05) * 1000).toFixed(1))
           }
         },
         dataQuality: 85 + Math.floor(Math.random() * 15)
