@@ -32,13 +32,14 @@ export default function ControlPanel({
 }: ControlPanelProps) {
   return (
     <div 
-      className={`fixed top-[100px] left-6 max-h-[calc(100vh-120px)] overflow-y-auto custom-scrollbar backdrop-blur-[16px] rounded-xl z-[100] transition-all duration-300 ${
+      className={`fixed top-[100px] left-6 max-h-[calc(100vh-120px)] custom-scrollbar backdrop-blur-[16px] rounded-xl z-[100] transition-all duration-300 ${
         isCollapsed ? 'w-16 p-3' : 'w-80 p-6'
       }`}
       style={{
         background: 'rgba(20, 20, 20, 0.95)',
         border: '1px solid var(--border-rush)',
-        boxShadow: '0 4px 24px rgba(0, 0, 0, 0.4)'
+        boxShadow: '0 4px 24px rgba(0, 0, 0, 0.4)',
+        overflow: 'visible'
       }}
     >
       {/* Collapse Toggle Button */}
@@ -169,22 +170,31 @@ export default function ControlPanel({
             >
               Disease Category
             </label>
-            <Select value={selectedDisease} onValueChange={onDiseaseChange}>
+            <Select 
+              value={selectedDisease} 
+              onValueChange={onDiseaseChange}
+              onOpenChange={(open) => console.log('Select open state:', open)}
+            >
               <SelectTrigger 
-                className="h-10 text-sm border-[var(--border-default)] focus:border-[var(--rush-primary)] focus:ring-[var(--focus-ring)]"
+                className="h-10 text-sm border-[var(--border-default)] focus:border-[var(--rush-primary)] focus:ring-[var(--focus-ring)] cursor-pointer"
                 style={{
                   background: 'var(--bg-overlay)',
-                  color: 'var(--text-secondary)'
+                  color: 'var(--text-secondary)',
+                  pointerEvents: 'auto'
                 }}
+                onClick={() => console.log('SelectTrigger clicked')}
               >
-                <SelectValue />
+                <SelectValue placeholder="Select disease category" />
               </SelectTrigger>
               <SelectContent 
+                className="z-[9999]"
                 style={{
                   background: 'var(--bg-overlay)',
                   border: '1px solid var(--border-default)',
-                  color: 'var(--text-secondary)'
+                  color: 'var(--text-secondary)',
+                  zIndex: 9999
                 }}
+                sideOffset={5}
               >
                 <SelectItem value="diabetes">Diabetes (E10-E14)</SelectItem>
                 <SelectItem value="hypertension">Hypertension (I10-I15)</SelectItem>
