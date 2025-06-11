@@ -81,24 +81,35 @@ export function addDataLayer(
   selectedDisease: string,
   visualizationMode: 'count' | 'rate'
 ) {
-  // Remove existing layers if they exist
-  const existingLayers = [`${layerId}-fill`, `${layerId}-border`, `${layerId}-hover`, `${layerId}-labels`, `${layerId}-population`];
-  existingLayers.forEach(layer => {
-    if (map.getLayer(layer)) {
-      map.removeLayer(layer);
-    }
-  });
-
-  if (map.getSource(layerId)) {
-    (map.getSource(layerId) as mapboxgl.GeoJSONSource).setData(data);
-  } else {
-    map.addSource(layerId, {
-      type: 'geojson',
-      data,
+  try {
+    // Remove existing layers if they exist
+    const existingLayers = [`${layerId}-fill`, `${layerId}-border`, `${layerId}-hover`, `${layerId}-labels`, `${layerId}-population`];
+    existingLayers.forEach(layer => {
+      if (map.getLayer(layer)) {
+        map.removeLayer(layer);
+      }
     });
-  }
 
-  // Add fill layer
+    if (map.getSource(layerId)) {
+      (map.getSource(layerId) as mapboxgl.GeoJSONSource).setData(data);
+    } else {
+      map.addSource(layerId, {
+        type: 'geojson',
+        data,
+      });
+    }
+
+    const propertyKey = `${selectedDisease}_${visualizationMode}`;
+    console.log(`Adding layer with property key: ${propertyKey}`);
+    
+    // Verify data has the expected properties
+    if (data.features.length > 0) {
+      const firstFeature = data.features[0];
+      console.log(`First feature properties:`, Object.keys(firstFeature.properties || {}));
+      console.log(`Property value for ${propertyKey}:`, firstFeature.properties?.[propertyKey]);
+    }
+
+    // Add fill layer
   map.addLayer({
     id: `${layerId}-fill`,
     type: 'fill',
@@ -106,16 +117,18 @@ export function addDataLayer(
     paint: {
       'fill-color': [
         'case',
-        ['>', ['get', ['concat', selectedDisease, '_', visualizationMode]], 0],
+        ['>', ['get', `${selectedDisease}_${visualizationMode}`], 0],
         [
           'interpolate',
           ['linear'],
-          ['get', ['concat', selectedDisease, '_', visualizationMode]],
-          0, 'rgba(0, 103, 71, 0.3)',
-          5, '#4a8c2a',
-          10, '#a4c441',
-          15, '#f4e04d',
-          20, '#f76c5e'
+          ['get', `${selectedDisease}_${visualizationMode}`],
+          0, '#006747',      // Dark green for low values
+          50, '#4a8c2a',     // Medium green
+          100, '#a4c441',    // Yellow-green
+          150, '#f4e04d',    // Yellow
+          200, '#ff8c42',    // Orange
+          300, '#f76c5e',    // Red
+          400, '#d32f2f'     // Dark red for highest values
         ],
         'rgba(107, 114, 128, 0.3)' // Suppressed data color
       ],
@@ -207,6 +220,10 @@ export function addDataLayer(
       'text-halo-width': 1
     }
   });
+  
+  } catch (error) {
+    console.error('Error adding data layer:', error);
+  }
 }
 
 export function createTooltip(): mapboxgl.Popup {

@@ -81,14 +81,22 @@ export default function MapContainer({
       // Process data for visualization
       const processedData: GeoJSON.FeatureCollection = {
         type: 'FeatureCollection',
-        features: geoData.features.map(feature => ({
-          ...feature,
-          properties: {
-            ...feature.properties,
-            [`${selectedDisease}_count`]: feature.properties.diseases[selectedDisease]?.count || 0,
-            [`${selectedDisease}_rate`]: feature.properties.diseases[selectedDisease]?.rate || 0,
-          }
-        }))
+        features: geoData.features.map(feature => {
+          const diseaseData = feature.properties.diseases[selectedDisease];
+          const count = diseaseData?.count || 0;
+          const rate = diseaseData?.rate || 0;
+          
+
+          
+          return {
+            ...feature,
+            properties: {
+              ...feature.properties,
+              [`${selectedDisease}_count`]: count,
+              [`${selectedDisease}_rate`]: rate,
+            }
+          };
+        })
       };
 
       // Filter suppressed data if needed

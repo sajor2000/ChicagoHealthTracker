@@ -14,11 +14,13 @@ export function formatRate(rate: number): string {
 }
 
 export function getDiseaseColor(rate: number): string {
-  if (rate <= 5) return 'var(--data-lowest)';
-  if (rate <= 10) return 'var(--data-low)';
-  if (rate <= 15) return 'var(--data-medium)';
-  if (rate <= 20) return 'var(--data-high)';
-  return 'var(--data-highest)';
+  if (rate <= 50) return '#006747';    // Dark green for low values
+  if (rate <= 100) return '#4a8c2a';   // Medium green
+  if (rate <= 150) return '#a4c441';   // Yellow-green
+  if (rate <= 200) return '#f4e04d';   // Yellow
+  if (rate <= 300) return '#ff8c42';   // Orange
+  if (rate <= 400) return '#f76c5e';   // Red
+  return '#d32f2f';                    // Dark red for highest values
 }
 
 export function getPrevalencePercentage(rate: number, maxRate: number = 25): number {
