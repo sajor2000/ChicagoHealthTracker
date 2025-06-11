@@ -123,9 +123,14 @@ export default function MapContainer({
     const allPossibleLayers = ['community-data-fill', 'census-data-fill'];
     allPossibleLayers.forEach(layer => {
       if (map.current && map.current.getLayer(layer)) {
-        map.current.off('mouseenter', layer);
-        map.current.off('mouseleave', layer);
-        map.current.off('click', layer);
+        try {
+          // Remove all event listeners for this layer
+          (map.current as any).off('mouseenter', layer);
+          (map.current as any).off('mouseleave', layer);
+          (map.current as any).off('click', layer);
+        } catch (e) {
+          // Ignore errors when removing non-existent listeners
+        }
       }
     });
 

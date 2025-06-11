@@ -208,12 +208,14 @@ export default function ChicagoDataVisualization({
                   let centerCoords: number[] = [];
                   
                   if (feature.geometry.type === 'MultiPolygon') {
-                    const polygon = feature.geometry.coordinates[0];
+                    const coordinates = feature.geometry.coordinates as number[][][][];
+                    const polygon = coordinates[0];
                     if (polygon && polygon[0] && polygon[0][0]) {
                       centerCoords = polygon[0][0];
                     }
                   } else if (feature.geometry.type === 'Polygon') {
-                    const ring = feature.geometry.coordinates[0];
+                    const coordinates = feature.geometry.coordinates as number[][][];
+                    const ring = coordinates[0];
                     if (ring && ring[0]) {
                       centerCoords = ring[0];
                     }
