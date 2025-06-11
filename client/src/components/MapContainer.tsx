@@ -124,10 +124,11 @@ export default function MapContainer({
     allPossibleLayers.forEach(layer => {
       if (map.current && map.current.getLayer(layer)) {
         try {
-          // Remove all event listeners for this layer
-          (map.current as any).off('mouseenter', layer);
-          (map.current as any).off('mouseleave', layer);
-          (map.current as any).off('click', layer);
+          // Remove all event listeners for this layer - use proper method signature
+          const mapInstance = map.current as any;
+          mapInstance.off('mouseenter', layer, undefined);
+          mapInstance.off('mouseleave', layer, undefined);
+          mapInstance.off('click', layer, undefined);
         } catch (e) {
           // Ignore errors when removing non-existent listeners
         }
