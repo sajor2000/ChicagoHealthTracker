@@ -160,24 +160,39 @@ export default function ChicagoDataVisualization({
               
               {/* Area labels for larger communities */}
               {activeView === 'community' && (() => {
-                const coords = feature.geometry.type === 'MultiPolygon' 
-                  ? feature.geometry.coordinates[0][0][0]
-                  : feature.geometry.coordinates[0][0];
-                
-                if (coords && coords.length >= 2) {
-                  const [x, y] = projectToSVG(coords[0], coords[1]);
-                  return (
-                    <text
-                      x={x}
-                      y={y}
-                      fill="#e5e7eb"
-                      fontSize="10"
-                      textAnchor="middle"
-                      className="pointer-events-none font-mono"
-                    >
-                      {area.name.split(' ')[0]}
-                    </text>
-                  );
+                try {
+                  let centerCoords: number[] = [];
+                  
+                  if (feature.geometry.type === 'MultiPolygon') {
+                    const polygon = feature.geometry.coordinates[0];
+                    if (polygon && polygon[0] && polygon[0][0]) {
+                      centerCoords = polygon[0][0];
+                    }
+                  } else if (feature.geometry.type === 'Polygon') {
+                    const ring = feature.geometry.coordinates[0];
+                    if (ring && ring[0]) {
+                      centerCoords = ring[0];
+                    }
+                  }
+                  
+                  if (centerCoords.length >= 2) {
+                    const [x, y] = projectToSVG(centerCoords[0], centerCoords[1]);
+                    return (
+                      <text
+                        x={x}
+                        y={y}
+                        fill="#e5e7eb"
+                        fontSize="8"
+                        textAnchor="middle"
+                        className="pointer-events-none font-mono"
+                        style={{ userSelect: 'none' }}
+                      >
+                        {area.name.split(' ')[0]}
+                      </text>
+                    );
+                  }
+                } catch (error) {
+                  console.warn('Error rendering label for', area.name);
                 }
                 return null;
               })()}
