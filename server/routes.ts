@@ -77,6 +77,17 @@ try {
   chicagoCommunitiesData = null;
 }
 
+// Load authentic Illinois census tract data with real boundaries
+let chicagoCensusTractsData = null;
+try {
+  const data = fs.readFileSync(path.join(__dirname, 'data/chicago-census-tracts-real.json'), 'utf8');
+  chicagoCensusTractsData = JSON.parse(data);
+  console.log(`Loaded ${chicagoCensusTractsData.features.length} authentic Chicago census tracts with real boundaries`);
+} catch (error) {
+  console.error('Failed to load Chicago census tracts data:', error);
+  chicagoCensusTractsData = null;
+}
+
 function generateCensusTractData() {
   const censusTracts = [];
   const chicagoBounds = {
