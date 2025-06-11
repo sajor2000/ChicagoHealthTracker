@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import { createMap, addDataLayer, createTooltip, updateTooltipContent, fitBoundsToFeature } from '@/lib/mapbox';
-import { AreaData, ViewMode, DiseaseType, VisualizationMode, ChicagoGeoData } from '@/types';
+import { AreaData, ViewMode, DiseaseType, VisualizationMode } from '@/types';
 import { useChicagoGeoData } from '@/hooks/useMapData';
+import ChicagoDataVisualization from './ChicagoDataVisualization';
 
 interface MapContainerProps {
   activeView: ViewMode;
@@ -23,36 +24,35 @@ export default function MapContainer({
   const map = useRef<mapboxgl.Map | null>(null);
   const tooltip = useRef<mapboxgl.Popup | null>(null);
   const [hoveredFeatureId, setHoveredFeatureId] = useState<string | null>(null);
+  const [useMapboxFallback, setUseMapboxFallback] = useState(false);
 
   const { data: geoData, isLoading, error } = useChicagoGeoData(activeView);
+
+  // Check if Mapbox token is available
+  const hasMapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
+
+  // Use SVG visualization if no Mapbox token
+  if (!hasMapboxToken || useMapboxFallback) {
+    return (
+      <ChicagoDataVisualization
+        activeView={activeView}
+        selectedDisease={selectedDisease}
+        visualizationMode={visualizationMode}
+        showSuppressed={showSuppressed}
+        onAreaSelect={onAreaSelect}
+      />
+    );
+  }
 
   // Initialize map
   useEffect(() => {
     if (!mapContainer.current) return;
 
-    // Check for Mapbox token
-    const hasValidToken = mapboxgl.accessToken && mapboxgl.accessToken !== 'default_token';
-    
-    if (!hasValidToken) {
-      // Show fallback message
-      mapContainer.current.innerHTML = `
-        <div class="flex items-center justify-center h-full text-center p-8" style="background: linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%); color: var(--text-tertiary); font-family: var(--font-mono); font-size: 14px;">
-          <div>
-            <div style="margin-bottom: 16px; color: var(--rush-primary); font-size: 18px;">
-              🗺️
-            </div>
-            <div>Interactive Chicago Disease Map</div>
-            <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">
-              Mapbox token required for map display
-            </div>
-          </div>
-        </div>
-      `;
-      return;
-    }
-
     try {
-      map.current = createMap(mapContainer.current.id);
+      const containerElement = mapContainer.current;
+      containerElement.id = 'map';
+      
+      map.current = createMap('map');
       tooltip.current = createTooltip();
 
       return () => {
@@ -67,17 +67,7 @@ export default function MapContainer({
       };
     } catch (error) {
       console.error('Error initializing map:', error);
-      mapContainer.current.innerHTML = `
-        <div class="flex items-center justify-center h-full text-center p-8" style="background: var(--bg-base); color: var(--text-tertiary);">
-          <div>
-            <div style="margin-bottom: 16px; color: var(--status-error);">⚠️</div>
-            <div>Map initialization failed</div>
-            <div style="font-size: 12px; margin-top: 8px; opacity: 0.7;">
-              Please check Mapbox configuration
-            </div>
-          </div>
-        </div>
-      `;
+      setUseMapboxFallback(true);
     }
   }, []);
 

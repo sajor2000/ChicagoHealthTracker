@@ -2,11 +2,11 @@ import mapboxgl from 'mapbox-gl';
 import { MapFeature, TooltipData } from '@/types';
 
 // Set Mapbox access token from environment variables
-const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || 
-                    import.meta.env.VITE_MAPBOX_API_KEY || 
-                    'default_token';
+const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
 
-if (MAPBOX_TOKEN && MAPBOX_TOKEN !== 'default_token') {
+if (!MAPBOX_TOKEN) {
+  console.error('Mapbox access token not found. Please set VITE_MAPBOX_ACCESS_TOKEN environment variable.');
+} else {
   mapboxgl.accessToken = MAPBOX_TOKEN;
 }
 
@@ -23,10 +23,20 @@ export const mapConfig = {
 };
 
 export function createMap(container: string): mapboxgl.Map {
+  if (!MAPBOX_TOKEN) {
+    throw new Error('Mapbox access token is required. Please configure VITE_MAPBOX_ACCESS_TOKEN.');
+  }
+
   try {
     const map = new mapboxgl.Map({
       ...mapConfig,
       container,
+      accessToken: MAPBOX_TOKEN,
+    });
+
+    // Handle map load errors
+    map.on('error', (e) => {
+      console.error('Mapbox GL error:', e.error);
     });
 
     // Custom map styling overrides
@@ -57,6 +67,9 @@ export function createMap(container: string): mapboxgl.Map {
     return map;
   } catch (error) {
     console.error('Failed to create map:', error);
+    if (error instanceof Error && error.message.includes('token')) {
+      throw new Error('Invalid Mapbox access token. Please check your VITE_MAPBOX_ACCESS_TOKEN configuration.');
+    }
     throw error;
   }
 }
