@@ -121,17 +121,32 @@ export function addDataLayer(
           ['get', 'tractce']
         ],
         'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
-        'text-size': isCommunityView ? 14 : 8,
+        'text-size': isCommunityView ? [
+          'interpolate',
+          ['linear'],
+          ['zoom'],
+          8, 10,
+          12, 14,
+          16, 18
+        ] : 8,
         'text-offset': [0, 0],
         'text-anchor': 'center',
-        'text-allow-overlap': isCommunityView,
-        'text-ignore-placement': isCommunityView,
-        'text-transform': 'uppercase'
+        'text-allow-overlap': false,
+        'text-ignore-placement': false,
+        'text-transform': 'uppercase',
+        'text-padding': isCommunityView ? 10 : 2
       },
       paint: {
         'text-color': '#ffffff',
-        'text-halo-color': 'rgba(0, 0, 0, 0.8)',
-        'text-halo-width': 2
+        'text-halo-color': 'rgba(0, 0, 0, 0.9)',
+        'text-halo-width': isCommunityView ? 3 : 2,
+        'text-opacity': [
+          'interpolate',
+          ['linear'],
+          ['zoom'],
+          8, 0.8,
+          10, 1.0
+        ]
       }
     });
 
