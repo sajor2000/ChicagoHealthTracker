@@ -81,6 +81,14 @@ export function addDataLayer(
   selectedDisease: string,
   visualizationMode: 'count' | 'rate'
 ) {
+  // Remove existing layers if they exist
+  const existingLayers = [`${layerId}-fill`, `${layerId}-border`, `${layerId}-hover`, `${layerId}-labels`, `${layerId}-population`];
+  existingLayers.forEach(layer => {
+    if (map.getLayer(layer)) {
+      map.removeLayer(layer);
+    }
+  });
+
   if (map.getSource(layerId)) {
     (map.getSource(layerId) as mapboxgl.GeoJSONSource).setData(data);
   } else {
@@ -88,65 +96,117 @@ export function addDataLayer(
       type: 'geojson',
       data,
     });
-
-    // Add fill layer
-    map.addLayer({
-      id: `${layerId}-fill`,
-      type: 'fill',
-      source: layerId,
-      paint: {
-        'fill-color': [
-          'case',
-          ['>', ['get', ['concat', selectedDisease, '_', visualizationMode]], 0],
-          [
-            'interpolate',
-            ['linear'],
-            ['get', ['concat', selectedDisease, '_', visualizationMode]],
-            0, 'rgba(0, 103, 71, 0.3)',
-            5, '#4a8c2a',
-            10, '#a4c441',
-            15, '#f4e04d',
-            20, '#f76c5e'
-          ],
-          'rgba(107, 114, 128, 0.3)' // Suppressed data color
-        ],
-        'fill-opacity': 0.8
-      }
-    });
-
-    // Add border layer
-    map.addLayer({
-      id: `${layerId}-border`,
-      type: 'line',
-      source: layerId,
-      paint: {
-        'line-color': '#006747',
-        'line-width': [
-          'case',
-          ['boolean', ['feature-state', 'hover'], false],
-          3,
-          1
-        ],
-        'line-opacity': 0.8
-      }
-    });
-
-    // Add hover layer
-    map.addLayer({
-      id: `${layerId}-hover`,
-      type: 'fill',
-      source: layerId,
-      paint: {
-        'fill-color': '#006747',
-        'fill-opacity': [
-          'case',
-          ['boolean', ['feature-state', 'hover'], false],
-          0.3,
-          0
-        ]
-      }
-    });
   }
+
+  // Add fill layer
+  map.addLayer({
+    id: `${layerId}-fill`,
+    type: 'fill',
+    source: layerId,
+    paint: {
+      'fill-color': [
+        'case',
+        ['>', ['get', ['concat', selectedDisease, '_', visualizationMode]], 0],
+        [
+          'interpolate',
+          ['linear'],
+          ['get', ['concat', selectedDisease, '_', visualizationMode]],
+          0, 'rgba(0, 103, 71, 0.3)',
+          5, '#4a8c2a',
+          10, '#a4c441',
+          15, '#f4e04d',
+          20, '#f76c5e'
+        ],
+        'rgba(107, 114, 128, 0.3)' // Suppressed data color
+      ],
+      'fill-opacity': 0.8
+    }
+  });
+
+  // Add border layer
+  map.addLayer({
+    id: `${layerId}-border`,
+    type: 'line',
+    source: layerId,
+    paint: {
+      'line-color': '#006747',
+      'line-width': [
+        'case',
+        ['boolean', ['feature-state', 'hover'], false],
+        3,
+        1
+      ],
+      'line-opacity': 0.8
+    }
+  });
+
+  // Add hover layer
+  map.addLayer({
+    id: `${layerId}-hover`,
+    type: 'fill',
+    source: layerId,
+    paint: {
+      'fill-color': '#006747',
+      'fill-opacity': [
+        'case',
+        ['boolean', ['feature-state', 'hover'], false],
+        0.3,
+        0
+      ]
+    }
+  });
+
+  // Determine if this is community or census view based on layerId
+  const isCommunityView = layerId.includes('community');
+  
+  // Add area name labels
+  map.addLayer({
+    id: `${layerId}-labels`,
+    type: 'symbol',
+    source: layerId,
+    layout: {
+      'text-field': isCommunityView 
+        ? ['get', 'name']
+        : ['concat', 'Tract ', ['slice', ['get', 'geoid'], -4]],
+      'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
+      'text-size': isCommunityView ? 12 : 9,
+      'text-offset': [0, -0.5],
+      'text-anchor': 'center',
+      'text-allow-overlap': false,
+      'text-ignore-placement': false
+    },
+    paint: {
+      'text-color': '#ffffff',
+      'text-halo-color': 'rgba(0, 0, 0, 0.8)',
+      'text-halo-width': 2
+    }
+  });
+
+  // Add population labels
+  map.addLayer({
+    id: `${layerId}-population`,
+    type: 'symbol',
+    source: layerId,
+    layout: {
+      'text-field': [
+        'concat',
+        'Pop: ',
+        ['to-string', ['round', ['/', ['get', 'population'], 1000]]],
+        'k'
+      ],
+      'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
+      'text-size': isCommunityView ? 9 : 7,
+      'text-offset': [0, 0.8],
+      'text-anchor': 'center',
+      'text-allow-overlap': false,
+      'text-ignore-placement': false
+    },
+    paint: {
+      'text-color': '#e5e7eb',
+      'text-halo-color': 'rgba(0, 0, 0, 0.6)',
+      'text-halo-width': 1
+    }
+  });
 }
 
 export function createTooltip(): mapboxgl.Popup {

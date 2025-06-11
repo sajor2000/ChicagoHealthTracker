@@ -202,8 +202,8 @@ export default function ChicagoDataVisualization({
                 onClick={() => onAreaSelect(area)}
               />
               
-              {/* Area labels for larger communities */}
-              {activeView === 'community' && (() => {
+              {/* Enhanced area labels with names and population */}
+              {(() => {
                 try {
                   let centerCoords: number[] = [];
                   
@@ -221,18 +221,49 @@ export default function ChicagoDataVisualization({
                   
                   if (centerCoords.length >= 2) {
                     const [x, y] = projectToSVG(centerCoords[0], centerCoords[1]);
+                    
+                    // Determine label content based on view mode
+                    const labelName = activeView === 'community' 
+                      ? area.name 
+                      : `Tract ${area.geoid?.slice(-4) || area.name.split(' ').pop()}`;
+                    
+                    const fontSize = activeView === 'community' ? '10' : '7';
+                    const popSize = activeView === 'community' ? '8' : '6';
+                    
                     return (
-                      <text
-                        x={x}
-                        y={y}
-                        fill="#e5e7eb"
-                        fontSize="8"
-                        textAnchor="middle"
-                        className="pointer-events-none font-mono"
-                        style={{ userSelect: 'none' }}
-                      >
-                        {area.name.split(' ')[0]}
-                      </text>
+                      <g className="pointer-events-none">
+                        <text
+                          x={x}
+                          y={y - 6}
+                          fill="#ffffff"
+                          fontSize={fontSize}
+                          fontWeight="600"
+                          textAnchor="middle"
+                          className="font-sans"
+                          style={{ 
+                            userSelect: 'none',
+                            textShadow: '1px 1px 2px rgba(0,0,0,0.8)',
+                            filter: 'drop-shadow(0px 1px 2px rgba(0,0,0,0.8))'
+                          }}
+                        >
+                          {labelName}
+                        </text>
+                        <text
+                          x={x}
+                          y={y + 8}
+                          fill="#e5e7eb"
+                          fontSize={popSize}
+                          textAnchor="middle"
+                          className="font-mono"
+                          style={{ 
+                            userSelect: 'none',
+                            textShadow: '1px 1px 1px rgba(0,0,0,0.6)',
+                            filter: 'drop-shadow(0px 1px 1px rgba(0,0,0,0.6))'
+                          }}
+                        >
+                          Pop: {(area.population / 1000).toFixed(0)}k
+                        </text>
+                      </g>
                     );
                   }
                 } catch (error) {
