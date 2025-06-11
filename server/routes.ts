@@ -181,8 +181,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
         res.json(chicagoCommunitiesData);
       } else {
-        const tractData = generateCensusTractData();
-        res.json(tractData);
+        if (!chicagoCensusTractsData) {
+          return res.status(503).json({ 
+            error: 'Census tract data not available', 
+            message: 'Unable to load authentic Illinois census tract boundaries data' 
+          });
+        }
+        res.json(chicagoCensusTractsData);
       }
     } catch (error) {
       console.error('Error fetching Chicago areas:', error);
