@@ -173,7 +173,6 @@ export default function ControlPanel({
             <Select 
               value={selectedDisease} 
               onValueChange={onDiseaseChange}
-              onOpenChange={(open) => console.log('Select open state:', open)}
             >
               <SelectTrigger 
                 className="h-10 text-sm border-[var(--border-default)] focus:border-[var(--rush-primary)] focus:ring-[var(--focus-ring)] cursor-pointer"
@@ -182,7 +181,6 @@ export default function ControlPanel({
                   color: 'var(--text-secondary)',
                   pointerEvents: 'auto'
                 }}
-                onClick={() => console.log('SelectTrigger clicked')}
               >
                 <SelectValue placeholder="Select disease category" />
               </SelectTrigger>
@@ -201,6 +199,16 @@ export default function ControlPanel({
                 <SelectItem value="heart">Heart Disease (I20-I25)</SelectItem>
                 <SelectItem value="copd">COPD (J40-J44)</SelectItem>
                 <SelectItem value="asthma">Asthma (J45)</SelectItem>
+                <SelectItem value="stroke">Stroke (I60-I69)</SelectItem>
+                <SelectItem value="ckd">Chronic Kidney Disease (N18)</SelectItem>
+                <SelectItem value="depression">Depression (F32-F33)</SelectItem>
+                <SelectItem value="anxiety">Anxiety Disorders (F40-F41)</SelectItem>
+                <SelectItem value="obesity">Obesity (E66)</SelectItem>
+                <SelectItem value="cancer">Cancer (C00-C97)</SelectItem>
+                <SelectItem value="arthritis">Arthritis (M05-M06, M15-M19)</SelectItem>
+                <SelectItem value="osteoporosis">Osteoporosis (M80-M81)</SelectItem>
+                <SelectItem value="liver">Liver Disease (K70-K77)</SelectItem>
+                <SelectItem value="substance">Substance Use Disorder (F10-F19)</SelectItem>
               </SelectContent>
             </Select>
           </div>

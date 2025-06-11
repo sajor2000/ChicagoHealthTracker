@@ -33,7 +33,7 @@ export interface ChicagoGeoData {
 }
 
 export type ViewMode = 'census' | 'community';
-export type DiseaseType = 'diabetes' | 'hypertension' | 'heart' | 'copd' | 'asthma';
+export type DiseaseType = 'diabetes' | 'hypertension' | 'heart' | 'copd' | 'asthma' | 'stroke' | 'ckd' | 'depression' | 'anxiety' | 'obesity' | 'cancer' | 'arthritis' | 'osteoporosis' | 'liver' | 'substance';
 export type VisualizationMode = 'count' | 'rate';
 
 export interface AppState {

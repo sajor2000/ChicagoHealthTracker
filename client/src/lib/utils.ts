@@ -32,6 +32,16 @@ export function getDiseaseInfo(diseaseType: string) {
     heart: { name: 'Heart Disease', icdCodes: 'I20-I25' },
     copd: { name: 'COPD', icdCodes: 'J40-J44' },
     asthma: { name: 'Asthma', icdCodes: 'J45' },
+    stroke: { name: 'Stroke', icdCodes: 'I60-I69' },
+    ckd: { name: 'Chronic Kidney Disease', icdCodes: 'N18' },
+    depression: { name: 'Depression', icdCodes: 'F32-F33' },
+    anxiety: { name: 'Anxiety Disorders', icdCodes: 'F40-F41' },
+    obesity: { name: 'Obesity', icdCodes: 'E66' },
+    cancer: { name: 'Cancer', icdCodes: 'C00-C97' },
+    arthritis: { name: 'Arthritis', icdCodes: 'M05-M06, M15-M19' },
+    osteoporosis: { name: 'Osteoporosis', icdCodes: 'M80-M81' },
+    liver: { name: 'Liver Disease', icdCodes: 'K70-K77' },
+    substance: { name: 'Substance Use Disorder', icdCodes: 'F10-F19' },
   };
   
   return diseases[diseaseType as keyof typeof diseases] || { name: 'Unknown', icdCodes: '' };
