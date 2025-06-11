@@ -115,7 +115,7 @@ export function addDataLayer(
       type: 'symbol',
       source: layerId,
       layout: {
-        'text-field': isCommunityView ? ['get', 'name'] : [
+        'text-field': isCommunityView ? ['get', 'community'] : [
           'concat',
           'Tract ',
           ['get', 'tractce']
@@ -131,8 +131,8 @@ export function addDataLayer(
         ] : 8,
         'text-offset': [0, 0],
         'text-anchor': 'center',
-        'text-allow-overlap': false,
-        'text-ignore-placement': false,
+        'text-allow-overlap': isCommunityView,
+        'text-ignore-placement': isCommunityView,
         'text-transform': 'uppercase',
         'text-padding': isCommunityView ? 10 : 2
       },
