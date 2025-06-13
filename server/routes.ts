@@ -22,6 +22,17 @@ try {
   };
 }
 
+// Load authentic 2020 Census demographic data (race, ethnicity, housing)
+let censusDemographics: any = null;
+try {
+  const demographicsPath = path.join(__dirname, 'data/chicago-census-2020-demographics.json');
+  censusDemographics = JSON.parse(fs.readFileSync(demographicsPath, 'utf8'));
+  console.log(`Loaded authentic 2020 Census demographic data for ${Object.keys(censusDemographics).length} tracts`);
+} catch (error) {
+  console.warn('Could not load Census demographic data');
+  censusDemographics = {};
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Load authentic Chicago Community Areas data
   let chicagoCommunitiesData: any = null;
