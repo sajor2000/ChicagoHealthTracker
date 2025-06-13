@@ -62,15 +62,27 @@ export default function InfoPanel({ selectedArea, isOpen, onClose }: InfoPanelPr
       <div className="flex-1 overflow-y-auto custom-scrollbar p-6">
         {/* Population Metrics */}
         <section className="mb-6">
-          <h4 
-            className="text-base font-semibold mb-4 uppercase tracking-wider"
-            style={{ 
-              color: 'var(--text-primary)',
-              letterSpacing: '0.05em'
-            }}
-          >
-            Population Metrics
-          </h4>
+          <div className="flex items-center justify-between mb-4">
+            <h4 
+              className="text-base font-semibold uppercase tracking-wider"
+              style={{ 
+                color: 'var(--text-primary)',
+                letterSpacing: '0.05em'
+              }}
+            >
+              Population Metrics
+            </h4>
+            {/* Data Source Indicator */}
+            {selectedArea.id && (
+              <div className="text-[9px] px-2 py-1 rounded-full border" style={{
+                background: selectedArea.id.includes('17031') ? 'rgba(34, 197, 94, 0.1)' : 'rgba(59, 130, 246, 0.1)',
+                borderColor: selectedArea.id.includes('17031') ? 'rgba(34, 197, 94, 0.3)' : 'rgba(59, 130, 246, 0.3)',
+                color: selectedArea.id.includes('17031') ? 'rgb(34, 197, 94)' : 'rgb(59, 130, 246)'
+              }}>
+                {selectedArea.id.includes('17031') ? 'Direct Census' : 'Spatial Aggregation'}
+              </div>
+            )}
+          </div>
           <div className="grid grid-cols-2 gap-4">
             <div 
               className="border rounded-lg p-4 text-center"

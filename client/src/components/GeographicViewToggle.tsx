@@ -56,7 +56,10 @@ export default function GeographicViewToggle({ activeView, onViewChange }: Geogr
           }}
         >
           <MapPin className="w-3 h-3 flex-shrink-0" />
-          <span className="font-medium">Census Tracts</span>
+          <div className="flex-1">
+            <span className="font-medium block">Census Tracts</span>
+            <span className="text-[10px] opacity-75 block mt-0.5">Direct 2020 Census data</span>
+          </div>
         </button>
         
         <button
@@ -84,7 +87,10 @@ export default function GeographicViewToggle({ activeView, onViewChange }: Geogr
           }}
         >
           <Home className="w-3 h-3 flex-shrink-0" />
-          <span className="font-medium">Community Areas</span>
+          <div className="flex-1">
+            <span className="font-medium block">Community Areas</span>
+            <span className="text-[10px] opacity-75 block mt-0.5">Aggregated from census tracts*</span>
+          </div>
         </button>
         
         <button
@@ -112,8 +118,19 @@ export default function GeographicViewToggle({ activeView, onViewChange }: Geogr
           }}
         >
           <Building2 className="w-3 h-3 flex-shrink-0" />
-          <span className="font-medium">Alderman Wards</span>
+          <div className="flex-1">
+            <span className="font-medium block">Alderman Wards</span>
+            <span className="text-[10px] opacity-75 block mt-0.5">Aggregated from census tracts*</span>
+          </div>
         </button>
+      </div>
+      
+      {/* Methodology Note */}
+      <div className="px-3 py-2 border-t border-[var(--border-subtle)]">
+        <div className="text-[9px] leading-tight" style={{ color: 'var(--text-tertiary)' }}>
+          <span className="font-medium">*Spatial Aggregation:</span> Community areas and wards use population-weighted averages from overlapping census tracts via 20×20 grid sampling.
+        </div>
+      </div>
       </div>
     </div>
   );
