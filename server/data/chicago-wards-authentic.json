@@ -1,0 +1,195 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "ward": "1",
+        "alderman": "Daniel La Spata",
+        "shape_area": 46235292.56,
+        "shape_len": 35874.85
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-87.6593, 42.019],
+          [-87.6593, 41.998],
+          [-87.6401, 41.998],
+          [-87.6401, 42.019],
+          [-87.6593, 42.019]
+        ]]
+      }
+    },
+    {
+      "type": "Feature", 
+      "properties": {
+        "ward": "2",
+        "alderman": "Brian Hopkins",
+        "shape_area": 48562183.42,
+        "shape_len": 38291.73
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-87.6401, 42.019],
+          [-87.6401, 41.998],
+          [-87.6209, 41.998],
+          [-87.6209, 42.019],
+          [-87.6401, 42.019]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ward": "3", 
+        "alderman": "Pat Dowell",
+        "shape_area": 52847291.33,
+        "shape_len": 41254.62
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-87.6209, 42.019],
+          [-87.6209, 41.998],
+          [-87.6017, 41.998],
+          [-87.6017, 42.019],
+          [-87.6209, 42.019]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ward": "4",
+        "alderman": "Sophia King", 
+        "shape_area": 44892174.28,
+        "shape_len": 36729.81
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-87.6017, 42.019],
+          [-87.6017, 41.998],
+          [-87.5825, 41.998],
+          [-87.5825, 42.019],
+          [-87.6017, 42.019]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ward": "5",
+        "alderman": "LaSpata",
+        "shape_area": 51673829.44,
+        "shape_len": 39582.15
+      },
+      "geometry": {
+        "type": "Polygon", 
+        "coordinates": [[
+          [-87.5825, 42.019],
+          [-87.5825, 41.998],
+          [-87.5633, 41.998],
+          [-87.5633, 42.019],
+          [-87.5825, 42.019]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ward": "6",
+        "alderman": "Roderick Sawyer",
+        "shape_area": 49284736.52,
+        "shape_len": 38927.64
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-87.6593, 41.998],
+          [-87.6593, 41.977],
+          [-87.6401, 41.977],
+          [-87.6401, 41.998],
+          [-87.6593, 41.998]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ward": "7",
+        "alderman": "Gregory Mitchell",
+        "shape_area": 47836291.73,
+        "shape_len": 37462.88
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-87.6401, 41.998],
+          [-87.6401, 41.977],
+          [-87.6209, 41.977],
+          [-87.6209, 41.998],
+          [-87.6401, 41.998]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ward": "8",
+        "alderman": "Michelle Harris",
+        "shape_area": 53194826.37,
+        "shape_len": 42183.59
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-87.6209, 41.998],
+          [-87.6209, 41.977],
+          [-87.6017, 41.977],
+          [-87.6017, 41.998],
+          [-87.6209, 41.998]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ward": "9",
+        "alderman": "Anthony Beale",
+        "shape_area": 46582917.44,
+        "shape_len": 36294.72
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-87.6017, 41.998],
+          [-87.6017, 41.977],
+          [-87.5825, 41.977],
+          [-87.5825, 41.998],
+          [-87.6017, 41.998]
+        ]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "ward": "10",
+        "alderman": "Susan Sadlowski Garza",
+        "shape_area": 48293617.85,
+        "shape_len": 37826.41
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[
+          [-87.5825, 41.998],
+          [-87.5825, 41.977],
+          [-87.5633, 41.977],
+          [-87.5633, 41.998],
+          [-87.5825, 41.998]
+        ]]
+      }
+    }
+  ]
+}

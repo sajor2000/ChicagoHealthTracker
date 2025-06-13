@@ -520,11 +520,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           geometry: {
             type: 'Polygon',
             coordinates: [[
-              [-87.9 + Math.random() * 0.4, 41.6 + Math.random() * 0.4],
-              [-87.9 + Math.random() * 0.4, 41.6 + Math.random() * 0.4],
-              [-87.9 + Math.random() * 0.4, 41.6 + Math.random() * 0.4],
-              [-87.9 + Math.random() * 0.4, 41.6 + Math.random() * 0.4],
-              [-87.9 + Math.random() * 0.4, 41.6 + Math.random() * 0.4]
+              [-87.7 - (index % 5) * 0.02, 41.85 + Math.floor(index / 10) * 0.02],
+              [-87.7 - (index % 5) * 0.02 + 0.015, 41.85 + Math.floor(index / 10) * 0.02],
+              [-87.7 - (index % 5) * 0.02 + 0.015, 41.85 + Math.floor(index / 10) * 0.02 + 0.015],
+              [-87.7 - (index % 5) * 0.02, 41.85 + Math.floor(index / 10) * 0.02 + 0.015],
+              [-87.7 - (index % 5) * 0.02, 41.85 + Math.floor(index / 10) * 0.02]
             ]]
           }
         };
