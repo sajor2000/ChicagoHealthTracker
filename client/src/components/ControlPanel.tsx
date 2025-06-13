@@ -150,30 +150,7 @@ export default function ControlPanel({
             </div>
           </div>
 
-          {/* Attribution */}
-          <div className="mb-6">
-            <div className="text-xs space-y-3" style={{ color: 'var(--text-tertiary)' }}>
-              <div className="border-t pt-3" style={{ borderColor: 'var(--border-subtle)' }}>
-                <div className="mb-2">
-                  <span className="font-medium block mb-1" style={{ color: 'var(--text-secondary)' }}>
-                    Built by
-                  </span>
-                  <span className="text-xs">
-                    Rush Health Equity Data Analytics Studio
-                  </span>
-                </div>
-                
-                <div>
-                  <span className="font-medium block mb-1" style={{ color: 'var(--text-secondary)' }}>
-                    Data provided by
-                  </span>
-                  <span className="text-xs">
-                    CAPriCORN
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
+
         </>
       )}
     </div>

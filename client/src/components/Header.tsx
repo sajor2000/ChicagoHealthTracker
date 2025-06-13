@@ -15,13 +15,35 @@ export default function Header({ className = '' }: HeaderProps) {
         }}
       >
         <div className="max-w-7xl mx-auto w-full h-full flex justify-between items-center px-6">
-          <div className="branding">
-            <h1 
-              className="text-2xl font-bold"
-              style={{ color: 'var(--text-primary)' }}
-            >
-              Chicago Chronic Disease Data Commons
-            </h1>
+          <div className="branding flex items-center gap-6">
+            <div>
+              <h1 
+                className="text-2xl font-bold"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                Chicago Chronic Disease Data Commons
+              </h1>
+            </div>
+            
+            <div className="flex items-center gap-4 text-xs" style={{ color: 'var(--text-tertiary)' }}>
+              <div className="flex items-center gap-2">
+                <span>Built by</span>
+                <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>
+                  Rush Health Equity Data Analytics Studio
+                </span>
+                {/* Rush logo placeholder - will be added when logo file is provided */}
+              </div>
+              
+              <div className="w-px h-4 bg-[var(--border-subtle)]"></div>
+              
+              <div className="flex items-center gap-2">
+                <span>Data by</span>
+                <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>
+                  CAPriCORN
+                </span>
+                {/* CAPriCORN logo placeholder - will be added when logo file is provided */}
+              </div>
+            </div>
           </div>
           
           <nav className="header-nav hidden md:flex gap-8">
