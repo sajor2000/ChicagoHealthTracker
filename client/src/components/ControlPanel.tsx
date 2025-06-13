@@ -150,33 +150,27 @@ export default function ControlPanel({
             </div>
           </div>
 
-          {/* Data Information */}
+          {/* Attribution */}
           <div className="mb-6">
-            <label 
-              className="block text-xs uppercase tracking-wider font-medium mb-3"
-              style={{ 
-                color: 'var(--text-tertiary)',
-                letterSpacing: '0.08em'
-              }}
-            >
-              Data Sources
-            </label>
-            <div className="text-xs space-y-2" style={{ color: 'var(--text-tertiary)' }}>
-              <div>
-                <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>Population:</span> 
-                <span className="ml-1">2020 Census API</span>
-              </div>
-              <div>
-                <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>Demographics:</span> 
-                <span className="ml-1">2020 Census Bureau</span>
-              </div>
-              <div>
-                <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>Boundaries:</span> 
-                <span className="ml-1">Authentic Chicago GIS</span>
-              </div>
-              <div>
-                <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>Health Data:</span> 
-                <span className="ml-1">Modeled Prevalence</span>
+            <div className="text-xs space-y-3" style={{ color: 'var(--text-tertiary)' }}>
+              <div className="border-t pt-3" style={{ borderColor: 'var(--border-subtle)' }}>
+                <div className="mb-2">
+                  <span className="font-medium block mb-1" style={{ color: 'var(--text-secondary)' }}>
+                    Built by
+                  </span>
+                  <span className="text-xs">
+                    Rush Health Equity Data Analytics Studio
+                  </span>
+                </div>
+                
+                <div>
+                  <span className="font-medium block mb-1" style={{ color: 'var(--text-secondary)' }}>
+                    Data provided by
+                  </span>
+                  <span className="text-xs">
+                    CAPriCORN
+                  </span>
+                </div>
               </div>
             </div>
           </div>

@@ -17,17 +17,11 @@ export default function Header({ className = '' }: HeaderProps) {
         <div className="max-w-7xl mx-auto w-full h-full flex justify-between items-center px-6">
           <div className="branding">
             <h1 
-              className="text-2xl font-bold mb-1"
+              className="text-2xl font-bold"
               style={{ color: 'var(--text-primary)' }}
             >
               Chicago Chronic Disease Data Commons
             </h1>
-            <p 
-              className="text-base font-medium"
-              style={{ color: 'var(--rush-primary)' }}
-            >
-              Comprehensive Health Disparity Analysis & Visualization
-            </p>
           </div>
           
           <nav className="header-nav hidden md:flex gap-8">
