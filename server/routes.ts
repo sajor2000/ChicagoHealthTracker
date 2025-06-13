@@ -73,26 +73,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     processedCensusTracts = combinedFeatures.map((feature: any, index: number) => {
       // Extract and format Census GEOID to match 2020 Census API format (17031XXXXXX)
       const rawGeoid = feature.properties.GEOID || feature.properties.geoid || feature.properties.id;
-      let censusGeoid = null;
+      let censusGeoid = rawGeoid ? rawGeoid.toString() : null;
       
-      if (rawGeoid) {
-        const geoidStr = rawGeoid.toString();
-        // Convert from various formats to match Census API format "17031XXXXXX"
-        if (geoidStr.length === 11 && geoidStr.startsWith('17031')) {
-          // Convert "17031001001" to "17031010010" format
-          const prefix = geoidStr.slice(0, 5); // "17031"
-          const tractPart = geoidStr.slice(5); // "001001"
-          const tract = tractPart.slice(0, 4); // "0010"
-          const block = tractPart.slice(4); // "01"
-          censusGeoid = prefix + tract + block + '0'; // "17031001010"
-        } else if (geoidStr.length === 9 && geoidStr.startsWith('17031')) {
-          censusGeoid = geoidStr.slice(0, 5) + geoidStr.slice(5).padStart(6, '0');
+      // Try multiple GEOID formats to match authentic 2020 Census demographic data
+      let demographics = null;
+      if (censusGeoid) {
+        // Try direct match first
+        demographics = censusDemographics[censusGeoid];
+        
+        // Convert 9-digit GEOID to 11-digit format for Census demographic data matching
+        if (!demographics && censusGeoid.length === 9 && censusGeoid.startsWith('17031')) {
+          // Convert "170311001" to "17031010010" format
+          const prefix = censusGeoid.slice(0, 5); // "17031"
+          const tractPart = censusGeoid.slice(5, 9); // "1001" 
+          
+          // Add leading zero and trailing zero: "17031010010"
+          const convertedGeoid = prefix + '0' + tractPart + '0';
+          demographics = censusDemographics[convertedGeoid];
+          
+          // Try alternative: "17031100100" (move digits differently)
+          if (!demographics) {
+            const alt2 = prefix + tractPart.padStart(4, '0') + '00';
+            demographics = censusDemographics[alt2];
+          }
+        }
+        
+        // Handle 11-digit format variations
+        if (!demographics && censusGeoid.length === 11 && censusGeoid.startsWith('17031')) {
+          // Try with different padding patterns
+          const prefix = censusGeoid.slice(0, 5);
+          const tractPart = censusGeoid.slice(5);
+          
+          const variations = [
+            censusGeoid, // original
+            prefix + tractPart.padStart(6, '0'), // pad with zeros
+            prefix + '0' + tractPart.slice(0, 4) + '0' + tractPart.slice(4) // insert zeros
+          ];
+          
+          for (const variation of variations) {
+            if (censusDemographics[variation]) {
+              demographics = censusDemographics[variation];
+              break;
+            }
+          }
         }
       }
-      
-      // Get authentic 2020 Census demographic data for this tract
-      const demographics = censusGeoid && censusDemographics[censusGeoid] ? 
-        censusDemographics[censusGeoid] : null;
       
       // Use authentic 2020 Census population data from demographics or fallback to API data
       const population = demographics ? 
