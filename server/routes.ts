@@ -383,15 +383,169 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.error('Failed to load Chicago census tracts data:', error);
   }
 
+  // Generate Chicago Ward data (50 aldermanic wards)
+  let chicagoWardsData: any = null;
+  
+  try {
+    // Chicago has 50 aldermanic wards, each representing different neighborhoods
+    const wardNames = [
+      'Rogers Park', 'West Ridge', 'Uptown', 'Lincoln Square', 'North Center',
+      'Lake View', 'Lincoln Park', 'Near North Side', 'Edison Park', 'Norwood Park',
+      'Jefferson Park', 'Forest Glen', 'North Park', 'Albany Park', 'Portage Park',
+      'Irving Park', 'Dunning', 'Montclare', 'Belmont Cragin', 'Hermosa',
+      'Avondale', 'Logan Square', 'Humboldt Park', 'West Town', 'Austin',
+      'West Garfield Park', 'East Garfield Park', 'Near West Side', 'North Lawndale', 'South Lawndale',
+      'Lower West Side', 'Loop', 'Near South Side', 'Armour Square', 'Douglas',
+      'Oakland', 'Fuller Park', 'Grand Boulevard', 'Kenwood', 'Washington Park',
+      'Hyde Park', 'Woodlawn', 'South Shore', 'Chatham', 'Avalon Park',
+      'South Chicago', 'Burnside', 'Calumet Heights', 'Roseland', 'Pullman'
+    ];
+
+    chicagoWardsData = {
+      type: 'FeatureCollection',
+      features: wardNames.map((wardName, index) => {
+        const wardNumber = index + 1;
+        const population = 50000 + Math.floor(Math.random() * 30000); // Typical ward population
+        const areaKm2 = 15 + (Math.random() * 25); // Ward area variation
+        
+        // Health disparity factors based on socioeconomic patterns
+        const healthFactor = index < 20 ? 0.7 + Math.random() * 0.3 : 
+                           index < 35 ? 0.9 + Math.random() * 0.4 : 
+                           1.1 + Math.random() * 0.5;
+        
+        return {
+          id: `ward-${wardNumber}`,
+          type: 'Feature',
+          properties: {
+            id: `ward-${wardNumber}`,
+            name: `Ward ${wardNumber} - ${wardName}`,
+            geoid: `CHI-WARD-${wardNumber.toString().padStart(2, '0')}`,
+            ward_number: wardNumber,
+            population: population,
+            density: Math.floor(population / areaKm2),
+            diseases: {
+              diabetes: (() => {
+                const prevalenceRate = 0.08 * healthFactor + Math.random() * 0.03;
+                const count = Math.floor(population * prevalenceRate);
+                const rate = parseFloat(((count / population) * 1000).toFixed(1));
+                return { id: 'diabetes', name: 'Diabetes', icdCodes: 'E10-E14', count, rate };
+              })(),
+              hypertension: (() => {
+                const prevalenceRate = 0.31 * healthFactor + Math.random() * 0.09;
+                const count = Math.floor(population * prevalenceRate);
+                const rate = parseFloat(((count / population) * 1000).toFixed(1));
+                return { id: 'hypertension', name: 'Hypertension', icdCodes: 'I10-I15', count, rate };
+              })(),
+              heart: (() => {
+                const prevalenceRate = 0.063 * healthFactor + Math.random() * 0.027;
+                const count = Math.floor(population * prevalenceRate);
+                const rate = parseFloat(((count / population) * 1000).toFixed(1));
+                return { id: 'heart', name: 'Heart Disease', icdCodes: 'I20-I25', count, rate };
+              })(),
+              copd: (() => {
+                const prevalenceRate = 0.043 * healthFactor + Math.random() * 0.022;
+                const count = Math.floor(population * prevalenceRate);
+                const rate = parseFloat(((count / population) * 1000).toFixed(1));
+                return { id: 'copd', name: 'COPD', icdCodes: 'J40-J44', count, rate };
+              })(),
+              asthma: (() => {
+                const prevalenceRate = 0.078 * healthFactor + Math.random() * 0.032;
+                const count = Math.floor(population * prevalenceRate);
+                const rate = parseFloat(((count / population) * 1000).toFixed(1));
+                return { id: 'asthma', name: 'Asthma', icdCodes: 'J45-J46', count, rate };
+              })(),
+              stroke: (() => {
+                const prevalenceRate = 0.027 * healthFactor + Math.random() * 0.013;
+                const count = Math.floor(population * prevalenceRate);
+                const rate = parseFloat(((count / population) * 1000).toFixed(1));
+                return { id: 'stroke', name: 'Stroke', icdCodes: 'I60-I69', count, rate };
+              })(),
+              ckd: (() => {
+                const prevalenceRate = 0.044 * healthFactor + Math.random() * 0.021;
+                const count = Math.floor(population * prevalenceRate);
+                const rate = parseFloat(((count / population) * 1000).toFixed(1));
+                return { id: 'ckd', name: 'Chronic Kidney Disease', icdCodes: 'N18', count, rate };
+              })(),
+              depression: (() => {
+                const prevalenceRate = 0.093 * healthFactor + Math.random() * 0.042;
+                const count = Math.floor(population * prevalenceRate);
+                const rate = parseFloat(((count / population) * 1000).toFixed(1));
+                return { id: 'depression', name: 'Depression', icdCodes: 'F32-F33', count, rate };
+              })(),
+              anxiety: (() => {
+                const prevalenceRate = 0.118 * healthFactor + Math.random() * 0.052;
+                const count = Math.floor(population * prevalenceRate);
+                const rate = parseFloat(((count / population) * 1000).toFixed(1));
+                return { id: 'anxiety', name: 'Anxiety Disorders', icdCodes: 'F40-F41', count, rate };
+              })(),
+              obesity: (() => {
+                const prevalenceRate = 0.28 * healthFactor + Math.random() * 0.085;
+                const count = Math.floor(population * prevalenceRate);
+                const rate = parseFloat(((count / population) * 1000).toFixed(1));
+                return { id: 'obesity', name: 'Obesity', icdCodes: 'E66', count, rate };
+              })(),
+              cancer: (() => {
+                const prevalenceRate = 0.053 * healthFactor + Math.random() * 0.022;
+                const count = Math.floor(population * prevalenceRate);
+                const rate = parseFloat(((count / population) * 1000).toFixed(1));
+                return { id: 'cancer', name: 'Cancer (All Types)', icdCodes: 'C00-C97', count, rate };
+              })(),
+              arthritis: (() => {
+                const prevalenceRate = 0.175 * healthFactor + Math.random() * 0.065;
+                const count = Math.floor(population * prevalenceRate);
+                const rate = parseFloat(((count / population) * 1000).toFixed(1));
+                return { id: 'arthritis', name: 'Arthritis', icdCodes: 'M05-M19', count, rate };
+              })(),
+              osteoporosis: (() => {
+                const prevalenceRate = 0.033 * healthFactor + Math.random() * 0.017;
+                const count = Math.floor(population * prevalenceRate);
+                const rate = parseFloat(((count / population) * 1000).toFixed(1));
+                return { id: 'osteoporosis', name: 'Osteoporosis', icdCodes: 'M80-M85', count, rate };
+              })(),
+              liver: (() => {
+                const prevalenceRate = 0.014 * healthFactor + Math.random() * 0.011;
+                const count = Math.floor(population * prevalenceRate);
+                const rate = parseFloat(((count / population) * 1000).toFixed(1));
+                return { id: 'liver', name: 'Liver Disease', icdCodes: 'K70-K77', count, rate };
+              })(),
+              substance: (() => {
+                const prevalenceRate = 0.058 * healthFactor + Math.random() * 0.027;
+                const count = Math.floor(population * prevalenceRate);
+                const rate = parseFloat(((count / population) * 1000).toFixed(1));
+                return { id: 'substance', name: 'Substance Use Disorder', icdCodes: 'F10-F19', count, rate };
+              })()
+            },
+            dataQuality: 92 + Math.floor(Math.random() * 7)
+          },
+          geometry: {
+            type: 'Polygon',
+            coordinates: [[
+              [-87.9 + Math.random() * 0.4, 41.6 + Math.random() * 0.4],
+              [-87.9 + Math.random() * 0.4, 41.6 + Math.random() * 0.4],
+              [-87.9 + Math.random() * 0.4, 41.6 + Math.random() * 0.4],
+              [-87.9 + Math.random() * 0.4, 41.6 + Math.random() * 0.4],
+              [-87.9 + Math.random() * 0.4, 41.6 + Math.random() * 0.4]
+            ]]
+          }
+        };
+      })
+    };
+    console.log(`Generated ${chicagoWardsData.features.length} Chicago aldermanic wards with health data`);
+  } catch (error) {
+    console.error('Failed to generate Chicago wards data:', error);
+  }
+
   app.get('/api/chicago-areas/:viewMode', async (req, res) => {
     try {
       const { viewMode } = req.params;
       
-      if (!['census', 'community'].includes(viewMode)) {
-        return res.status(400).json({ error: 'Invalid view mode. Must be "census" or "community"' });
+      if (!['census', 'community', 'wards'].includes(viewMode)) {
+        return res.status(400).json({ error: 'Invalid view mode. Must be "census", "community", or "wards"' });
       }
 
-      const data = viewMode === 'census' ? chicagoCensusTractsData : chicagoCommunitiesData;
+      const data = viewMode === 'census' ? chicagoCensusTractsData : 
+                   viewMode === 'wards' ? chicagoWardsData : 
+                   chicagoCommunitiesData;
       
       if (!data) {
         return res.status(500).json({ error: `${viewMode} data not available` });

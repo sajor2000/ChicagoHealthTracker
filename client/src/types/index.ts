@@ -32,7 +32,7 @@ export interface ChicagoGeoData {
   features: MapFeature[];
 }
 
-export type ViewMode = 'census' | 'community';
+export type ViewMode = 'census' | 'community' | 'wards';
 export type DiseaseType = 'diabetes' | 'hypertension' | 'heart' | 'copd' | 'asthma' | 'stroke' | 'ckd' | 'depression' | 'anxiety' | 'obesity' | 'cancer' | 'arthritis' | 'osteoporosis' | 'liver' | 'substance';
 export type VisualizationMode = 'count' | 'rate';
 

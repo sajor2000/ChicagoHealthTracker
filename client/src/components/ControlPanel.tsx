@@ -1,5 +1,5 @@
 import { ViewMode, DiseaseType, VisualizationMode } from '@/types';
-import { MapPin, Home, HelpCircle, ChevronLeft, ChevronRight } from 'lucide-react';
+import { MapPin, Home, Building2, HelpCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
@@ -153,6 +153,30 @@ export default function ControlPanel({
                     style={{ color: 'inherit' }}
                   >
                     77 neighborhoods
+                  </div>
+                </div>
+              </button>
+
+              <button
+                className={`flex items-center gap-3 p-4 rounded-lg border transition-all duration-200 text-left ${
+                  activeView === 'wards' 
+                    ? 'text-white border-[var(--rush-primary)]' 
+                    : 'border-[var(--border-default)] hover:border-[var(--border-strong)]'
+                }`}
+                style={{
+                  background: activeView === 'wards' ? 'var(--rush-primary)' : 'var(--bg-overlay)',
+                  color: activeView === 'wards' ? 'white' : 'var(--text-secondary)'
+                }}
+                onClick={() => onViewChange('wards')}
+              >
+                <HelpCircle className="text-lg" />
+                <div className="flex-1">
+                  <div className="text-sm">Alderman Wards</div>
+                  <div 
+                    className="text-xs opacity-80 ml-auto"
+                    style={{ color: 'inherit' }}
+                  >
+                    50 political districts
                   </div>
                 </div>
               </button>
