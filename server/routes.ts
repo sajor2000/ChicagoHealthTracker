@@ -12,15 +12,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   let chicagoCommunitiesData: any = null;
 
   try {
-    // Use fallback data structure if file doesn't exist
-    let rawData;
-    try {
-      const dataPath = path.join(__dirname, 'data', 'chicago-community-areas.json');
-      rawData = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
-    } catch (fileError) {
-      console.log('Using fallback community areas data structure');
-      rawData = { features: [] };
-    }
+    const dataPath = path.join(__dirname, 'data', 'chicago-community-areas.json');
+    const rawData = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+    console.log(`Loaded authentic Chicago community areas data: ${rawData.features?.length || 0} features`);
     
     // 2020 Census population data for Chicago's 77 community areas
     const census2020Population: Record<string, number> = {
@@ -265,20 +259,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   let chicagoCensusTractsData: any = null;
 
   try {
-    // Use fallback data structure if files don't exist
-    let combinedFeatures: any[] = [];
-    try {
-      const tractPath1 = path.join(__dirname, 'data', 'tl_2023_17_tract1.json');
-      const tractPath2 = path.join(__dirname, 'data', 'tl_2023_17_tract2.json');
-      
-      const tractData1 = JSON.parse(fs.readFileSync(tractPath1, 'utf8'));
-      const tractData2 = JSON.parse(fs.readFileSync(tractPath2, 'utf8'));
-      
-      combinedFeatures = [...tractData1.features, ...tractData2.features];
-    } catch (fileError) {
-      console.log('Using fallback census tracts data structure');
-      combinedFeatures = [];
-    }
+    const tractPath = path.join(__dirname, 'data', 'chicago-census-tracts.json');
+    const tractData = JSON.parse(fs.readFileSync(tractPath, 'utf8'));
+    const combinedFeatures = tractData.features || [];
+    console.log(`Loaded authentic Chicago census tracts data: ${combinedFeatures.length} features`);
     
     chicagoCensusTractsData = {
       type: 'FeatureCollection',
