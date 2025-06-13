@@ -20,13 +20,13 @@ export default function Header({ className = '' }: HeaderProps) {
               className="text-2xl font-bold mb-1"
               style={{ color: 'var(--text-primary)' }}
             >
-              This Conscience Framework
+              Chicago Chronic Disease Data Commons
             </h1>
             <p 
               className="text-base font-medium"
               style={{ color: 'var(--rush-primary)' }}
             >
-              CONSCIENCE – CONnecting SCIence – ENgaging Chicago for Equity
+              Comprehensive Health Disparity Analysis & Visualization
             </p>
           </div>
           
