@@ -383,30 +383,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.error('Failed to load Chicago census tracts data:', error);
   }
 
-  // Generate Chicago Ward data (50 aldermanic wards)
+  // Load authentic Chicago Ward boundaries and add health data
   let chicagoWardsData: any = null;
   
   try {
-    // Chicago has 50 aldermanic wards, each representing different neighborhoods
-    const wardNames = [
-      'Rogers Park', 'West Ridge', 'Uptown', 'Lincoln Square', 'North Center',
-      'Lake View', 'Lincoln Park', 'Near North Side', 'Edison Park', 'Norwood Park',
-      'Jefferson Park', 'Forest Glen', 'North Park', 'Albany Park', 'Portage Park',
-      'Irving Park', 'Dunning', 'Montclare', 'Belmont Cragin', 'Hermosa',
-      'Avondale', 'Logan Square', 'Humboldt Park', 'West Town', 'Austin',
-      'West Garfield Park', 'East Garfield Park', 'Near West Side', 'North Lawndale', 'South Lawndale',
-      'Lower West Side', 'Loop', 'Near South Side', 'Armour Square', 'Douglas',
-      'Oakland', 'Fuller Park', 'Grand Boulevard', 'Kenwood', 'Washington Park',
-      'Hyde Park', 'Woodlawn', 'South Shore', 'Chatham', 'Avalon Park',
-      'South Chicago', 'Burnside', 'Calumet Heights', 'Roseland', 'Pullman'
-    ];
-
+    // Load authentic ward boundaries from converted GeoJSON
+    const wardsPath = path.join(__dirname, 'data/chicago-wards-authentic.json');
+    const wardsGeoJSON = JSON.parse(fs.readFileSync(wardsPath, 'utf8'));
+    
     chicagoWardsData = {
       type: 'FeatureCollection',
-      features: wardNames.map((wardName, index) => {
-        const wardNumber = index + 1;
-        const population = 50000 + Math.floor(Math.random() * 30000); // Typical ward population
-        const areaKm2 = 15 + (Math.random() * 25); // Ward area variation
+      features: wardsGeoJSON.features.map((wardFeature: any) => {
+        const wardNumber = parseInt(wardFeature.properties.ward);
+        const population = 45000 + Math.floor(Math.random() * 35000); // Realistic ward population
+        const areaKm2 = (wardFeature.properties.shape_area / 1000000) || 20; // Convert to km²
         
         // Health disparity factors based on socioeconomic patterns
         const healthFactor = index < 20 ? 0.7 + Math.random() * 0.3 : 
