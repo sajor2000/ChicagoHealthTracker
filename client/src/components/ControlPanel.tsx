@@ -115,115 +115,8 @@ export default function ControlPanel({
           </div>
         </div>
       ) : (
-        // Expanded view - full controls
+        // Expanded view - display options only
         <>
-          {/* Disease Filter */}
-          <div className="mb-6">
-            <label 
-              className="block text-xs uppercase tracking-wider font-medium mb-3"
-              style={{ 
-                color: 'var(--text-tertiary)',
-                letterSpacing: '0.08em'
-              }}
-            >
-              Disease Category
-            </label>
-            <Select 
-              value={selectedDisease} 
-              onValueChange={onDiseaseChange}
-            >
-              <SelectTrigger 
-                className="h-10 text-sm border-[var(--border-default)] focus:border-[var(--rush-primary)] focus:ring-[var(--focus-ring)] cursor-pointer"
-                style={{
-                  background: 'var(--bg-overlay)',
-                  color: 'var(--text-secondary)',
-                  pointerEvents: 'auto'
-                }}
-              >
-                <SelectValue placeholder="Select disease category" />
-              </SelectTrigger>
-              <SelectContent 
-                className="z-[9999]"
-                style={{
-                  background: 'var(--bg-overlay)',
-                  border: '1px solid var(--border-default)',
-                  color: 'var(--text-secondary)',
-                  zIndex: 9999
-                }}
-                sideOffset={5}
-              >
-                <SelectItem value="diabetes">Diabetes (Type 1 & 2)</SelectItem>
-                <SelectItem value="hypertension">Hypertension</SelectItem>
-                <SelectItem value="heart">Heart Disease</SelectItem>
-                <SelectItem value="copd">COPD</SelectItem>
-                <SelectItem value="asthma">Asthma</SelectItem>
-                <SelectItem value="stroke">Stroke</SelectItem>
-                <SelectItem value="ckd">Chronic Kidney Disease</SelectItem>
-                <SelectItem value="depression">Depression</SelectItem>
-                <SelectItem value="anxiety">Anxiety Disorders</SelectItem>
-                <SelectItem value="obesity">Obesity</SelectItem>
-                <SelectItem value="cancer">Cancer (All Types)</SelectItem>
-                <SelectItem value="arthritis">Arthritis</SelectItem>
-                <SelectItem value="osteoporosis">Osteoporosis</SelectItem>
-                <SelectItem value="liver">Liver Disease</SelectItem>
-                <SelectItem value="substance">Substance Use Disorder</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Visualization Mode */}
-          <div className="mb-6">
-            <label 
-              className="block text-xs uppercase tracking-wider font-medium mb-3"
-              style={{ 
-                color: 'var(--text-tertiary)',
-                letterSpacing: '0.08em'
-              }}
-            >
-              Visualization Mode
-            </label>
-            <RadioGroup 
-              value={visualizationMode} 
-              onValueChange={onVisualizationModeChange}
-              className="flex flex-col gap-3"
-            >
-              <div className="flex items-center space-x-3">
-                <RadioGroupItem 
-                  value="count" 
-                  id="count"
-                  style={{
-                    borderColor: 'var(--border-default)',
-                    backgroundColor: 'var(--bg-overlay)'
-                  }}
-                />
-                <Label 
-                  htmlFor="count" 
-                  className="text-sm cursor-pointer"
-                  style={{ color: 'var(--text-secondary)' }}
-                >
-                  Patient Count
-                </Label>
-              </div>
-              <div className="flex items-center space-x-3">
-                <RadioGroupItem 
-                  value="rate" 
-                  id="rate"
-                  style={{
-                    borderColor: 'var(--border-default)',
-                    backgroundColor: 'var(--bg-overlay)'
-                  }}
-                />
-                <Label 
-                  htmlFor="rate" 
-                  className="text-sm cursor-pointer"
-                  style={{ color: 'var(--text-secondary)' }}
-                >
-                  Age-Adjusted Rate
-                </Label>
-              </div>
-            </RadioGroup>
-          </div>
-
           {/* Display Options */}
           <div className="mb-6">
             <label 
@@ -235,23 +128,56 @@ export default function ControlPanel({
             >
               Display Options
             </label>
-            <div className="flex items-center space-x-3">
-              <Checkbox
-                id="show-suppressed"
-                checked={showSuppressed}
-                onCheckedChange={onShowSuppressedChange}
-                style={{
-                  borderColor: 'var(--border-default)',
-                  backgroundColor: 'var(--bg-overlay)'
-                }}
-              />
-              <Label 
-                htmlFor="show-suppressed" 
-                className="text-sm cursor-pointer"
-                style={{ color: 'var(--text-secondary)' }}
-              >
-                Show Suppressed Data
-              </Label>
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center space-x-3">
+                <Checkbox
+                  id="show-suppressed"
+                  checked={showSuppressed}
+                  onCheckedChange={onShowSuppressedChange}
+                  style={{
+                    borderColor: 'var(--border-default)',
+                    backgroundColor: 'var(--bg-overlay)'
+                  }}
+                />
+                <Label 
+                  htmlFor="show-suppressed" 
+                  className="text-sm cursor-pointer"
+                  style={{ color: 'var(--text-secondary)' }}
+                >
+                  Show Suppressed Data
+                </Label>
+              </div>
+            </div>
+          </div>
+
+          {/* Data Information */}
+          <div className="mb-6">
+            <label 
+              className="block text-xs uppercase tracking-wider font-medium mb-3"
+              style={{ 
+                color: 'var(--text-tertiary)',
+                letterSpacing: '0.08em'
+              }}
+            >
+              Data Sources
+            </label>
+            <div className="text-xs space-y-2" style={{ color: 'var(--text-tertiary)' }}>
+              <div>
+                <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>Population:</span> 
+                <span className="ml-1">2020 Census API</span>
+              </div>
+              <div>
+                <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>Demographics:</span> 
+                <span className="ml-1">2020 Census Bureau</span>
+              </div>
+              <div>
+                <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>Boundaries:</span> 
+                <span className="ml-1">Authentic Chicago GIS</span>
+              </div>
+              <div>
+                <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>Health Data:</span> 
+                <span className="ml-1">Modeled Prevalence</span>
+              </div>
             </div>
           </div>
         </>

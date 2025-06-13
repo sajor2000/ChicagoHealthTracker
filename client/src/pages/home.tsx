@@ -4,7 +4,7 @@ import MapContainer from '@/components/MapContainer';
 import ControlPanel from '@/components/ControlPanel';
 import InfoPanel from '@/components/InfoPanel';
 import Legend from '@/components/Legend';
-import GeographicViewToggle from '@/components/GeographicViewToggle';
+import WaterSideControls from '@/components/WaterSideControls';
 import { AppState, AreaData, ViewMode, DiseaseType, VisualizationMode } from '@/types';
 
 export default function Home() {
@@ -83,9 +83,13 @@ export default function Home() {
         onToggleCollapse={handleToggleControlPanelCollapse}
       />
       
-      <GeographicViewToggle
+      <WaterSideControls
         activeView={appState.activeView}
+        selectedDisease={appState.selectedDisease}
+        visualizationMode={appState.visualizationMode}
         onViewChange={handleViewChange}
+        onDiseaseChange={handleDiseaseChange}
+        onVisualizationModeChange={handleVisualizationModeChange}
       />
       
       <InfoPanel
