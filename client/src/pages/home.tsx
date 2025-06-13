@@ -4,6 +4,7 @@ import MapContainer from '@/components/MapContainer';
 import ControlPanel from '@/components/ControlPanel';
 import InfoPanel from '@/components/InfoPanel';
 import Legend from '@/components/Legend';
+import GeographicViewToggle from '@/components/GeographicViewToggle';
 import { AppState, AreaData, ViewMode, DiseaseType, VisualizationMode } from '@/types';
 
 export default function Home() {
@@ -80,6 +81,11 @@ export default function Home() {
         onVisualizationModeChange={handleVisualizationModeChange}
         onShowSuppressedChange={handleShowSuppressedChange}
         onToggleCollapse={handleToggleControlPanelCollapse}
+      />
+      
+      <GeographicViewToggle
+        activeView={appState.activeView}
+        onViewChange={handleViewChange}
       />
       
       <InfoPanel
