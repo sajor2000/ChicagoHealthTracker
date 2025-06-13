@@ -399,8 +399,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const areaKm2 = (wardFeature.properties.shape_area / 1000000) || 20; // Convert to km²
         
         // Health disparity factors based on socioeconomic patterns
-        const healthFactor = index < 20 ? 0.7 + Math.random() * 0.3 : 
-                           index < 35 ? 0.9 + Math.random() * 0.4 : 
+        const healthFactor = wardNumber <= 20 ? 0.7 + Math.random() * 0.3 : 
+                           wardNumber <= 35 ? 0.9 + Math.random() * 0.4 : 
                            1.1 + Math.random() * 0.5;
         
         return {
@@ -408,7 +408,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           type: 'Feature',
           properties: {
             id: `ward-${wardNumber}`,
-            name: `Ward ${wardNumber} - ${wardName}`,
+            name: `Ward ${wardNumber}`,
             geoid: `CHI-WARD-${wardNumber.toString().padStart(2, '0')}`,
             ward_number: wardNumber,
             population: population,
@@ -507,38 +507,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             },
             dataQuality: 92 + Math.floor(Math.random() * 7)
           },
-          geometry: (() => {
-            // Create realistic ward boundaries within Chicago bounds
-            const chicagoBounds = {
-              minLat: 41.644, maxLat: 42.023,
-              minLng: -87.94, maxLng: -87.524
-            };
-            
-            // Arrange wards in a 10x5 grid pattern across Chicago
-            const wardRow = Math.floor(index / 10);
-            const wardCol = index % 10;
-            
-            const latStep = (chicagoBounds.maxLat - chicagoBounds.minLat) / 5;
-            const lngStep = (chicagoBounds.maxLng - chicagoBounds.minLng) / 10;
-            
-            const startLat = chicagoBounds.minLat + wardRow * latStep;
-            const startLng = chicagoBounds.minLng + wardCol * lngStep;
-            
-            return {
-              type: 'Polygon',
-              coordinates: [[
-                [startLng, startLat],
-                [startLng + lngStep * 0.9, startLat],
-                [startLng + lngStep * 0.9, startLat + latStep * 0.9],
-                [startLng, startLat + latStep * 0.9],
-                [startLng, startLat]
-              ]]
-            };
-          })()
+          geometry: wardFeature.geometry
         };
       })
     };
-    console.log(`Generated ${chicagoWardsData.features.length} Chicago aldermanic wards with health data`);
+    console.log(`Loaded authentic Chicago alderman ward boundaries: ${chicagoWardsData.features.length} features`);
   } catch (error) {
     console.error('Failed to generate Chicago wards data:', error);
   }
