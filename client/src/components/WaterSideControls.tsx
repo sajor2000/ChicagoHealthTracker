@@ -1,5 +1,5 @@
 import { ViewMode, DiseaseType, VisualizationMode } from '@/types';
-import { MapPin, Home, Building2, Activity, BarChart3 } from 'lucide-react';
+import { MapPin, Home, Building2, Activity, BarChart3, ChevronDown } from 'lucide-react';
 
 interface WaterSideControlsProps {
   activeView: ViewMode;
@@ -140,7 +140,7 @@ export default function WaterSideControls({
         </div>
       </div>
 
-      {/* Disease Category Toggle */}
+      {/* Disease Category Dropdown */}
       <div 
         className="backdrop-blur-[12px] rounded-lg border"
         style={{
@@ -161,41 +161,27 @@ export default function WaterSideControls({
           </span>
         </div>
         
-        <div className="p-2 max-h-64 overflow-y-auto custom-scrollbar">
-          <div className="flex flex-col gap-1">
+        <div className="p-2">
+          <select
+            value={selectedDisease}
+            onChange={(e) => onDiseaseChange(e.target.value as DiseaseType)}
+            className="w-full px-3 py-2 text-xs rounded border transition-all duration-200"
+            style={{
+              background: 'var(--bg-overlay)',
+              borderColor: 'var(--border-default)',
+              color: 'var(--text-secondary)'
+            }}
+          >
             {diseaseOptions.map((disease) => (
-              <button
-                key={disease.value}
-                className={`flex items-center gap-2 px-3 py-2 rounded text-xs transition-all duration-200 text-left ${
-                  selectedDisease === disease.value ? 'text-white' : 'hover:bg-[var(--bg-hover)]'
-                }`}
-                style={{
-                  background: selectedDisease === disease.value ? 'var(--rush-primary)' : 'transparent',
-                  color: selectedDisease === disease.value ? 'white' : 'var(--text-secondary)'
-                }}
-                onClick={() => onDiseaseChange(disease.value as DiseaseType)}
-                onMouseEnter={(e) => {
-                  if (selectedDisease !== disease.value) {
-                    e.currentTarget.style.background = 'var(--bg-hover)';
-                    e.currentTarget.style.color = 'var(--text-primary)';
-                  }
-                }}
-                onMouseLeave={(e) => {
-                  if (selectedDisease !== disease.value) {
-                    e.currentTarget.style.background = 'transparent';
-                    e.currentTarget.style.color = 'var(--text-secondary)';
-                  }
-                }}
-              >
-                <Activity className="w-3 h-3 flex-shrink-0" />
-                <span className="font-medium">{disease.label}</span>
-              </button>
+              <option key={disease.value} value={disease.value}>
+                {disease.label}
+              </option>
             ))}
-          </div>
+          </select>
         </div>
       </div>
 
-      {/* Visualization Mode Toggle */}
+      {/* Rate Calculation Method */}
       <div 
         className="backdrop-blur-[12px] rounded-lg border"
         style={{
@@ -212,7 +198,7 @@ export default function WaterSideControls({
               letterSpacing: '0.06em'
             }}
           >
-            Visualization
+            Rate Calculation
           </span>
         </div>
         
@@ -240,7 +226,10 @@ export default function WaterSideControls({
             }}
           >
             <BarChart3 className="w-3 h-3 flex-shrink-0" />
-            <span className="font-medium">Patient Count</span>
+            <div className="flex flex-col items-start">
+              <span className="font-medium">Total Count</span>
+              <span className="text-xs opacity-75">Raw patient numbers</span>
+            </div>
           </button>
           
           <button
@@ -266,7 +255,39 @@ export default function WaterSideControls({
             }}
           >
             <BarChart3 className="w-3 h-3 flex-shrink-0" />
-            <span className="font-medium">Age-Adjusted Rate</span>
+            <div className="flex flex-col items-start">
+              <span className="font-medium">Population-Adjusted Rate</span>
+              <span className="text-xs opacity-75">Per 1,000 residents (2020 Census)</span>
+            </div>
+          </button>
+          
+          <button
+            className={`flex items-center gap-2 px-3 py-2 rounded text-xs transition-all duration-200 text-left ${
+              visualizationMode === 'age_adjusted' ? 'text-white' : 'hover:bg-[var(--bg-hover)]'
+            }`}
+            style={{
+              background: visualizationMode === 'age_adjusted' ? 'var(--rush-primary)' : 'transparent',
+              color: visualizationMode === 'age_adjusted' ? 'white' : 'var(--text-secondary)'
+            }}
+            onClick={() => onVisualizationModeChange('age_adjusted')}
+            onMouseEnter={(e) => {
+              if (visualizationMode !== 'age_adjusted') {
+                e.currentTarget.style.background = 'var(--bg-hover)';
+                e.currentTarget.style.color = 'var(--text-primary)';
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (visualizationMode !== 'age_adjusted') {
+                e.currentTarget.style.background = 'transparent';
+                e.currentTarget.style.color = 'var(--text-secondary)';
+              }
+            }}
+          >
+            <BarChart3 className="w-3 h-3 flex-shrink-0" />
+            <div className="flex flex-col items-start">
+              <span className="font-medium">Age-Adjusted Density</span>
+              <span className="text-xs opacity-75">Standardized by age distribution</span>
+            </div>
           </button>
         </div>
       </div>
