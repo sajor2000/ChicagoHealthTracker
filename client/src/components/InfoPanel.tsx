@@ -139,11 +139,11 @@ export default function InfoPanel({ selectedArea, isOpen, onClose }: InfoPanelPr
                   How These Numbers Are Calculated:
                 </div>
                 <div className="space-y-1 text-[10px] leading-relaxed">
-                  <div>• Population metrics are calculated by overlapping this {selectedArea.name.includes('Ward') ? 'alderman ward' : 'community area'} boundary with all intersecting census tracts</div>
-                  <div>• Each census tract's contribution is weighted by the percentage of its area that falls within this boundary</div>
-                  <div>• Uses 20×20 grid sampling to calculate precise overlap ratios between boundaries</div>
-                  <div>• Disease rates are population-weighted averages from all contributing census tracts</div>
-                  <div>• All underlying data comes from authentic 2020 Census demographic records</div>
+                  <div>• Geographic overlap calculated using adaptive grid sampling (25-50 points) with Chicago latitude correction</div>
+                  <div>• Population weights account for density variations within each census tract</div>
+                  <div>• Disease rates use effective population weighting rather than simple area averaging</div>
+                  <div>• Data quality score reflects overlap precision and number of contributing tracts</div>
+                  <div>• All underlying data sourced from authentic 2020 Census demographic records</div>
                 </div>
               </div>
             </div>

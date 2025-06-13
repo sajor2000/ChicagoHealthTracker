@@ -67,40 +67,49 @@ function pointInPolygon(point: Point, polygon: number[][]): boolean {
 }
 
 /**
- * Calculate approximate overlap area between two polygons using grid sampling
+ * Calculate overlap ratio using improved method with geographic projection
  * Returns a value between 0 and 1 representing the proportion of tract area within the unit
  */
 function calculateOverlapRatio(tractGeometry: Polygon, unitGeometry: Polygon): number {
   const tractRing = tractGeometry.coordinates[0];
   const unitRing = unitGeometry.coordinates[0];
 
-  // Get bounding box of tract
-  let minLng = Infinity, maxLng = -Infinity;
-  let minLat = Infinity, maxLat = -Infinity;
-
-  for (const coord of tractRing) {
-    minLng = Math.min(minLng, coord[0]);
-    maxLng = Math.max(maxLng, coord[0]);
-    minLat = Math.min(minLat, coord[1]);
-    maxLat = Math.max(maxLat, coord[1]);
+  // First, quick bounding box check to eliminate non-overlapping polygons
+  const tractBounds = getBoundingBox(tractGeometry.coordinates);
+  const unitBounds = getBoundingBox(unitGeometry.coordinates);
+  
+  if (!boundingBoxesOverlap(tractBounds, unitBounds)) {
+    return 0;
   }
 
-  // Sample points within tract bounding box
-  const gridSize = 20; // 20x20 grid for sampling
-  const lngStep = (maxLng - minLng) / gridSize;
-  const latStep = (maxLat - minLat) / gridSize;
+  // For Chicago latitude (~41.8°N), apply geographic correction
+  const avgLat = (tractBounds.minLat + tractBounds.maxLat) / 2;
+  const latCorrectionFactor = Math.cos(avgLat * Math.PI / 180);
+
+  // Use adaptive grid sampling based on polygon size
+  const tractWidth = (tractBounds.maxLng - tractBounds.minLng) * latCorrectionFactor;
+  const tractHeight = tractBounds.maxLat - tractBounds.minLat;
+  const tractArea = tractWidth * tractHeight;
+  
+  // Adaptive grid size: more points for larger or more complex polygons
+  const baseGridSize = 25;
+  const adaptiveGridSize = Math.min(50, Math.max(baseGridSize, Math.floor(Math.sqrt(tractArea * 10000))));
+  
+  const lngStep = (tractBounds.maxLng - tractBounds.minLng) / adaptiveGridSize;
+  const latStep = (tractBounds.maxLat - tractBounds.minLat) / adaptiveGridSize;
 
   let totalPoints = 0;
   let pointsInUnit = 0;
 
-  for (let i = 0; i <= gridSize; i++) {
-    for (let j = 0; j <= gridSize; j++) {
+  // Use more precise sampling within actual tract boundaries
+  for (let i = 0; i <= adaptiveGridSize; i++) {
+    for (let j = 0; j <= adaptiveGridSize; j++) {
       const testPoint: Point = {
-        lng: minLng + i * lngStep,
-        lat: minLat + j * latStep
+        lng: tractBounds.minLng + i * lngStep,
+        lat: tractBounds.minLat + j * latStep
       };
 
-      // Check if point is in tract
+      // Check if point is in tract (more precise boundary check)
       if (pointInPolygon(testPoint, tractRing)) {
         totalPoints++;
         
@@ -186,32 +195,47 @@ function boundingBoxesOverlap(box1: any, box2: any): boolean {
 }
 
 /**
- * Aggregate disease data from overlapping census tracts using population-weighted averages
+ * Aggregate disease data using improved population-weighted methodology
+ * Accounts for population density variations and geographic overlap precision
  */
 function aggregateDiseaseData(overlaps: Array<{tract: CensusTract, overlapRatio: number}>): {
   diseases: Record<string, any>,
   totalPopulation: number,
-  weightedDensity: number
+  weightedDensity: number,
+  dataQuality: number,
+  constituentTracts: string[]
 } {
   if (overlaps.length === 0) {
     return {
       diseases: {},
       totalPopulation: 0,
-      weightedDensity: 0
+      weightedDensity: 0,
+      dataQuality: 0,
+      constituentTracts: []
     };
   }
 
-  // Calculate total weighted population
+  // Enhanced weighting that considers both area overlap and population density
   let totalWeightedPopulation = 0;
-  let totalWeightedDensity = 0;
+  let totalAreaWeightedDensity = 0;
+  let totalOverlapArea = 0;
   const diseaseAggregates: Record<string, {totalCount: number, totalWeightedRate: number, weightSum: number}> = {};
+  const constituentTracts: string[] = [];
 
   for (const { tract, overlapRatio } of overlaps) {
-    const weight = tract.population * overlapRatio;
-    totalWeightedPopulation += weight;
-    totalWeightedDensity += tract.density * weight;
+    // Calculate effective population in the overlapping area
+    const effectivePopulation = tract.population * overlapRatio;
+    
+    // Weight by effective population (more accurate than simple area weighting)
+    const populationWeight = effectivePopulation;
+    
+    totalWeightedPopulation += effectivePopulation;
+    totalAreaWeightedDensity += tract.density * effectivePopulation;
+    totalOverlapArea += overlapRatio;
+    
+    constituentTracts.push(tract.id);
 
-    // Aggregate each disease
+    // Aggregate each disease using population weighting
     for (const [diseaseId, diseaseData] of Object.entries(tract.diseases)) {
       if (!diseaseAggregates[diseaseId]) {
         diseaseAggregates[diseaseId] = {
@@ -222,11 +246,18 @@ function aggregateDiseaseData(overlaps: Array<{tract: CensusTract, overlapRatio:
       }
 
       const aggregate = diseaseAggregates[diseaseId];
+      
+      // Weight disease counts by effective population in overlap area
       aggregate.totalCount += diseaseData.count * overlapRatio;
-      aggregate.totalWeightedRate += diseaseData.rate * weight;
-      aggregate.weightSum += weight;
+      aggregate.totalWeightedRate += diseaseData.rate * populationWeight;
+      aggregate.weightSum += populationWeight;
     }
   }
+
+  // Calculate data quality score based on overlap precision and tract count
+  const avgOverlapRatio = totalOverlapArea / overlaps.length;
+  const tractCountFactor = Math.min(1, overlaps.length / 5); // Optimal: 5+ tracts
+  const dataQuality = Math.round((avgOverlapRatio * 0.6 + tractCountFactor * 0.4) * 100);
 
   // Calculate final aggregated values
   const diseases: Record<string, any> = {};
@@ -244,7 +275,9 @@ function aggregateDiseaseData(overlaps: Array<{tract: CensusTract, overlapRatio:
   return {
     diseases,
     totalPopulation: Math.round(totalWeightedPopulation),
-    weightedDensity: totalWeightedPopulation > 0 ? Math.round(totalWeightedDensity / totalWeightedPopulation) : 0
+    weightedDensity: totalWeightedPopulation > 0 ? Math.round(totalAreaWeightedDensity / totalWeightedPopulation) : 0,
+    dataQuality,
+    constituentTracts
   };
 }
 

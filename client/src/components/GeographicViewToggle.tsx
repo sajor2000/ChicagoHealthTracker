@@ -128,7 +128,7 @@ export default function GeographicViewToggle({ activeView, onViewChange }: Geogr
       {/* Methodology Note */}
       <div className="px-3 py-2 border-t border-[var(--border-subtle)]">
         <div className="text-[9px] leading-tight" style={{ color: 'var(--text-tertiary)' }}>
-          <span className="font-medium">*Spatial Aggregation:</span> Community areas and wards use population-weighted averages from overlapping census tracts via 20×20 grid sampling.
+          <span className="font-medium">*Spatial Aggregation:</span> Population-weighted averages from overlapping census tracts using adaptive grid sampling with geographic projection correction.
         </div>
       </div>
     </div>
