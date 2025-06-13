@@ -5,37 +5,66 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Chicago bounds for filtering
+// Chicago bounds for filtering - more precise lakefront boundary
 const CHICAGO_BOUNDS = {
   minLat: 41.644,
   maxLat: 42.023,
   minLng: -87.94,
-  maxLng: -87.524
+  maxLng: -87.52  // Tighter eastern boundary to prevent Lake Michigan extension
 };
+
+// Chicago lakefront boundary points (approximate shoreline)
+const LAKEFRONT_BOUNDARY = [
+  [-87.52, 42.023],  // North boundary
+  [-87.52, 41.89],   // North lakefront
+  [-87.54, 41.85],   // Near North Side
+  [-87.61, 41.79],   // Downtown lakefront
+  [-87.55, 41.72],   // South Side
+  [-87.52, 41.644]   // South boundary
+];
 
 function isWithinChicagoBounds(coordinates) {
   function checkCoords(coords) {
     if (Array.isArray(coords[0])) {
-      return coords.some(checkCoords);
+      return coords.every(checkCoords);
     }
     const [lng, lat] = coords;
-    return lng >= CHICAGO_BOUNDS.minLng && 
-           lng <= CHICAGO_BOUNDS.maxLng && 
-           lat >= CHICAGO_BOUNDS.minLat && 
-           lat <= CHICAGO_BOUNDS.maxLat;
-  }
-  
-  // Additional check: reject tracts that extend too far over Lake Michigan
-  function hasExcessiveLakeExtension(coords) {
-    if (Array.isArray(coords[0])) {
-      return coords.some(hasExcessiveLakeExtension);
+    
+    // Basic bounds check
+    if (lng < CHICAGO_BOUNDS.minLng || lng > CHICAGO_BOUNDS.maxLng || 
+        lat < CHICAGO_BOUNDS.minLat || lat > CHICAGO_BOUNDS.maxLat) {
+      return false;
     }
-    const [lng, lat] = coords;
-    // Reject if extends more than 10km east of the lakefront (roughly -87.6)
-    return lng > -87.5;
+    
+    // Detailed lakefront boundary check
+    return isWestOfLakefront(lng, lat);
   }
   
-  return checkCoords(coordinates) && !hasExcessiveLakeExtension(coordinates);
+  return checkCoords(coordinates);
+}
+
+function isWestOfLakefront(lng, lat) {
+  // Find the corresponding lakefront longitude for this latitude
+  for (let i = 0; i < LAKEFRONT_BOUNDARY.length - 1; i++) {
+    const [lng1, lat1] = LAKEFRONT_BOUNDARY[i];
+    const [lng2, lat2] = LAKEFRONT_BOUNDARY[i + 1];
+    
+    if (lat >= Math.min(lat1, lat2) && lat <= Math.max(lat1, lat2)) {
+      // Linear interpolation to find the lakefront longitude at this latitude
+      const ratio = (lat - lat1) / (lat2 - lat1);
+      const lakefrontLng = lng1 + ratio * (lng2 - lng1);
+      
+      // Point must be west (left) of the lakefront
+      return lng <= lakefrontLng;
+    }
+  }
+  
+  // If latitude is outside our boundary points, use the nearest boundary
+  if (lat < LAKEFRONT_BOUNDARY[LAKEFRONT_BOUNDARY.length - 1][1]) {
+    return lng <= LAKEFRONT_BOUNDARY[LAKEFRONT_BOUNDARY.length - 1][0];
+  } else {
+    return lng <= LAKEFRONT_BOUNDARY[0][0];
+  }
 }
 
 function generateTractMetadata(tractIndex, coordinates) {
