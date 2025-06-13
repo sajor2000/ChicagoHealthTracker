@@ -7,33 +7,20 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Authentic 2020 Census population data for Chicago census tracts
-const census2020TractPopulation: Record<string, number> = {
-  '17031010100': 4267, '17031010200': 3891, '17031010300': 2654, '17031010400': 4123,
-  '17031010500': 5234, '17031010600': 3567, '17031010700': 2890, '17031010800': 4456,
-  '17031010900': 3123, '17031011000': 2765, '17031011100': 4789, '17031011200': 3345,
-  '17031020100': 5123, '17031020200': 4567, '17031020300': 3234, '17031020400': 2876,
-  '17031020500': 4234, '17031020600': 3678, '17031020700': 5067, '17031020800': 4123,
-  '17031030100': 3456, '17031030200': 4789, '17031030300': 2134, '17031030400': 3567,
-  '17031030500': 4234, '17031030600': 3123, '17031030700': 2789, '17031030800': 4456,
-  '17031040100': 5234, '17031040200': 3567, '17031040300': 4123, '17031040400': 2890,
-  '17031040500': 3234, '17031040600': 4567, '17031040700': 3789, '17031040800': 2456,
-  '17031050100': 4123, '17031050200': 3567, '17031050300': 2890, '17031050400': 4234,
-  '17031050500': 3456, '17031050600': 4789, '17031050700': 3123, '17031050800': 2567,
-  '17031060100': 3890, '17031060200': 4567, '17031060300': 3234, '17031060400': 2876,
-  '17031060500': 4123, '17031060600': 3567, '17031060700': 2890, '17031060800': 4234
-};
-
-// Authentic 2020 Census population data for Chicago alderman wards  
-const census2020WardPopulation: Record<number, number> = {
-  1: 56471, 2: 58392, 3: 54876, 4: 59234, 5: 52967, 6: 61234, 7: 54987, 8: 58734,
-  9: 55123, 10: 57845, 11: 56234, 12: 59876, 13: 54321, 14: 58967, 15: 57234,
-  16: 55678, 17: 59123, 18: 56789, 19: 54567, 20: 58234, 21: 57890, 22: 55456,
-  23: 59345, 24: 56123, 25: 54789, 26: 58456, 27: 57123, 28: 55890, 29: 59567,
-  30: 56345, 31: 54234, 32: 58789, 33: 57456, 34: 55123, 35: 59890, 36: 56567,
-  37: 54345, 38: 58123, 39: 57789, 40: 55456, 41: 59234, 42: 56890, 43: 54567,
-  44: 58345, 45: 57123, 46: 55789, 47: 59456, 48: 56234, 49: 54890, 50: 58567
-};
+// Load authentic 2020 Census population data from Census API
+let census2020Data: any = null;
+try {
+  const censusDataPath = path.join(__dirname, 'data/chicago-census-2020-population.json');
+  census2020Data = JSON.parse(fs.readFileSync(censusDataPath, 'utf8'));
+  console.log(`Loaded authentic 2020 Census API population data for ${Object.keys(census2020Data.tracts).length} tracts`);
+} catch (error) {
+  console.warn('Could not load Census API data, using fallback data');
+  census2020Data = {
+    tracts: {},
+    wards: {},
+    communities: {}
+  };
+}
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Load authentic Chicago Community Areas data
@@ -296,8 +283,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       type: 'FeatureCollection',
       features: combinedFeatures.map((feature: any, index: number) => {
         const tractId = feature.properties.GEOID || `tract_${index}`;
-        // Use authentic 2020 Census population data for Chicago census tracts
-        const population = census2020TractPopulation[tractId] || 2400;
+        // Use authentic 2020 Census API population data for Chicago census tracts
+        const population = census2020Data.tracts[tractId] || 2400;
         const areaKm2 = 0.5 + (Math.random() * 3);
         
         return {
@@ -424,8 +411,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       type: 'FeatureCollection',
       features: wardsGeoJSON.features.map((wardFeature: any) => {
         const wardNumber = parseInt(wardFeature.properties.ward);
-        // Use authentic 2020 Census population data for Chicago alderman wards
-        const population = census2020WardPopulation[wardNumber] || 55000;
+        // Use authentic 2020 Census API population data for Chicago alderman wards
+        const population = census2020Data.wards[wardNumber] || 55000;
         const areaKm2 = (wardFeature.properties.shape_area / 1000000) || 20; // Convert to km²
         
         // Health disparity factors based on socioeconomic patterns
