@@ -288,11 +288,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         if (rawGeoid) {
           const geoidStr = rawGeoid.toString();
-          // Convert from formats like "170311001" to "17031100100" 
-          if (geoidStr.length === 9 && geoidStr.startsWith('17031')) {
+          // Convert from various formats to match Census API format "17031XXXXXX"
+          if (geoidStr.length === 11 && geoidStr.startsWith('17031')) {
+            // Convert "17031001001" to "17031010010" format
+            const prefix = geoidStr.slice(0, 5); // "17031"
+            const tractPart = geoidStr.slice(5); // "001001"
+            const tract = tractPart.slice(0, 4); // "0010"
+            const block = tractPart.slice(4); // "01"
+            censusGeoid = prefix + tract + block + '0'; // "17031001010"
+          } else if (geoidStr.length === 9 && geoidStr.startsWith('17031')) {
             censusGeoid = geoidStr.slice(0, 5) + geoidStr.slice(5).padStart(6, '0');
-          } else if (geoidStr.length === 11) {
-            censusGeoid = geoidStr;
           }
         }
         
