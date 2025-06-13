@@ -81,15 +81,29 @@ export function addDataLayer(
       }
     });
 
-    // Add border layer
+    // Determine border style based on geographic level
+    const getBorderStyle = (layerId: string) => {
+      if (layerId.includes('census')) {
+        return { width: 0.3, color: '#6b7280', opacity: 0.6 }; // Thin gray for census tracts
+      } else if (layerId.includes('community')) {
+        return { width: 1.0, color: '#374151', opacity: 0.8 }; // Medium for community areas
+      } else if (layerId.includes('wards')) {
+        return { width: 2.0, color: '#1f2937', opacity: 1.0 }; // Thick dark for alderman wards
+      }
+      return { width: 0.5, color: '#374151', opacity: 0.8 }; // Default
+    };
+
+    const borderStyle = getBorderStyle(layerId);
+
+    // Add border layer with distinct styling per geographic level
     map.addLayer({
       id: `${layerId}-border`,
       type: 'line',
       source: layerId,
       paint: {
-        'line-color': '#374151',
-        'line-width': 0.5,
-        'line-opacity': 0.8
+        'line-color': borderStyle.color,
+        'line-width': borderStyle.width,
+        'line-opacity': borderStyle.opacity
       }
     });
 

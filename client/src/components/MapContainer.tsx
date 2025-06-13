@@ -71,6 +71,29 @@ export default function MapContainer({
     }
   }, []);
 
+  // Clear all geographic layers to ensure only current view is shown
+  const clearAllGeographicLayers = () => {
+    if (!map.current) return;
+    
+    const allViewTypes = ['census', 'community', 'wards'];
+    const layerSuffixes = ['-data-fill', '-data-border', '-data-hover', '-data-labels', '-data-population'];
+    
+    allViewTypes.forEach(viewType => {
+      layerSuffixes.forEach(suffix => {
+        const layerName = `${viewType}${suffix}`;
+        if (map.current!.getLayer(layerName)) {
+          map.current!.removeLayer(layerName);
+        }
+      });
+      
+      // Remove the source as well
+      const sourceName = `${viewType}-data`;
+      if (map.current!.getSource(sourceName)) {
+        map.current!.removeSource(sourceName);
+      }
+    });
+  };
+
   // Update map data when props change
   useEffect(() => {
     if (!map.current || !geoData || isLoading) return;
@@ -78,6 +101,9 @@ export default function MapContainer({
     const layerId = `${activeView}-data`;
 
     try {
+      // Clear all existing geographic layers first
+      clearAllGeographicLayers();
+
       // Process data for visualization
       const processedData: GeoJSON.FeatureCollection = {
         type: 'FeatureCollection',
