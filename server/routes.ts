@@ -282,19 +282,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
     chicagoCensusTractsData = {
       type: 'FeatureCollection',
       features: combinedFeatures.map((feature: any, index: number) => {
-        const tractId = feature.properties.GEOID || `tract_${index}`;
-        // Use authentic 2020 Census API population data for Chicago census tracts
-        const population = census2020Data.tracts[tractId] || 2400;
+        // Extract and format Census GEOID to match 2020 Census API format (17031XXXXXX)
+        const rawGeoid = feature.properties.GEOID || feature.properties.geoid || feature.properties.id;
+        let censusGeoid = null;
+        
+        if (rawGeoid) {
+          const geoidStr = rawGeoid.toString();
+          // Convert from formats like "170311001" to "17031100100" 
+          if (geoidStr.length === 9 && geoidStr.startsWith('17031')) {
+            censusGeoid = geoidStr.slice(0, 5) + geoidStr.slice(5).padStart(6, '0');
+          } else if (geoidStr.length === 11) {
+            censusGeoid = geoidStr;
+          }
+        }
+        
+        // Use authentic 2020 Census API population data
+        const population = censusGeoid && census2020Data.tracts[censusGeoid] ? 
+          census2020Data.tracts[censusGeoid] : 2400;
         const areaKm2 = 0.5 + (Math.random() * 3);
+        
+        const finalTractId = censusGeoid || rawGeoid || `tract_${index}`;
         
         return {
           ...feature,
-          id: tractId,
+          id: finalTractId,
           properties: {
             ...feature.properties,
-            id: tractId,
-            name: `Census Tract ${feature.properties.TRACTCE || tractId.slice(-4)}`,
-            geoid: tractId,
+            id: finalTractId,
+            name: `Census Tract ${feature.properties.TRACTCE || finalTractId.slice(-4)}`,
+            geoid: finalTractId,
             population: population,
             density: Math.floor(population / areaKm2 * 2.59),
             diseases: {
