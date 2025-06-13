@@ -131,7 +131,6 @@ export default function GeographicViewToggle({ activeView, onViewChange }: Geogr
           <span className="font-medium">*Spatial Aggregation:</span> Community areas and wards use population-weighted averages from overlapping census tracts via 20×20 grid sampling.
         </div>
       </div>
-      </div>
     </div>
   );
 }

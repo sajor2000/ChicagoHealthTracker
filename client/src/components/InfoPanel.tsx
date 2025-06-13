@@ -39,11 +39,7 @@ export default function InfoPanel({ selectedArea, isOpen, onClose }: InfoPanelPr
           onClick={onClose}
           className="p-2 rounded transition-all duration-200 hover:scale-110"
           style={{ 
-            color: 'var(--text-tertiary)',
-            ':hover': { 
-              backgroundColor: 'var(--bg-hover)',
-              color: 'var(--text-primary)'
-            }
+            color: 'var(--text-tertiary)'
           }}
           onMouseEnter={(e) => {
             e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
@@ -131,6 +127,27 @@ export default function InfoPanel({ selectedArea, isOpen, onClose }: InfoPanelPr
               </span>
             </div>
           </div>
+          
+          {/* Methodology Explanation for Aggregated Data */}
+          {selectedArea.id && !selectedArea.id.includes('17031') && (
+            <div className="mt-4 p-3 rounded-lg border" style={{
+              background: 'rgba(59, 130, 246, 0.05)',
+              borderColor: 'rgba(59, 130, 246, 0.2)'
+            }}>
+              <div className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                <div className="font-medium mb-2" style={{ color: 'rgb(59, 130, 246)' }}>
+                  How These Numbers Are Calculated:
+                </div>
+                <div className="space-y-1 text-[10px] leading-relaxed">
+                  <div>• Population metrics are calculated by overlapping this {selectedArea.name.includes('Ward') ? 'alderman ward' : 'community area'} boundary with all intersecting census tracts</div>
+                  <div>• Each census tract's contribution is weighted by the percentage of its area that falls within this boundary</div>
+                  <div>• Uses 20×20 grid sampling to calculate precise overlap ratios between boundaries</div>
+                  <div>• Disease rates are population-weighted averages from all contributing census tracts</div>
+                  <div>• All underlying data comes from authentic 2020 Census demographic records</div>
+                </div>
+              </div>
+            </div>
+          )}
         </section>
 
         {/* Demographics - 2020 Census */}
@@ -174,7 +191,7 @@ export default function InfoPanel({ selectedArea, isOpen, onClose }: InfoPanelPr
                       className="font-mono font-medium"
                       style={{ color: 'var(--text-primary)' }}
                     >
-                      {formatNumber(item.value)} ({((item.value / selectedArea.demographics.population.total) * 100).toFixed(1)}%)
+                      {formatNumber(item.value)} ({selectedArea.demographics ? ((item.value / selectedArea.demographics.population.total) * 100).toFixed(1) : '0.0'}%)
                     </span>
                   </div>
                 ))}
