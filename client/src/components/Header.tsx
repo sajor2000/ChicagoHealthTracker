@@ -1,4 +1,6 @@
 import { Link } from 'wouter';
+import rushLogo from '@assets/Xnip2025-06-13_18-03-51_1749855841178.png';
+import capricornLogo from '@assets/Xnip2025-06-13_17-59-22_1749855841179.png';
 
 interface HeaderProps {
   className?: string;
@@ -28,20 +30,28 @@ export default function Header({ className = '' }: HeaderProps) {
             <div className="flex items-center gap-4 text-xs" style={{ color: 'var(--text-tertiary)' }}>
               <div className="flex items-center gap-2">
                 <span>Built by</span>
+                <img 
+                  src={rushLogo} 
+                  alt="Rush Logo" 
+                  className="h-4 w-auto"
+                />
                 <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>
                   Rush Health Equity Data Analytics Studio
                 </span>
-                {/* Rush logo placeholder - will be added when logo file is provided */}
               </div>
               
               <div className="w-px h-4 bg-[var(--border-subtle)]"></div>
               
               <div className="flex items-center gap-2">
                 <span>Data by</span>
+                <img 
+                  src={capricornLogo} 
+                  alt="CAPriCORN Logo" 
+                  className="h-4 w-auto"
+                />
                 <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>
                   CAPriCORN
                 </span>
-                {/* CAPriCORN logo placeholder - will be added when logo file is provided */}
               </div>
             </div>
           </div>
