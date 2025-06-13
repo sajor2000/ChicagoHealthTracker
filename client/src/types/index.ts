@@ -6,6 +6,32 @@ export interface Disease {
   rate: number;
 }
 
+export interface Demographics {
+  population: {
+    total: number;
+    adults18Plus: number;
+  };
+  race: {
+    white: number;
+    black: number;
+    americanIndian: number;
+    asian: number;
+    pacificIslander: number;
+    otherRace: number;
+    multiRace: number;
+  };
+  ethnicity: {
+    total: number;
+    hispanic: number;
+    nonHispanic: number;
+  };
+  housing: {
+    totalUnits: number;
+    occupied: number;
+    vacant: number;
+  };
+}
+
 export interface AreaData {
   id: string;
   name: string;
@@ -14,6 +40,7 @@ export interface AreaData {
   density: number;
   diseases: Record<string, Disease>;
   dataQuality: number;
+  demographics?: Demographics;
   geometry?: any;
 }
 

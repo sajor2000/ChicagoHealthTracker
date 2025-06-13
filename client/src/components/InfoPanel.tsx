@@ -121,6 +121,176 @@ export default function InfoPanel({ selectedArea, isOpen, onClose }: InfoPanelPr
           </div>
         </section>
 
+        {/* Demographics - 2020 Census */}
+        {selectedArea.demographics && (
+          <section className="mb-6">
+            <h4 
+              className="text-base font-semibold mb-4 uppercase tracking-wider"
+              style={{ 
+                color: 'var(--text-primary)',
+                letterSpacing: '0.05em'
+              }}
+            >
+              2020 Census Demographics
+            </h4>
+            
+            {/* Race Distribution */}
+            <div className="mb-4">
+              <h5 
+                className="text-sm font-medium mb-3"
+                style={{ color: 'var(--text-secondary)' }}
+              >
+                Race Distribution
+              </h5>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                {[
+                  { label: 'White', value: selectedArea.demographics.race.white },
+                  { label: 'Black/African American', value: selectedArea.demographics.race.black },
+                  { label: 'Asian', value: selectedArea.demographics.race.asian },
+                  { label: 'American Indian/Alaska Native', value: selectedArea.demographics.race.americanIndian },
+                  { label: 'Pacific Islander', value: selectedArea.demographics.race.pacificIslander },
+                  { label: 'Other Race', value: selectedArea.demographics.race.otherRace },
+                  { label: 'Two or More Races', value: selectedArea.demographics.race.multiRace }
+                ].map(item => (
+                  <div 
+                    key={item.label}
+                    className="flex justify-between p-2 rounded"
+                    style={{ background: 'var(--bg-overlay)', borderColor: 'var(--border-subtle)' }}
+                  >
+                    <span style={{ color: 'var(--text-tertiary)' }}>{item.label}</span>
+                    <span 
+                      className="font-mono font-medium"
+                      style={{ color: 'var(--text-primary)' }}
+                    >
+                      {formatNumber(item.value)} ({((item.value / selectedArea.demographics.population.total) * 100).toFixed(1)}%)
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Ethnicity Distribution */}
+            <div className="mb-4">
+              <h5 
+                className="text-sm font-medium mb-3"
+                style={{ color: 'var(--text-secondary)' }}
+              >
+                Ethnicity Distribution
+              </h5>
+              <div className="grid grid-cols-1 gap-2 text-xs">
+                <div 
+                  className="flex justify-between p-2 rounded"
+                  style={{ background: 'var(--bg-overlay)', borderColor: 'var(--border-subtle)' }}
+                >
+                  <span style={{ color: 'var(--text-tertiary)' }}>Hispanic or Latino</span>
+                  <span 
+                    className="font-mono font-medium"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
+                    {formatNumber(selectedArea.demographics.ethnicity.hispanic)} ({((selectedArea.demographics.ethnicity.hispanic / selectedArea.demographics.ethnicity.total) * 100).toFixed(1)}%)
+                  </span>
+                </div>
+                <div 
+                  className="flex justify-between p-2 rounded"
+                  style={{ background: 'var(--bg-overlay)', borderColor: 'var(--border-subtle)' }}
+                >
+                  <span style={{ color: 'var(--text-tertiary)' }}>Not Hispanic or Latino</span>
+                  <span 
+                    className="font-mono font-medium"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
+                    {formatNumber(selectedArea.demographics.ethnicity.nonHispanic)} ({((selectedArea.demographics.ethnicity.nonHispanic / selectedArea.demographics.ethnicity.total) * 100).toFixed(1)}%)
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Housing Characteristics */}
+            <div className="mb-4">
+              <h5 
+                className="text-sm font-medium mb-3"
+                style={{ color: 'var(--text-secondary)' }}
+              >
+                Housing Characteristics
+              </h5>
+              <div className="grid grid-cols-1 gap-2 text-xs">
+                <div 
+                  className="flex justify-between p-2 rounded"
+                  style={{ background: 'var(--bg-overlay)', borderColor: 'var(--border-subtle)' }}
+                >
+                  <span style={{ color: 'var(--text-tertiary)' }}>Total Housing Units</span>
+                  <span 
+                    className="font-mono font-medium"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
+                    {formatNumber(selectedArea.demographics.housing.totalUnits)}
+                  </span>
+                </div>
+                <div 
+                  className="flex justify-between p-2 rounded"
+                  style={{ background: 'var(--bg-overlay)', borderColor: 'var(--border-subtle)' }}
+                >
+                  <span style={{ color: 'var(--text-tertiary)' }}>Occupied Units</span>
+                  <span 
+                    className="font-mono font-medium"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
+                    {formatNumber(selectedArea.demographics.housing.occupied)} ({selectedArea.demographics.housing.totalUnits > 0 ? ((selectedArea.demographics.housing.occupied / selectedArea.demographics.housing.totalUnits) * 100).toFixed(1) : '0.0'}%)
+                  </span>
+                </div>
+                <div 
+                  className="flex justify-between p-2 rounded"
+                  style={{ background: 'var(--bg-overlay)', borderColor: 'var(--border-subtle)' }}
+                >
+                  <span style={{ color: 'var(--text-tertiary)' }}>Vacant Units</span>
+                  <span 
+                    className="font-mono font-medium"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
+                    {formatNumber(selectedArea.demographics.housing.vacant)} ({selectedArea.demographics.housing.totalUnits > 0 ? ((selectedArea.demographics.housing.vacant / selectedArea.demographics.housing.totalUnits) * 100).toFixed(1) : '0.0'}%)
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* Age Demographics */}
+            <div className="mb-4">
+              <h5 
+                className="text-sm font-medium mb-3"
+                style={{ color: 'var(--text-secondary)' }}
+              >
+                Age Demographics
+              </h5>
+              <div className="grid grid-cols-1 gap-2 text-xs">
+                <div 
+                  className="flex justify-between p-2 rounded"
+                  style={{ background: 'var(--bg-overlay)', borderColor: 'var(--border-subtle)' }}
+                >
+                  <span style={{ color: 'var(--text-tertiary)' }}>Under 18 years</span>
+                  <span 
+                    className="font-mono font-medium"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
+                    {formatNumber(selectedArea.demographics.population.total - selectedArea.demographics.population.adults18Plus)} ({(((selectedArea.demographics.population.total - selectedArea.demographics.population.adults18Plus) / selectedArea.demographics.population.total) * 100).toFixed(1)}%)
+                  </span>
+                </div>
+                <div 
+                  className="flex justify-between p-2 rounded"
+                  style={{ background: 'var(--bg-overlay)', borderColor: 'var(--border-subtle)' }}
+                >
+                  <span style={{ color: 'var(--text-tertiary)' }}>18 years and over</span>
+                  <span 
+                    className="font-mono font-medium"
+                    style={{ color: 'var(--text-primary)' }}
+                  >
+                    {formatNumber(selectedArea.demographics.population.adults18Plus)} ({((selectedArea.demographics.population.adults18Plus / selectedArea.demographics.population.total) * 100).toFixed(1)}%)
+                  </span>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
         {/* Disease Prevalence */}
         <section className="mb-6">
           <h4 
