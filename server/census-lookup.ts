@@ -166,10 +166,19 @@ function loadTractGeometry(): Map<string, any> {
         const geoidStr = geoid.toString();
         geometryMap.set(geoidStr, feature.geometry);
         
-        // Also store with Census API format (11-digit GEOID)
+        // Map between different GEOID formats
         if (geoidStr.length === 9 && geoidStr.startsWith('17031')) {
-          const fullGeoid = '17031' + geoidStr.slice(5).padStart(6, '0');
-          geometryMap.set(fullGeoid, feature.geometry);
+          // Convert geometry format (170311001) to Census API format (17031010100)
+          const tractNum = geoidStr.slice(5); // "1001"
+          // Census tract 1001 corresponds to API tract 010100
+          const tractInt = parseInt(tractNum);
+          const apiTractCode = (tractInt * 100).toString().padStart(6, '0');
+          const apiGeoid = '17031' + apiTractCode;
+          geometryMap.set(apiGeoid, feature.geometry);
+          
+          // Also try alternative mapping where tract number is used directly
+          const directMapping = '17031' + tractNum.padStart(6, '0');
+          geometryMap.set(directMapping, feature.geometry);
         }
       }
     }
