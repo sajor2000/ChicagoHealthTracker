@@ -104,10 +104,11 @@ export default function MapContainer({
       isLoading,
       activeView,
       selectedDisease,
+      mapStyleLoaded,
       featuresCount: (geoData as any)?.features?.length
     });
 
-    if (!map.current || !geoData || isLoading || !mapStyleLoaded) return;
+    if (!map.current || !geoData || isLoading) return;
 
     const layerId = `${activeView}-data`;
 
@@ -252,7 +253,7 @@ export default function MapContainer({
       const properties = feature.properties;
       
       if (properties && geoData) {
-        const selectedFeature = geoData.features.find(f => f.id === properties.id);
+        const selectedFeature = (geoData as any).features.find((f: any) => f.id === properties.id);
         if (selectedFeature) {
           onAreaSelect(selectedFeature.properties);
           fitBoundsToFeature(map.current, selectedFeature);

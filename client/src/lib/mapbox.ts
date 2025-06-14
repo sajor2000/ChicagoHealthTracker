@@ -36,6 +36,15 @@ export function addDataLayer(
   visualizationMode: 'count' | 'rate'
 ) {
   try {
+    // Check if map style is loaded
+    if (!map.isStyleLoaded()) {
+      console.warn('Map style not loaded, waiting...');
+      map.once('styledata', () => {
+        addDataLayer(map, data, layerId, selectedDisease, visualizationMode);
+      });
+      return;
+    }
+
     // Remove existing layers if they exist
     const existingLayers = [`${layerId}-fill`, `${layerId}-border`, `${layerId}-hover`, `${layerId}-labels`, `${layerId}-population`];
     existingLayers.forEach(layer => {
