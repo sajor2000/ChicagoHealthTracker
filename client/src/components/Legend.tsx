@@ -45,13 +45,14 @@ export default function Legend({ visualizationMode }: LegendProps) {
             <div 
               className="w-[200px] h-3 rounded-md mb-2"
               style={{
-                background: 'linear-gradient(to right, #006747, #4a8c2a, #a4c441, #f4e04d, #ff8c42, #f76c5e, #d32f2f)'
+                background: 'linear-gradient(to right, #006747, #4a8c2a, #a4c441, #f4e04d, #ff8c42, #f76c5e, #d32f2f, #8b0000)'
               }}
             />
             <div className="flex justify-between text-xs font-mono" style={{ color: 'var(--text-tertiary)' }}>
-              <span>Low</span>
-              <span>Medium</span>
-              <span>High</span>
+              <span>7</span>
+              <span>37</span>
+              <span>68</span>
+              <span>138+</span>
             </div>
           </div>
           

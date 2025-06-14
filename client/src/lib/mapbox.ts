@@ -67,13 +67,14 @@ export function addDataLayer(
             'interpolate',
             ['linear'],
             ['get', `${selectedDisease}_${visualizationMode}`],
-            0, '#006747',      // Dark green for low values
-            50, '#4a8c2a',     // Medium green
-            100, '#a4c441',    // Yellow-green
-            150, '#f4e04d',    // Yellow
-            200, '#ff8c42',    // Orange
-            300, '#f76c5e',    // Red
-            400, '#d32f2f'     // Dark red for highest values
+            7, '#006747',      // Dark green - lowest values (min: 7.4)
+            25, '#4a8c2a',     // Medium green - low values (25th percentile: 27.2)
+            37, '#a4c441',     // Yellow-green - below median (median: 37.1)
+            50, '#f4e04d',     // Yellow - moderate values
+            68, '#ff8c42',     // Orange - high values (75th percentile: 68.3)
+            100, '#f76c5e',    // Red - very high values
+            138, '#d32f2f',    // Dark red - highest values (90th percentile: 137.9)
+            260, '#8b0000'     // Deep red - extreme values (max: 257.4)
           ],
           'rgba(107, 114, 128, 0.3)' // Suppressed data color
         ],
