@@ -321,7 +321,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
     });
 
-    const chicagoCensusTractsData = {
+    var chicagoCensusTractsData = {
       type: 'FeatureCollection',
       features: processedCensusTracts
     };
@@ -380,7 +380,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   try {
     // Load authentic ward boundaries from converted GeoJSON
     const wardsPath = path.join(__dirname, 'data/chicago-wards-authentic.json');
+    console.log('Loading ward boundaries from:', wardsPath);
     const wardsGeoJSON = JSON.parse(fs.readFileSync(wardsPath, 'utf8'));
+    console.log(`Loaded ${wardsGeoJSON.features.length} ward boundaries`);
     
     // Prepare ward geographic units for aggregation
     const wardUnits = wardsGeoJSON.features.map((wardFeature: any) => ({
@@ -432,7 +434,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       switch (viewMode) {
         case 'census':
-          responseData = chicagoCensusTractsData;
+          responseData = chicagoCensusTracts2020;
           break;
         case 'community':
           responseData = chicagoCommunitiesData;
