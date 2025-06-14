@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { aggregateTractsToUnits } from './spatial-aggregation.js';
+import { updateCensusTractDensities, getCompleteCensusTractData } from './census-api-loader';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -17,19 +18,29 @@ function calculatePolygonAreaInSquareMiles(coordinates: number[][][]): number {
   const ring = coordinates[0]; // Use outer ring
   if (ring.length < 3) return 0;
   
+  // Use accurate area calculation for Chicago coordinates
+  const EARTH_RADIUS_MILES = 3959; // Earth's radius in miles
+  
   let area = 0;
-  for (let i = 0; i < ring.length - 1; i++) {
-    const [x1, y1] = ring[i];
-    const [x2, y2] = ring[i + 1];
-    area += (x1 * y2 - x2 * y1);
+  const numPoints = ring.length - 1; // Last point repeats first
+  
+  for (let i = 0; i < numPoints; i++) {
+    const j = (i + 1) % numPoints;
+    const [lon1, lat1] = ring[i];
+    const [lon2, lat2] = ring[j];
+    
+    // Convert to radians
+    const lat1Rad = lat1 * Math.PI / 180;
+    const lat2Rad = lat2 * Math.PI / 180;
+    const deltaLonRad = (lon2 - lon1) * Math.PI / 180;
+    
+    // Use the shoelace formula with proper geographic correction
+    area += deltaLonRad * (2 + Math.sin(lat1Rad) + Math.sin(lat2Rad));
   }
   
-  // Convert from degrees squared to square miles
-  // 1 degree latitude ≈ 69 miles, 1 degree longitude ≈ 54.6 miles at Chicago latitude
-  const areaInDegreesSq = Math.abs(area) / 2;
-  const areaInSquareMiles = areaInDegreesSq * 69 * 54.6;
+  area = Math.abs(area) * EARTH_RADIUS_MILES * EARTH_RADIUS_MILES / 2;
   
-  return areaInSquareMiles;
+  return area;
 }
 
 // Load authentic 2020 Census demographic data

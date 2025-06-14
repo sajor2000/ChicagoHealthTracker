@@ -150,6 +150,47 @@ export async function loadCensusDataToDatabase(): Promise<{ loaded: number; exis
 }
 
 /**
+ * Update existing census tract records with corrected area and density calculations
+ */
+export async function updateCensusTractDensities(): Promise<{ updated: number }> {
+  console.log('Updating census tract area and density calculations...');
+  
+  // Get all census tracts with geometry
+  const tracts = await db.select({
+    geoid: chicagoCensusTracts2020.geoid,
+    totalPopulation: chicagoCensusTracts2020.totalPopulation,
+    geometry: chicagoCensusTracts2020.geometry
+  }).from(chicagoCensusTracts2020);
+  
+  let updatedCount = 0;
+  
+  for (const tract of tracts) {
+    if (!tract.geometry || !tract.geometry.coordinates) continue;
+    
+    // Recalculate area with improved method
+    const newArea = calculatePolygonArea(tract.geometry.coordinates);
+    const newDensity = newArea > 0 ? (tract.totalPopulation || 0) / newArea : 0;
+    
+    // Update the record
+    await db.update(chicagoCensusTracts2020)
+      .set({
+        landAreaSqMi: newArea,
+        populationDensity: newDensity
+      })
+      .where(eq(chicagoCensusTracts2020.geoid, tract.geoid));
+    
+    updatedCount++;
+    
+    if (updatedCount % 100 === 0) {
+      console.log(`Updated ${updatedCount} tract densities...`);
+    }
+  }
+  
+  console.log(`Updated ${updatedCount} census tract area and density calculations`);
+  return { updated: updatedCount };
+}
+
+/**
  * Get complete census tract data with all demographics
  */
 export async function getCompleteCensusTractData() {
@@ -200,18 +241,30 @@ function calculatePolygonArea(coordinates: number[][][]): number {
   const ring = coordinates[0];
   if (ring.length < 3) return 0;
   
+  // Use more accurate area calculation for Chicago coordinates
+  // Using spherical excess formula with Earth's radius
+  const EARTH_RADIUS_MILES = 3959; // Earth's radius in miles
+  
   let area = 0;
-  for (let i = 0; i < ring.length - 1; i++) {
-    const [x1, y1] = ring[i];
-    const [x2, y2] = ring[i + 1];
-    area += (x1 * y2 - x2 * y1);
+  const numPoints = ring.length - 1; // Last point repeats first
+  
+  for (let i = 0; i < numPoints; i++) {
+    const j = (i + 1) % numPoints;
+    const [lon1, lat1] = ring[i];
+    const [lon2, lat2] = ring[j];
+    
+    // Convert to radians
+    const lat1Rad = lat1 * Math.PI / 180;
+    const lat2Rad = lat2 * Math.PI / 180;
+    const deltaLonRad = (lon2 - lon1) * Math.PI / 180;
+    
+    // Use the shoelace formula with proper geographic correction
+    area += deltaLonRad * (2 + Math.sin(lat1Rad) + Math.sin(lat2Rad));
   }
   
-  // Convert to square miles (Chicago latitude ~41.8°N)
-  const areaInDegreesSq = Math.abs(area) / 2;
-  const areaInSquareMiles = areaInDegreesSq * 69 * 54.6;
+  area = Math.abs(area) * EARTH_RADIUS_MILES * EARTH_RADIUS_MILES / 2;
   
-  return areaInSquareMiles;
+  return area;
 }
 
 function calculateCentroid(coordinates: number[][][]): { lat: number; lng: number } {
