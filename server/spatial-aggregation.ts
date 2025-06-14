@@ -392,13 +392,23 @@ function aggregateDiseaseData(overlaps: Array<{tract: CensusTract, overlapRatio:
     }
   } : undefined;
 
+  // Generate flattened disease properties for overlay functionality
+  const flattenedDiseaseProps: Record<string, number> = {};
+  Object.keys(diseases).forEach(diseaseKey => {
+    const disease = diseases[diseaseKey];
+    flattenedDiseaseProps[`${diseaseKey}_count`] = disease.count;
+    flattenedDiseaseProps[`${diseaseKey}_rate`] = disease.rate;
+  });
+
   return {
     diseases,
     totalPopulation: Math.round(totalWeightedPopulation),
     weightedDensity: totalWeightedPopulation > 0 ? Math.round(totalAreaWeightedDensity / totalWeightedPopulation) : 0,
     dataQuality,
     constituentTracts,
-    demographics: finalDemographics
+    demographics: finalDemographics,
+    // Add flattened disease properties for Mapbox overlay functionality
+    ...flattenedDiseaseProps
   };
 }
 

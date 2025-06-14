@@ -124,6 +124,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // Calculate data quality score
         const dataQuality = calculateDataQuality(population, demographics, 'census');
         
+        // Generate flattened disease properties for overlay functionality
+        const flattenedDiseaseProps: Record<string, number> = {};
+        Object.keys(epidemiologicalDiseases).forEach(diseaseKey => {
+          const disease = epidemiologicalDiseases[diseaseKey];
+          flattenedDiseaseProps[`${diseaseKey}_count`] = disease.count;
+          flattenedDiseaseProps[`${diseaseKey}_rate`] = disease.rate;
+        });
+
         return {
           ...feature,
           id: finalTractId,
@@ -136,6 +144,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             density: density,
             diseases: epidemiologicalDiseases,
             dataQuality: dataQuality,
+            // Add flattened disease properties for Mapbox overlay functionality
+            ...flattenedDiseaseProps,
             // Include authentic 2020 Census demographic data
             demographics: demographics || {
               totalPopulation: population,
