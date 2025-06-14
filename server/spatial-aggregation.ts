@@ -226,7 +226,7 @@ function boundingBoxesOverlap(box1: any, box2: any): boolean {
  * Aggregate disease data using improved population-weighted methodology
  * Accounts for population density variations and geographic overlap precision
  */
-function aggregateDiseaseData(overlaps: Array<{tract: CensusTract, overlapRatio: number}>): {
+function aggregateDiseaseData(overlaps: Array<{tract: CensusTract, overlapRatio: number}>, unitName?: string): {
   diseases: Record<string, any>,
   totalPopulation: number,
   weightedDensity: number,
@@ -385,11 +385,12 @@ function aggregateDiseaseData(overlaps: Array<{tract: CensusTract, overlapRatio:
     }
   };
 
-  // Generate disease data with proper north-south geographic distribution
-  diseases = generateFinalDiseases(
+  // Generate disease data with Chicago geographic patterns
+  diseases = generateChicagoGeographicDiseases(
     Math.round(totalWeightedPopulation),
     aggregatedDemographics,
-    'community' // Use community level adjustments for both community areas and wards
+    'community', // Use community level adjustments for both community areas and wards
+    unitName // Pass community name for geographic classification
   );
 
   // Use the aggregated demographics we already calculated
@@ -458,7 +459,7 @@ export function aggregateTractsToUnits(
   
   return units.map(unit => {
     const overlappingTracts = findOverlappingTracts(unit, tracts);
-    const aggregatedData = aggregateDiseaseData(overlappingTracts);
+    const aggregatedData = aggregateDiseaseData(overlappingTracts, unit.name);
     
     // Calculate data quality based on number of constituent tracts and overlap quality
     const avgOverlapRatio = overlappingTracts.length > 0 
