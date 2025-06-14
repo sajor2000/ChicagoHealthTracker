@@ -1,7 +1,7 @@
 // Spatial aggregation utilities for Chicago health data
 // Aggregates census tract data to community areas and wards based on geographic overlap
 
-import { generateResearchBasedDiseases, enhanceHealthDisparities } from './research-based-disease-generator.js';
+import { generateEnhancedDiseases } from './enhanced-prevalence-system.js';
 
 interface Point {
   lng: number;
@@ -385,47 +385,15 @@ function aggregateDiseaseData(overlaps: Array<{tract: CensusTract, overlapRatio:
     }
   };
 
-  // Generate research-based disease data for the aggregated geographic unit
-  const researchBasedDiseases = generateResearchBasedDiseases(
+  // Generate enhanced disease data for the aggregated geographic unit
+  diseases = generateEnhancedDiseases(
     Math.round(totalWeightedPopulation),
     aggregatedDemographics,
     'community' // Use community level adjustments for both community areas and wards
   );
 
-  // Enhance health disparities to maintain strong visualization patterns
-  diseases = enhanceHealthDisparities(
-    researchBasedDiseases,
-    aggregatedDemographics,
-    Math.round(totalWeightedPopulation)
-  );
-
-  // Round demographics values
-  const finalDemographics = overlaps.some(o => o.tract.demographics) ? {
-    race: {
-      white: Math.round(demographicsAggregate.race.white),
-      black: Math.round(demographicsAggregate.race.black),
-      americanIndian: Math.round(demographicsAggregate.race.americanIndian),
-      asian: Math.round(demographicsAggregate.race.asian),
-      pacificIslander: Math.round(demographicsAggregate.race.pacificIslander),
-      otherRace: Math.round(demographicsAggregate.race.otherRace),
-      multiRace: Math.round(demographicsAggregate.race.multiRace)
-    },
-    ethnicity: {
-      total: Math.round(demographicsAggregate.ethnicity.total),
-      hispanic: Math.round(demographicsAggregate.ethnicity.hispanic),
-      nonHispanic: Math.round(demographicsAggregate.ethnicity.nonHispanic)
-    },
-    housing: {
-      totalUnits: Math.round(demographicsAggregate.housing.totalUnits),
-      occupied: Math.round(demographicsAggregate.housing.occupied),
-      vacant: Math.round(demographicsAggregate.housing.vacant)
-    },
-    age: {
-      under18: Math.round(demographicsAggregate.age.under18),
-      age18Plus: Math.round(demographicsAggregate.age.age18Plus),
-      age65Plus: Math.round(demographicsAggregate.age.age65Plus)
-    }
-  } : undefined;
+  // Use the aggregated demographics we already calculated
+  const finalDemographics = overlaps.some(o => o.tract.demographics) ? aggregatedDemographics : undefined;
 
   // Generate flattened disease properties for overlay functionality
   const flattenedDiseaseProps: Record<string, number> = {};
