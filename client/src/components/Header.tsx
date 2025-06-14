@@ -46,29 +46,47 @@ export default function Header({ className = '' }: HeaderProps) {
               </div>
             </div>
             
-            {/* Organization Credits */}
-            <div className="hidden lg:flex items-center gap-6 pl-6 border-l border-white/20">
+            {/* Organization Credits - Always Visible */}
+            <div className="flex items-center gap-6 pl-6 border-l border-white/20">
               <div className="flex items-center gap-3">
-                <img 
-                  src={rushLogo} 
-                  alt="Rush Logo" 
-                  className="h-5 w-auto opacity-90"
-                />
-                <div className="text-xs">
-                  <div className="text-white/70 font-medium">Built by</div>
-                  <div className="text-white font-semibold">Rush Health Equity Data Studio</div>
+                <div className="flex items-center justify-center w-8 h-8 bg-white/20 rounded">
+                  <img 
+                    src={rushLogo} 
+                    alt="Rush Logo" 
+                    className="h-6 w-auto filter brightness-110"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.nextElementSibling.style.display = 'block';
+                    }}
+                  />
+                  <span className="text-white font-bold text-xs hidden">R</span>
+                </div>
+                <div className="text-sm">
+                  <div className="text-white/80 font-medium text-xs uppercase tracking-wide">Built by</div>
+                  <div className="text-white font-bold text-sm leading-tight">Rush Health Equity</div>
+                  <div className="text-white font-bold text-sm leading-tight -mt-1">Analytics Studio</div>
                 </div>
               </div>
               
+              <div className="w-px h-8 bg-white/20"></div>
+              
               <div className="flex items-center gap-3">
-                <img 
-                  src={capricornLogo} 
-                  alt="CAPriCORN Logo" 
-                  className="h-5 w-auto opacity-90"
-                />
-                <div className="text-xs">
-                  <div className="text-white/70 font-medium">Data by</div>
-                  <div className="text-white font-semibold">CAPriCORN</div>
+                <div className="flex items-center justify-center w-8 h-8 bg-white/20 rounded">
+                  <img 
+                    src={capricornLogo} 
+                    alt="CAPriCORN Logo" 
+                    className="h-6 w-auto filter brightness-110"
+                    onError={(e) => {
+                      e.currentTarget.style.display = 'none';
+                      e.currentTarget.nextElementSibling.style.display = 'block';
+                    }}
+                  />
+                  <span className="text-white font-bold text-xs hidden">C</span>
+                </div>
+                <div className="text-sm">
+                  <div className="text-white/80 font-medium text-xs uppercase tracking-wide">Data by</div>
+                  <div className="text-white font-bold text-sm leading-tight">CAPriCORN</div>
+                  <div className="text-white/90 font-medium text-xs leading-tight">Research Network</div>
                 </div>
               </div>
             </div>
