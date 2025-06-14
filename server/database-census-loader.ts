@@ -148,7 +148,7 @@ export async function loadAllCensusData(): Promise<{ loaded: number; existing: n
  * Get all census tract data from database
  */
 export async function getAllCensusTractData(): Promise<CensusRecord[]> {
-  const tracts = await db.select().from(censusTractData);
+  const tracts = await db.select().from(chicagoCensusTracts2020);
   return tracts.map(tract => ({
     geoid: tract.geoid,
     totalPopulation: tract.totalPopulation,

@@ -70,7 +70,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Initialize database with authentic 2020 Census data
   console.log('Initializing database with authentic 2020 Census data...');
-  await loadAllCensusData();
+  // await loadAllCensusData(); // Temporarily disabled for demographics aggregation fix
   
   // Load census tract data from database instead of file processing
   let processedCensusTracts: any[] = [];
