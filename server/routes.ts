@@ -66,8 +66,8 @@ try {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Declare data variables at function scope
   var chicagoCensusTractsData: any = null;
-  var chicagoCommunitiesData: any = null;
-  var chicagoWardsData: any = null;
+  var chicagoCommunitiesData: any = { type: 'FeatureCollection', features: [] };
+  var chicagoWardsData: any = { type: 'FeatureCollection', features: [] };
 
   // Initialize database with authentic 2020 Census data
   console.log('Initializing database with authentic 2020 Census data...');
@@ -215,6 +215,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log(`Generated ${chicagoCommunitiesData.features.length} Chicago community areas with aggregated census tract data`);
   } catch (error) {
     console.error('Failed to load and aggregate Chicago community areas data:', error);
+    // Ensure chicagoCommunitiesData is properly initialized even on error
+    chicagoCommunitiesData = { type: 'FeatureCollection', features: [] };
   }
 
   // Load authentic Chicago Ward boundaries and aggregate census tract data
@@ -262,6 +264,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log(`Generated ${chicagoWardsData.features.length} Chicago alderman wards with aggregated census tract data`);
   } catch (error) {
     console.error('Failed to load and aggregate Chicago wards data:', error);
+    // Ensure chicagoWardsData is properly initialized even on error
+    chicagoWardsData = { type: 'FeatureCollection', features: [] };
   }
 
   app.get('/api/chicago-areas/:viewMode', async (req, res) => {
