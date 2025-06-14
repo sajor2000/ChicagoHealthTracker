@@ -246,14 +246,28 @@ function getEnvironmentalRiskFactors(areaName: string): { foodDesert: number; ai
 function getSESMultiplier(areaName: string, demographics: any): number {
   const name = areaName.toLowerCase();
   
+  // Check exact matches first for maximum precision
+  if (CHICAGO_SES_RISK_AREAS.highRisk.some(area => area.toLowerCase() === name)) {
+    return 2.8; // Highest disparity areas - South/West Side
+  } else if (CHICAGO_SES_RISK_AREAS.moderateHighRisk.some(area => area.toLowerCase() === name)) {
+    return 2.0;
+  } else if (CHICAGO_SES_RISK_AREAS.moderateRisk.some(area => area.toLowerCase() === name)) {
+    return 1.4;
+  } else if (CHICAGO_SES_RISK_AREAS.lowRisk.some(area => area.toLowerCase() === name)) {
+    return 0.6; // Lower risk areas - North Side affluent
+  }
+  
+  // Fallback to partial matching with stronger gradients
   if (CHICAGO_SES_RISK_AREAS.highRisk.some(area => name.includes(area.toLowerCase()))) {
-    return 2.2; // Highest disparity areas
+    return 2.5;
   } else if (CHICAGO_SES_RISK_AREAS.moderateHighRisk.some(area => name.includes(area.toLowerCase()))) {
-    return 1.7;
+    return 1.8;
   } else if (CHICAGO_SES_RISK_AREAS.moderateRisk.some(area => name.includes(area.toLowerCase()))) {
-    return 1.3;
+    return 1.2;
+  } else if (CHICAGO_SES_RISK_AREAS.lowRisk.some(area => name.includes(area.toLowerCase()))) {
+    return 0.7;
   } else {
-    return 0.8; // Lower risk areas
+    return 1.0; // Default/unknown areas
   }
 }
 
@@ -345,9 +359,10 @@ export function generateEpidemiologicalDiseaseData(
     // Base prevalence rate per 100,000
     let prevalenceRate = epidemiology.basePrevalence;
 
-    // Apply SES disparity
+    // Apply SES disparity with stronger effects
     const sesMultiplier = getSESMultiplier(areaName, demographics);
-    prevalenceRate *= (1 + (sesMultiplier - 1) * epidemiology.sesDisparity);
+    const sesEffect = 1 + (sesMultiplier - 1) * (epidemiology.sesDisparity - 1);
+    prevalenceRate *= sesEffect;
 
     // Apply race/ethnicity risk
     const raceMultiplier = getRaceEthnicityMultiplier(diseaseKey, demographics);
@@ -357,11 +372,21 @@ export function generateEpidemiologicalDiseaseData(
     const ageMultiplier = getAgeMultiplier(diseaseKey, demographics);
     prevalenceRate *= ageMultiplier;
 
-    // Apply environmental factors
+    // Apply environmental factors (FIXED - remove division cancellation)
     const envFactors = getEnvironmentalRiskFactors(areaName);
-    prevalenceRate *= envFactors.foodDesert * epidemiology.environmentalFactors.foodDesert / epidemiology.environmentalFactors.foodDesert;
-    prevalenceRate *= envFactors.airQuality * epidemiology.environmentalFactors.airQuality / epidemiology.environmentalFactors.airQuality;
-    prevalenceRate *= envFactors.walkability * epidemiology.environmentalFactors.walkability / epidemiology.environmentalFactors.walkability;
+    
+    // Calculate combined environmental effect
+    const envEffect = (
+      (envFactors.foodDesert - 1) * (epidemiology.environmentalFactors.foodDesert - 1) +
+      (envFactors.airQuality - 1) * (epidemiology.environmentalFactors.airQuality - 1) +
+      (envFactors.walkability - 1) * (epidemiology.environmentalFactors.walkability - 1)
+    ) / 3 + 1;
+    
+    prevalenceRate *= envEffect;
+
+    // Add geographic variation (±15%) to simulate local health factors
+    const randomVariation = 0.85 + Math.random() * 0.3;
+    prevalenceRate *= randomVariation;
 
     // Calculate final count and rate
     const count = Math.round((prevalenceRate / 100000) * population);
