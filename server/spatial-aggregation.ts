@@ -1,6 +1,8 @@
 // Spatial aggregation utilities for Chicago health data
 // Aggregates census tract data to community areas and wards based on geographic overlap
 
+import { generateResearchBasedDiseases, enhanceHealthDisparities } from './research-based-disease-generator.js';
+
 interface Point {
   lng: number;
   lat: number;
@@ -354,51 +356,48 @@ function aggregateDiseaseData(overlaps: Array<{tract: CensusTract, overlapRatio:
   // Calculate final aggregated values with health disparity enhancement
   const diseases: Record<string, any> = {};
   
-  // Calculate demographic-based disparity factor for the aggregated unit
-  let disparityFactor = 1.0;
-  if (totalWeightedPopulation > 0) {
-    const blackPct = demographicsAggregate.race.black / totalWeightedPopulation;
-    const hispanicPct = demographicsAggregate.ethnicity.hispanic / totalWeightedPopulation;
-    
-    // Apply stronger health disparity multipliers for community/ward level visualization
-    disparityFactor += (blackPct * 1.2) + (hispanicPct * 0.8);
-    
-    // Additional disparity for areas with very high minority populations
-    if (blackPct > 0.6 || hispanicPct > 0.5) {
-      disparityFactor += 0.5;
+  // Use research-based disease generation for aggregated units
+  // This ensures authentic CDC/NIH prevalence patterns are maintained at community/ward level
+  const aggregatedDemographics = {
+    race: {
+      white: Math.round(demographicsAggregate.race.white),
+      black: Math.round(demographicsAggregate.race.black),
+      americanIndian: Math.round(demographicsAggregate.race.americanIndian),
+      asian: Math.round(demographicsAggregate.race.asian),
+      pacificIslander: Math.round(demographicsAggregate.race.pacificIslander),
+      otherRace: Math.round(demographicsAggregate.race.otherRace),
+      multiRace: Math.round(demographicsAggregate.race.multiRace)
+    },
+    ethnicity: {
+      total: Math.round(demographicsAggregate.ethnicity.total),
+      hispanic: Math.round(demographicsAggregate.ethnicity.hispanic),
+      nonHispanic: Math.round(demographicsAggregate.ethnicity.nonHispanic)
+    },
+    housing: {
+      totalUnits: Math.round(demographicsAggregate.housing.totalUnits),
+      occupied: Math.round(demographicsAggregate.housing.occupied),
+      vacant: Math.round(demographicsAggregate.housing.vacant)
+    },
+    age: {
+      under18: Math.round(demographicsAggregate.age.under18),
+      age18Plus: Math.round(demographicsAggregate.age.age18Plus),
+      age65Plus: Math.round(demographicsAggregate.age.age65Plus)
     }
-    
-    // Extra boost for predominantly minority areas
-    if (blackPct > 0.4) {
-      disparityFactor += 0.3;
-    }
-    
-    if (hispanicPct > 0.3) {
-      disparityFactor += 0.2;
-    }
-    
-    // Cap disparity factor for realistic range
-    disparityFactor = Math.max(0.6, Math.min(disparityFactor, 2.8));
-  }
-  
-  for (const [diseaseId, aggregate] of Object.entries(diseaseAggregates)) {
-    const baseRate = aggregate.weightSum > 0 ? aggregate.totalWeightedRate / aggregate.weightSum : 0;
-    
-    // Apply disparity enhancement to preserve health patterns at community/ward level
-    const enhancedRate = baseRate * disparityFactor * (0.85 + Math.random() * 0.3);
-    
-    // For counts, apply stronger concentration in high-disparity areas
-    const countMultiplier = disparityFactor > 2.0 ? disparityFactor * 1.2 : disparityFactor;
-    const enhancedCount = Math.round(aggregate.totalCount * countMultiplier * (0.9 + Math.random() * 0.2));
-    
-    diseases[diseaseId] = {
-      id: diseaseId,
-      name: overlaps[0].tract.diseases[diseaseId]?.name || diseaseId,
-      icdCodes: overlaps[0].tract.diseases[diseaseId]?.icdCodes || '',
-      count: Math.max(1, enhancedCount),
-      rate: parseFloat(enhancedRate.toFixed(1))
-    };
-  }
+  };
+
+  // Generate research-based disease data for the aggregated geographic unit
+  const researchBasedDiseases = generateResearchBasedDiseases(
+    Math.round(totalWeightedPopulation),
+    aggregatedDemographics,
+    'community' // Use community level adjustments for both community areas and wards
+  );
+
+  // Enhance health disparities to maintain strong visualization patterns
+  diseases = enhanceHealthDisparities(
+    researchBasedDiseases,
+    aggregatedDemographics,
+    Math.round(totalWeightedPopulation)
+  );
 
   // Round demographics values
   const finalDemographics = overlaps.some(o => o.tract.demographics) ? {

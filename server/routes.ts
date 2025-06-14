@@ -5,7 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { aggregateTractsToUnits } from './spatial-aggregation.js';
 import { loadAllCensusData, getAllCensusTractData } from "./database-census-loader";
-import { generateDiseaseData, calculateDisparityFactor } from './simple-disease-generator';
+import { generateResearchBasedDiseases, enhanceHealthDisparities, calculateGradingThresholds } from './research-based-disease-generator.js';
 import { validateCensusGeoIds } from './census-geoid-validator';
 import { db } from "./db";
 import { chicagoCensusTracts2020 } from "@shared/schema";
@@ -112,17 +112,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         const finalTractId = censusGeoid || rawGeoid || `tract_${index}`;
         
-        // Generate disease data using simple disparity-based calculation
-        const disparityFactor = calculateDisparityFactor(demographics);
-        const diseases = generateDiseaseData(population, disparityFactor);
+        // Generate research-based disease data using authentic CDC/NIH prevalence data
+        const diseases = generateResearchBasedDiseases(population, demographics || {
+          race: { 
+            white: Math.floor(population * 0.32),
+            black: Math.floor(population * 0.30), 
+            americanIndian: Math.floor(population * 0.01),
+            asian: Math.floor(population * 0.07),
+            pacificIslander: Math.floor(population * 0.001),
+            otherRace: Math.floor(population * 0.18),
+            multiRace: Math.floor(population * 0.109)
+          },
+          ethnicity: { 
+            total: population, 
+            hispanic: Math.floor(population * 0.29), 
+            nonHispanic: Math.floor(population * 0.71) 
+          },
+          housing: { 
+            totalUnits: Math.floor(population * 0.4), 
+            occupied: Math.floor(population * 0.35), 
+            vacant: Math.floor(population * 0.05) 
+          },
+          age: {
+            under18: Math.floor(population * 0.25),
+            age18Plus: Math.floor(population * 0.75),
+            age65Plus: Math.floor(population * 0.15)
+          }
+        }, 'census');
+        
+        // Enhance health disparities based on demographic composition
+        const enhancedDiseases = enhanceHealthDisparities(diseases, demographics || {
+          race: { 
+            white: Math.floor(population * 0.32),
+            black: Math.floor(population * 0.30), 
+            americanIndian: Math.floor(population * 0.01),
+            asian: Math.floor(population * 0.07),
+            pacificIslander: Math.floor(population * 0.001),
+            otherRace: Math.floor(population * 0.18),
+            multiRace: Math.floor(population * 0.109)
+          },
+          ethnicity: { 
+            total: population, 
+            hispanic: Math.floor(population * 0.29), 
+            nonHispanic: Math.floor(population * 0.71) 
+          },
+          housing: { 
+            totalUnits: Math.floor(population * 0.4), 
+            occupied: Math.floor(population * 0.35), 
+            vacant: Math.floor(population * 0.05) 
+          },
+          age: {
+            under18: Math.floor(population * 0.25),
+            age18Plus: Math.floor(population * 0.75),
+            age65Plus: Math.floor(population * 0.15)
+          }
+        }, population);
         
         // Set consistent data quality
         const dataQuality = 0.95;
         
         // Generate flattened disease properties for overlay functionality
         const flattenedDiseaseProps: Record<string, number> = {};
-        Object.keys(diseases).forEach(diseaseKey => {
-          const disease = diseases[diseaseKey];
+        Object.keys(enhancedDiseases).forEach(diseaseKey => {
+          const disease = enhancedDiseases[diseaseKey];
           flattenedDiseaseProps[`${diseaseKey}_count`] = disease.count;
           flattenedDiseaseProps[`${diseaseKey}_rate`] = disease.rate;
         });
@@ -137,7 +189,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             geoid: finalTractId,
             population: population,
             density: density,
-            diseases: diseases,
+            diseases: enhancedDiseases,
             dataQuality: dataQuality,
             // Add flattened disease properties for Mapbox overlay functionality
             ...flattenedDiseaseProps,
