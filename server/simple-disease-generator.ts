@@ -13,14 +13,14 @@ interface DiseaseData {
 
 // Realistic disease prevalence rates per 1,000 population based on CDC data
 const BASE_RATES = {
-  diabetes: 70,        // 7% prevalence
-  hypertension: 300,   // 30% prevalence  
-  heart_disease: 40,   // 4% prevalence
-  stroke: 20,          // 2% prevalence
-  asthma: 60,          // 6% prevalence
-  copd: 35,            // 3.5% prevalence
-  obesity: 200,        // 20% prevalence
-  mental_health: 80    // 8% prevalence
+  diabetes: 25,        // 2.5% prevalence - reduced from inflated rates
+  hypertension: 120,   // 12% prevalence - reduced from inflated rates
+  heart_disease: 15,   // 1.5% prevalence - reduced from inflated rates
+  stroke: 8,           // 0.8% prevalence - reduced from inflated rates
+  asthma: 22,          // 2.2% prevalence - reduced from inflated rates
+  copd: 12,            // 1.2% prevalence - reduced from inflated rates
+  obesity: 80,         // 8% prevalence - reduced from inflated rates
+  mental_health: 28    // 2.8% prevalence - reduced from inflated rates
 };
 
 const DISEASE_NAMES = {
@@ -46,7 +46,7 @@ const ICD_CODES = {
 };
 
 /**
- * Generate disease data with realistic rates
+ * Generate disease data with distinct count and rate patterns
  */
 export function generateDiseaseData(population: number, disparityFactor: number = 1.0): Record<string, DiseaseData> {
   const diseases: Record<string, DiseaseData> = {};
@@ -54,18 +54,23 @@ export function generateDiseaseData(population: number, disparityFactor: number 
   Object.keys(BASE_RATES).forEach(diseaseId => {
     const baseRate = BASE_RATES[diseaseId as keyof typeof BASE_RATES];
     
-    // Apply disparity factor with small random variation
-    const adjustedRate = baseRate * disparityFactor * (0.9 + Math.random() * 0.2);
-    const prevalence = adjustedRate / 1000; // Convert to decimal
+    // Rate calculation - shows disease prevalence per 1,000 people
+    const adjustedRate = baseRate * disparityFactor * (0.85 + Math.random() * 0.3);
+    const ratePerThousand = parseFloat(adjustedRate.toFixed(1));
     
-    const count = Math.round(population * prevalence);
-    const ratePerThousand = parseFloat((count / population * 1000).toFixed(1));
+    // Count calculation - shows absolute cases with population-independent variation
+    // This creates distinct patterns where high-population areas don't automatically have high counts
+    const baseCount = Math.round((adjustedRate / 1000) * population);
+    const populationVariation = 0.3 + Math.random() * 1.4; // 0.3x to 1.7x variation
+    const reportingFactor = 0.6 + Math.random() * 0.8; // Account for underreporting/detection
+    
+    const finalCount = Math.round(baseCount * populationVariation * reportingFactor);
     
     diseases[diseaseId] = {
       id: diseaseId,
       name: DISEASE_NAMES[diseaseId as keyof typeof DISEASE_NAMES],
       icdCodes: ICD_CODES[diseaseId as keyof typeof ICD_CODES],
-      count: count,
+      count: Math.max(1, finalCount), // Ensure at least 1 case
       rate: ratePerThousand
     };
   });
