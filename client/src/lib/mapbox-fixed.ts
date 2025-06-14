@@ -82,7 +82,11 @@ export function addDataLayer(
       const q75 = values[Math.floor(values.length * 0.75)];
       const max = values[values.length - 1];
 
-      console.log(`Color scale: ${min} → ${q25} → ${median} → ${q75} → ${max}`);
+      console.log(`Color scale for ${propertyKey}: ${min} → ${q25} → ${median} → ${q75} → ${max}`);
+      console.log(`Sample feature values:`, data.features.slice(0, 3).map(f => ({ 
+        name: f.properties?.name, 
+        [propertyKey]: f.properties?.[propertyKey] 
+      })));
 
       // Set quartile data for Legend component
       (window as any).__CURRENT_QUARTILES__ = {
@@ -97,11 +101,14 @@ export function addDataLayer(
         }
       };
 
-      // Add fill layer
+      // Add fill layer with explicit layout properties
       map.addLayer({
         id: `${layerId}-fill`,
         type: 'fill',
         source: layerId,
+        layout: {
+          'visibility': 'visible'
+        },
         paint: {
           'fill-color': [
             'case',
@@ -110,15 +117,15 @@ export function addDataLayer(
               'interpolate',
               ['linear'],
               ['get', propertyKey],
-              min, '#006d2c',
-              q25, '#31a354',
-              median, '#74c476',
-              q75, '#fd8d3c',
-              max, '#d94701'
+              min, '#006d2c',      // Green for lowest values
+              q25, '#74c476',      // Light green
+              median, '#fed976',   // Yellow
+              q75, '#fd8d3c',      // Orange
+              max, '#bd0026'       // Red for highest values
             ],
-            'rgba(128, 128, 128, 0.3)'
+            'rgba(200, 200, 200, 0.3)'  // Light gray for missing data
           ],
-          'fill-opacity': 0.7
+          'fill-opacity': 0.8
         }
       });
 
@@ -128,9 +135,9 @@ export function addDataLayer(
         type: 'line',
         source: layerId,
         paint: {
-          'line-color': '#ffffff',
-          'line-width': 0.5,
-          'line-opacity': 0.8
+          'line-color': '#333333',
+          'line-width': 1.0,
+          'line-opacity': 0.9
         }
       });
 
@@ -152,6 +159,23 @@ export function addDataLayer(
       }, 50);
       
       console.log(`✅ Successfully added layers for ${layerId}`);
+      
+      // Force layer visibility and check if they're actually rendered
+      setTimeout(() => {
+        const fillLayer = map.getLayer(`${layerId}-fill`);
+        const lineLayer = map.getLayer(`${layerId}-line`);
+        console.log(`Layer check - Fill layer exists: ${!!fillLayer}, Line layer exists: ${!!lineLayer}`);
+        
+        if (fillLayer) {
+          map.setLayoutProperty(`${layerId}-fill`, 'visibility', 'visible');
+        }
+        if (lineLayer) {
+          map.setLayoutProperty(`${layerId}-line`, 'visibility', 'visible');
+        }
+        
+        // Force map repaint
+        map.triggerRepaint();
+      }, 100);
 
     } catch (error) {
       console.error('Error adding layers:', error);
