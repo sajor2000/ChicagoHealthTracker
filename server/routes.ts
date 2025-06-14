@@ -88,59 +88,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const rawGeoid = feature.properties.GEOID || feature.properties.geoid || feature.properties.id;
       let censusGeoid = rawGeoid ? rawGeoid.toString() : null;
       
-      // Enhanced GEOID matching for authentic 2020 Census demographic data
+      // Direct lookup using standardized 11-digit GEOID format
       let demographics = null;
       if (censusGeoid) {
-        // Create comprehensive list of GEOID format attempts
-        const geoAttempts = [];
-        
-        if (censusGeoid.length === 9 && censusGeoid.startsWith('17031')) {
-          // Convert "170311386" to multiple demographic format attempts
-          const tractNumber = censusGeoid.slice(6); // Extract "386" from "170311386"
-          
-          // Multiple pattern attempts for Cook County demographics matching
-          geoAttempts.push(
-            // Pattern 1: "170311386" -> "17031138600" 
-            `17031${tractNumber}00`,
-            // Pattern 2: "170311386" -> "17031013860"
-            `170310${tractNumber}0`, 
-            // Pattern 3: Standard 11-digit format
-            `1703101${tractNumber}00`,
-            // Pattern 4: Six-digit padding
-            `17031${tractNumber.padStart(6, '0')}`,
-            // Pattern 5: Alternative with middle padding
-            `17031${tractNumber[0]}0${tractNumber.slice(1)}00`
-          );
-        } else if (censusGeoid.length === 11) {
-          // 11-digit format variations
-          geoAttempts.push(censusGeoid);
-        } else {
-          // Other lengths - try as-is and with padding
-          geoAttempts.push(
-            censusGeoid,
-            censusGeoid.padEnd(11, '0'),
-            `17031${censusGeoid.slice(5)}`
-          );
-        }
-        
-        // Try each GEOID format attempt
-        for (const attempt of geoAttempts) {
-          if (censusDemographics[attempt]) {
-            demographics = censusDemographics[attempt];
-            break;
-          }
-        }
-        
-        // If still no match, try reverse engineering from available keys
-        if (!demographics && censusGeoid.length >= 7) {
-          const tractNumber = censusGeoid.slice(-4); // Last 4 digits
-          for (const [key, value] of Object.entries(censusDemographics)) {
-            if (key.slice(-4) === tractNumber && key.startsWith('17031')) {
-              demographics = value;
-              break;
-            }
-          }
-        }
+        demographics = censusDemographics[censusGeoid];
       }
       
       // Use authentic 2020 Census population data from demographics or fallback to API data
