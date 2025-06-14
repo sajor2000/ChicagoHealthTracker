@@ -46,7 +46,7 @@ const ICD_CODES = {
 };
 
 /**
- * Generate disease data with proper health disparity patterns
+ * Generate disease data with concentrated counts in high-disparity areas
  */
 export function generateDiseaseData(population: number, disparityFactor: number = 1.0): Record<string, DiseaseData> {
   const diseases: Record<string, DiseaseData> = {};
@@ -54,18 +54,24 @@ export function generateDiseaseData(population: number, disparityFactor: number 
   Object.keys(BASE_RATES).forEach(diseaseId => {
     const baseRate = BASE_RATES[diseaseId as keyof typeof BASE_RATES];
     
-    // Apply health disparity factor with realistic variation
+    // Apply health disparity factor with realistic variation for rates
     const adjustedRate = baseRate * disparityFactor * (0.8 + Math.random() * 0.4);
     const ratePerThousand = parseFloat(adjustedRate.toFixed(1));
     
-    // Calculate count directly from rate without additional density adjustments
-    const count = Math.round((ratePerThousand / 1000) * population);
+    // For counts: Apply stronger disparity concentration in high-minority areas
+    // This creates higher absolute counts in areas with high Black/Hispanic populations
+    const countMultiplier = disparityFactor > 2.0 ? 
+      disparityFactor * 1.3 : // Extra boost for highest disparity areas
+      disparityFactor;
+    
+    const baseCount = Math.round((adjustedRate / 1000) * population);
+    const adjustedCount = Math.round(baseCount * countMultiplier * (0.9 + Math.random() * 0.2));
     
     diseases[diseaseId] = {
       id: diseaseId,
       name: DISEASE_NAMES[diseaseId as keyof typeof DISEASE_NAMES],
       icdCodes: ICD_CODES[diseaseId as keyof typeof ICD_CODES],
-      count: Math.max(1, count),
+      count: Math.max(1, adjustedCount),
       rate: ratePerThousand
     };
   });
