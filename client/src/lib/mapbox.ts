@@ -77,7 +77,30 @@ export function addDataLayer(
 
     const propertyKey = `${selectedDisease}_${visualizationMode}`;
 
-    // Add fill layer
+    // Calculate dynamic color scaling based on actual data values
+    const values = data.features
+      .map(f => f.properties?.[propertyKey])
+      .filter(v => typeof v === 'number' && v > 0)
+      .sort((a, b) => a - b);
+
+    if (values.length === 0) {
+      console.warn('No valid data values found for', propertyKey);
+      return;
+    }
+
+    const min = values[0];
+    const q25 = values[Math.floor(values.length * 0.25)];
+    const median = values[Math.floor(values.length * 0.5)];
+    const q75 = values[Math.floor(values.length * 0.75)];
+    const q90 = values[Math.floor(values.length * 0.9)];
+    const q95 = values[Math.floor(values.length * 0.95)];
+    const max = values[values.length - 1];
+
+    console.log(`Dynamic color scaling for ${selectedDisease} (${visualizationMode}):`, {
+      min, q25, median, q75, q90, q95, max
+    });
+
+    // Add fill layer with dynamic color scaling
     map.addLayer({
       id: `${layerId}-fill`,
       type: 'fill',
@@ -85,85 +108,16 @@ export function addDataLayer(
       paint: {
         'fill-color': [
           'case',
-          ['>', ['get', `${selectedDisease}_${visualizationMode}`], 0],
-          // Disease-specific color thresholds based on actual data distributions
-          selectedDisease === 'diabetes' ? [
-            'interpolate', ['linear'], ['get', `${selectedDisease}_${visualizationMode}`],
-            19, '#006747',     // Green - lowest (19.6)
-            42, '#4a8c2a',     // Medium green - 25th percentile
-            57, '#a4c441',     // Yellow-green - median
-            66, '#f4e04d',     // Yellow - 75th percentile
-            71, '#ff8c42',     // Orange - 90th percentile
-            78, '#f76c5e',     // Red - high values
-            84, '#d32f2f'      // Dark red - max (83.9)
-          ] : selectedDisease === 'hypertension' ? [
-            'interpolate', ['linear'], ['get', `${selectedDisease}_${visualizationMode}`],
-            74, '#006747',     // Green - lowest (74.5)
-            144, '#4a8c2a',    // Medium green - 25th percentile
-            178, '#a4c441',    // Yellow-green - median
-            204, '#f4e04d',    // Yellow - 75th percentile
-            221, '#ff8c42',    // Orange - 90th percentile
-            237, '#f76c5e',    // Red - high values
-            254, '#d32f2f'     // Dark red - max (253.4)
-          ] : selectedDisease === 'heart_disease' ? [
-            'interpolate', ['linear'], ['get', `${selectedDisease}_${visualizationMode}`],
-            12, '#006747',     // Green - lowest (12.4)
-            27, '#4a8c2a',     // Medium green - 25th percentile
-            37, '#a4c441',     // Yellow-green - median
-            42, '#f4e04d',     // Yellow - 75th percentile
-            45, '#ff8c42',     // Orange - 90th percentile
-            50, '#f76c5e',     // Red - high values
-            54, '#d32f2f'      // Dark red - max (53.8)
-          ] : selectedDisease === 'stroke' ? [
-            'interpolate', ['linear'], ['get', `${selectedDisease}_${visualizationMode}`],
-            7, '#006747',      // Green - lowest (7.6)
-            17, '#4a8c2a',     // Medium green - 25th percentile
-            22, '#a4c441',     // Yellow-green - median
-            25, '#f4e04d',     // Yellow - 75th percentile
-            28, '#ff8c42',     // Orange - 90th percentile
-            32, '#f76c5e',     // Red - high values
-            36, '#d32f2f'      // Dark red - max (35.8)
-          ] : selectedDisease === 'asthma' ? [
-            'interpolate', ['linear'], ['get', `${selectedDisease}_${visualizationMode}`],
-            11, '#006747',     // Green - lowest (11)
-            22, '#4a8c2a',     // Medium green - 25th percentile
-            28, '#a4c441',     // Yellow-green - median
-            32, '#f4e04d',     // Yellow - 75th percentile
-            35, '#ff8c42',     // Orange - 90th percentile
-            38, '#f76c5e',     // Red - high values
-            40, '#d32f2f'      // Dark red - max (40.3)
-          ] : selectedDisease === 'copd' ? [
-            'interpolate', ['linear'], ['get', `${selectedDisease}_${visualizationMode}`],
-            14, '#006747',     // Green - lowest (13.9)
-            31, '#4a8c2a',     // Medium green - 25th percentile
-            41, '#a4c441',     // Yellow-green - median
-            47, '#f4e04d',     // Yellow - 75th percentile
-            52, '#ff8c42',     // Orange - 90th percentile
-            56, '#f76c5e',     // Red - high values
-            60, '#d32f2f'      // Dark red - max (59.7)
-          ] : selectedDisease === 'obesity' ? [
-            'interpolate', ['linear'], ['get', `${selectedDisease}_${visualizationMode}`],
-            42, '#006747',     // Green - lowest (42.2)
-            75, '#4a8c2a',     // Medium green - 25th percentile
-            91, '#a4c441',     // Yellow-green - median
-            102, '#f4e04d',    // Yellow - 75th percentile
-            111, '#ff8c42',    // Orange - 90th percentile
-            120, '#f76c5e',    // Red - high values
-            130, '#d32f2f'     // Dark red - max (130)
-          ] : selectedDisease === 'depression' || selectedDisease === 'mental_health' ? [
-            'interpolate', ['linear'], ['get', `${selectedDisease}_${visualizationMode}`],
-            18, '#006747',     // Green - lowest (18.4)
-            27, '#4a8c2a',     // Medium green - 25th percentile
-            29, '#a4c441',     // Yellow-green - median
-            33, '#f4e04d',     // Yellow - 75th percentile
-            35, '#ff8c42',     // Orange - 90th percentile
-            37, '#f76c5e',     // Red - high values
-            38, '#d32f2f'      // Dark red - max (38.1)
-          ] : [
-            // Default fallback scale
-            'interpolate', ['linear'], ['get', `${selectedDisease}_${visualizationMode}`],
-            7, '#006747', 25, '#4a8c2a', 37, '#a4c441', 50, '#f4e04d',
-            68, '#ff8c42', 100, '#f76c5e', 138, '#d32f2f', 260, '#8b0000'
+          ['>', ['get', propertyKey], 0],
+          [
+            'interpolate', ['linear'], ['get', propertyKey],
+            min, '#006747',        // Green - lowest values
+            q25, '#4a8c2a',        // Medium green - 25th percentile
+            median, '#a4c441',     // Yellow-green - median
+            q75, '#f4e04d',        // Yellow - 75th percentile
+            q90, '#ff8c42',        // Orange - 90th percentile
+            q95, '#f76c5e',        // Red - 95th percentile
+            max, '#d32f2f'         // Dark red - maximum values
           ],
           'rgba(107, 114, 128, 0.3)' // Suppressed data color
         ],
@@ -281,6 +235,8 @@ export function addDataLayer(
         'text-halo-width': 1
       }
     });
+
+    console.log('✅ Successfully added map layers for:', layerId);
     
   } catch (error) {
     console.error('Error adding data layer:', error);
@@ -289,23 +245,11 @@ export function addDataLayer(
       stack: error instanceof Error ? error.stack : undefined,
       layerId,
       selectedDisease,
-      visualizationMode,
+      visualizationMode,  
       dataValid: !!data && !!data.features,
       featuresCount: data?.features?.length
     });
-    
-    } catch (error) {
-      console.error('Error adding data layer:', error);
-      console.error('Error details:', {
-        message: error instanceof Error ? error.message : 'Unknown error',
-        stack: error instanceof Error ? error.stack : undefined,
-        layerId,
-        selectedDisease,
-        visualizationMode,
-        dataValid: !!data && !!data.features,
-        featuresCount: data?.features?.length
-      });
-    }
+  }
   };
 
   // Start the layer addition process
