@@ -308,28 +308,15 @@ export default function MapContainer({
     );
   }
 
-  // Use Mapbox if token is available and not using fallback, otherwise fall back to SVG
-  if (!hasMapboxToken || useMapboxFallback) {
-    return (
-      <ChicagoDataVisualization
-        activeView={activeView}
-        selectedDisease={selectedDisease}
-        visualizationMode={visualizationMode}
-        showSuppressed={showSuppressed}
-        onAreaSelect={onAreaSelect}
-      />
-    );
-  }
+  // Always use Mapbox since token is available
+  // SVG fallback disabled to show white borders properly
 
   return (
-    <div className="relative">
-      <div 
-        id="map"
-        ref={mapContainer}
-        className={`fixed inset-0 top-32 ${isLoading ? 'loading' : ''}`}
-        style={{ background: 'var(--bg-base)' }}
-      />
-      {/* Disable SVG overlay that covers Mapbox borders */}
-    </div>
+    <div 
+      id="map"
+      ref={mapContainer}
+      className={`fixed inset-0 top-32 ${isLoading ? 'loading' : ''}`}
+      style={{ background: 'var(--bg-base)' }}
+    />
   );
 }

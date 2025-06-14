@@ -177,6 +177,21 @@ export function addDataLayer(
       });
       
       console.log(`✅ White border layer added: ${layerId}-line`);
+      
+      // Force border layer visibility check
+      setTimeout(() => {
+        const borderLayer = map.getLayer(`${layerId}-line`);
+        if (borderLayer) {
+          console.log(`🔍 Border layer visibility check:`, {
+            exists: true,
+            paint: map.getPaintProperty(`${layerId}-line`, 'line-color'),
+            width: map.getPaintProperty(`${layerId}-line`, 'line-width'),
+            opacity: map.getPaintProperty(`${layerId}-line`, 'line-opacity')
+          });
+        } else {
+          console.log(`❌ Border layer missing: ${layerId}-line`);
+        }
+      }, 500);
 
       // Force enable all map interaction controls after adding layers
       setTimeout(() => {
