@@ -127,7 +127,7 @@ export function addDataLayer(
             111, '#ff8c42',    // Orange - 90th percentile
             120, '#f76c5e',    // Red - high values
             130, '#d32f2f'     // Dark red - max (130)
-          ] : selectedDisease === 'depression' ? [
+          ] : selectedDisease === 'depression' || selectedDisease === 'mental_health' ? [
             'interpolate', ['linear'], ['get', `${selectedDisease}_${visualizationMode}`],
             18, '#006747',     // Green - lowest (18.4)
             27, '#4a8c2a',     // Medium green - 25th percentile

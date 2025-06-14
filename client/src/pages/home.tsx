@@ -98,7 +98,7 @@ export default function Home() {
         onClose={handleInfoPanelClose}
       />
       
-      <Legend visualizationMode={appState.visualizationMode} />
+      <Legend visualizationMode={appState.visualizationMode} selectedDisease={appState.selectedDisease} />
     </div>
   );
 }

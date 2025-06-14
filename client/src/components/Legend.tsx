@@ -29,6 +29,7 @@ export default function Legend({ visualizationMode, selectedDisease }: LegendPro
       case 'obesity':
         return { min: '42', low: '75', med: '91', high: '111', max: '130+' };
       case 'depression':
+      case 'mental_health':
         return { min: '18', low: '27', med: '29', high: '35', max: '38+' };
       default:
         return { min: '7', low: '25', med: '37', high: '68', max: '138+' };
