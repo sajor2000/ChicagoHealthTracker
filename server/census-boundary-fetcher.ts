@@ -14,45 +14,81 @@ interface CensusBoundaryFeature {
 }
 
 /**
- * Fetch authentic census tract boundaries from Census Bureau
+ * Fetch authentic census tract boundaries from Census Bureau TIGER/Line API
  */
 export async function fetchAuthenticCensusBoundaries(): Promise<Map<string, any>> {
   const boundariesMap = new Map<string, any>();
   
   try {
-    // Census Bureau TIGER/Line boundaries API for Cook County (Chicago)
-    const baseUrl = 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/tigerWMS_ACS2022/MapServer/8/query';
+    // Use Census Bureau TIGER/Line Web Services for authentic boundaries
+    const baseUrl = 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/tracts_blocks/MapServer/0/query';
     const params = new URLSearchParams({
-      where: "STATE='17' AND COUNTY='031'", // Illinois, Cook County
-      outFields: '*',
+      where: "STATEFP20='17' AND COUNTYFP20='031'", // Illinois state code 17, Cook County code 031 for 2020
+      outFields: 'GEOID20,TRACTCE20,NAME20',
       returnGeometry: 'true',
-      f: 'geojson'
+      f: 'geojson',
+      spatialRel: 'esriSpatialRelIntersects'
     });
     
-    console.log('Fetching authentic census boundaries from Census Bureau API...');
+    console.log('Fetching authentic 2020 Census tract boundaries from TIGER/Line services...');
     const response = await fetch(`${baseUrl}?${params}`);
     
     if (!response.ok) {
-      throw new Error(`Census API error: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    
-    if (data.features && Array.isArray(data.features)) {
-      console.log(`Loaded ${data.features.length} authentic census tract boundaries`);
+      console.log(`TIGER API failed with ${response.status}, trying alternative endpoint...`);
       
-      data.features.forEach((feature: CensusBoundaryFeature) => {
-        if (feature.properties.GEOID && feature.geometry) {
-          boundariesMap.set(feature.properties.GEOID, feature.geometry);
-        }
+      // Try alternative endpoint
+      const altUrl = 'https://tigerweb.geo.census.gov/arcgis/rest/services/TIGERweb/Tracts_Blocks/MapServer/0/query';
+      const altParams = new URLSearchParams({
+        where: "1=1",
+        geometry: JSON.stringify({
+          "xmin": -88.0, "ymin": 41.6, "xmax": -87.5, "ymax": 42.1,
+          "spatialReference": {"wkid": 4326}
+        }),
+        geometryType: 'esriGeometryEnvelope',
+        inSR: '4326',
+        spatialRel: 'esriSpatialRelIntersects',
+        outFields: '*',
+        returnGeometry: 'true',
+        f: 'geojson'
       });
+      
+      const altResponse = await fetch(`${altUrl}?${altParams}`);
+      if (!altResponse.ok) {
+        throw new Error(`Census TIGER API error: ${altResponse.status}`);
+      }
+      
+      const altData = await altResponse.json();
+      if (altData.features && Array.isArray(altData.features)) {
+        console.log(`Loaded ${altData.features.length} boundaries from alternative TIGER endpoint`);
+        
+        altData.features.forEach((feature: any) => {
+          const geoid = feature.properties.GEOID20 || feature.properties.GEOID;
+          if (geoid && feature.geometry && geoid.startsWith('17031')) {
+            boundariesMap.set(geoid, feature.geometry);
+          }
+        });
+      }
+    } else {
+      const data = await response.json();
+      
+      if (data.features && Array.isArray(data.features)) {
+        console.log(`Loaded ${data.features.length} authentic Census tract boundaries from TIGER/Line`);
+        
+        data.features.forEach((feature: CensusBoundaryFeature) => {
+          const geoid = feature.properties.GEOID20 || feature.properties.GEOID;
+          if (geoid && feature.geometry) {
+            boundariesMap.set(geoid, feature.geometry);
+          }
+        });
+      }
     }
     
+    console.log(`Created boundary map with ${boundariesMap.size} authentic Census tract boundaries`);
     return boundariesMap;
     
   } catch (error) {
     console.error('Failed to fetch authentic census boundaries:', error);
-    console.log('Falling back to existing boundary data...');
+    console.log('Using existing boundary data with authentic Census GEOIDs...');
     return new Map();
   }
 }
@@ -70,29 +106,26 @@ export async function updateWithAuthenticBoundaries(features: any[]): Promise<an
   
   let updatedCount = 0;
   const updatedFeatures = features.map(feature => {
-    // Try multiple GEOID formats to match Census API
-    const rawGeoid = feature.properties?.GEOID || feature.properties?.geoid || feature.properties?.id;
-    const possibleGeoIds = [
-      rawGeoid,
-      rawGeoid?.toString(),
-      `17031${rawGeoid?.toString().slice(-6)}`, // Cook County format
-      rawGeoid?.toString().padStart(11, '17031') // Ensure 11-digit format
-    ].filter(Boolean);
+    // Extract GEOID in exact Census Bureau format
+    const geoid = feature.properties?.GEOID || feature.properties?.geoid || feature.properties?.id;
     
-    for (const geoid of possibleGeoIds) {
-      const authenticGeometry = authenticBoundaries.get(geoid);
+    if (geoid) {
+      const authenticGeometry = authenticBoundaries.get(geoid.toString());
       if (authenticGeometry) {
         updatedCount++;
+        console.log(`✓ Updated tract ${geoid} with authentic Census Bureau boundary`);
         return {
           ...feature,
           geometry: authenticGeometry
         };
+      } else {
+        console.log(`⚠ No Census Bureau boundary found for GEOID: ${geoid}`);
       }
     }
     
     return feature;
   });
   
-  console.log(`Updated ${updatedCount} census tracts with authentic boundaries`);
+  console.log(`Updated ${updatedCount} of ${features.length} census tracts with authentic Census Bureau boundaries`);
   return updatedFeatures;
 }

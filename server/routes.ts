@@ -83,8 +83,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     let combinedFeatures = tractData.features || [];
     console.log(`Loaded authentic Chicago census tracts data: ${combinedFeatures.length} features`);
     
-    // Keep original authentic Census boundaries as-is (no water extension needed)
-    console.log('Using authentic Census boundaries without modification');
+    // Update with authentic Census Bureau boundaries using exact GEOID matching
+    console.log('Fetching authentic Census Bureau boundaries with exact GEOID matching...');
+    combinedFeatures = await updateWithAuthenticBoundaries(combinedFeatures);
+    console.log('Authentic Census Bureau boundary update complete');
     
     // Process census tracts with health data (base authentic data layer)
     processedCensusTracts = combinedFeatures.map((feature: any, index: number) => {
