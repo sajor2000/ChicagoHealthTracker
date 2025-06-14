@@ -217,31 +217,28 @@ export function addDataLayer(
 }
 
 function cleanupLayers(map: mapboxgl.Map, layerId: string) {
-  // Clean up ALL existing layers from all views to prevent interference
-  const allViewTypes = ['census-data', 'community-data', 'wards-data'];
+  // Only clean up the specific layer being replaced, not all layers
   const layerSuffixes = ['-fill', '-line'];
   
-  allViewTypes.forEach(viewType => {
-    layerSuffixes.forEach(suffix => {
-      const fullLayerId = `${viewType}${suffix}`;
-      if (map.getLayer(fullLayerId)) {
-        try {
-          map.removeLayer(fullLayerId);
-        } catch (e) {
-          // Ignore removal errors
-        }
-      }
-    });
-    
-    // Remove sources
-    if (map.getSource(viewType)) {
+  layerSuffixes.forEach(suffix => {
+    const fullLayerId = `${layerId}${suffix}`;
+    if (map.getLayer(fullLayerId)) {
       try {
-        map.removeSource(viewType);
+        map.removeLayer(fullLayerId);
       } catch (e) {
         // Ignore removal errors
       }
     }
   });
+  
+  // Remove only the specific source
+  if (map.getSource(layerId)) {
+    try {
+      map.removeSource(layerId);
+    } catch (e) {
+      // Ignore removal errors
+    }
+  }
 }
 
 export function createTooltip(): mapboxgl.Popup {
