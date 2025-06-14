@@ -123,7 +123,7 @@ export function addDataLayer(
             'interpolate',
             ['linear'],
             ['get', propertyKey],
-            30, '#22c55e',    // Green (30 per 1,000)
+            30, '#16a34a',    // Dark green (30 per 1,000)
             128, '#eab308',   // Yellow (128 per 1,000)
             176, '#f97316',   // Orange (176 per 1,000)
             237, '#dc2626'    // Red (237+ per 1,000)
@@ -176,32 +176,7 @@ export function addDataLayer(
         });
         
         if (fillLayer) {
-          // Test with bright red color for visibility
-          console.log('🔴 Testing layer visibility with bright red...');
-          map.setPaintProperty(`${layerId}-fill`, 'fill-color', '#ff0000');
-          map.setPaintProperty(`${layerId}-fill`, 'fill-opacity', 0.8);
           map.setLayoutProperty(`${layerId}-fill`, 'visibility', 'visible');
-          
-          // Revert to original colors after 3 seconds
-          setTimeout(() => {
-            console.log('🎨 Reverting to original color scheme...');
-            map.setPaintProperty(`${layerId}-fill`, 'fill-color', [
-              'case',
-              ['>', ['get', propertyKey], 0],
-              [
-                'interpolate',
-                ['linear'],
-                ['get', propertyKey],
-                min, '#1a9850',
-                q25, '#91bfdb', 
-                median, '#fee08b',
-                q75, '#fc8d59',
-                max, '#d73027'
-              ],
-              'rgba(220, 220, 220, 0.5)'
-            ]);
-            map.setPaintProperty(`${layerId}-fill`, 'fill-opacity', 0.8);
-          }, 3000);
         }
         
         if (lineLayer) {
