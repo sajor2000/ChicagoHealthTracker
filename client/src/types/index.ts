@@ -61,7 +61,7 @@ export interface ChicagoGeoData {
 }
 
 export type ViewMode = 'census' | 'community' | 'wards';
-export type DiseaseType = 'diabetes' | 'hypertension' | 'heart' | 'copd' | 'asthma' | 'stroke' | 'ckd' | 'depression' | 'anxiety' | 'obesity' | 'cancer' | 'arthritis' | 'osteoporosis' | 'liver' | 'substance';
+export type DiseaseType = 'diabetes' | 'hypertension' | 'heart_disease' | 'copd' | 'asthma' | 'stroke' | 'obesity' | 'mental_health';
 export type VisualizationMode = 'count' | 'rate' | 'age_adjusted';
 
 export interface AppState {

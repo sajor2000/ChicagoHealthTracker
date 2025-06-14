@@ -14,19 +14,12 @@ interface WaterSideControlsProps {
 const diseaseOptions = [
   { value: 'diabetes', label: 'Diabetes' },
   { value: 'hypertension', label: 'Hypertension' },
-  { value: 'heart', label: 'Heart Disease' },
+  { value: 'heart_disease', label: 'Heart Disease' },
   { value: 'copd', label: 'COPD' },
   { value: 'asthma', label: 'Asthma' },
   { value: 'stroke', label: 'Stroke' },
-  { value: 'ckd', label: 'Kidney Disease' },
-  { value: 'depression', label: 'Depression' },
-  { value: 'anxiety', label: 'Anxiety' },
   { value: 'obesity', label: 'Obesity' },
-  { value: 'cancer', label: 'Cancer' },
-  { value: 'arthritis', label: 'Arthritis' },
-  { value: 'osteoporosis', label: 'Osteoporosis' },
-  { value: 'liver', label: 'Liver Disease' },
-  { value: 'substance', label: 'Substance Use' }
+  { value: 'mental_health', label: 'Mental Health' }
 ];
 
 export default function WaterSideControls({

@@ -31,14 +31,16 @@ export function getDiseaseInfo(diseaseType: string) {
   const diseases = {
     diabetes: { name: 'Diabetes', icdCodes: 'E10-E14' },
     hypertension: { name: 'Hypertension', icdCodes: 'I10-I15' },
-    heart: { name: 'Heart Disease', icdCodes: 'I20-I25' },
+    heart_disease: { name: 'Heart Disease', icdCodes: 'I20-I25' },
+    heart: { name: 'Heart Disease', icdCodes: 'I20-I25' }, // Alias for compatibility
     copd: { name: 'COPD', icdCodes: 'J40-J44' },
-    asthma: { name: 'Asthma', icdCodes: 'J45' },
+    asthma: { name: 'Asthma', icdCodes: 'J45-J46' },
     stroke: { name: 'Stroke', icdCodes: 'I60-I69' },
-    ckd: { name: 'Chronic Kidney Disease', icdCodes: 'N18' },
-    depression: { name: 'Depression', icdCodes: 'F32-F33' },
-    anxiety: { name: 'Anxiety Disorders', icdCodes: 'F40-F41' },
     obesity: { name: 'Obesity', icdCodes: 'E66' },
+    mental_health: { name: 'Mental Health', icdCodes: 'F32-F41' },
+    depression: { name: 'Depression', icdCodes: 'F32-F33' }, // Alias for compatibility
+    anxiety: { name: 'Anxiety Disorders', icdCodes: 'F40-F41' }, // Alias for compatibility
+    ckd: { name: 'Chronic Kidney Disease', icdCodes: 'N18' },
     cancer: { name: 'Cancer', icdCodes: 'C00-C97' },
     arthritis: { name: 'Arthritis', icdCodes: 'M05-M06, M15-M19' },
     osteoporosis: { name: 'Osteoporosis', icdCodes: 'M80-M81' },
