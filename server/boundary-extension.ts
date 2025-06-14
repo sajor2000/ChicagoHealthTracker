@@ -19,17 +19,16 @@ function isCoastalTract(coordinates: number[][][]): boolean {
   const ring = coordinates[0];
   if (!ring || ring.length < 3) return false;
   
-  // Check if any coordinate is east of -87.55 (close to lake)
-  const hasEasternBoundary = ring.some(([lng, lat]) => 
-    lng > -87.55 && 
-    lat > CHICAGO_SOUTH_LAT && lat < CHICAGO_NORTH_LAT
-  );
-  
-  // Check if tract has eastern boundary but doesn't reach actual shoreline
+  // Much more aggressive detection - any tract with eastern boundary
   const maxLng = Math.max(...ring.map(([lng]) => lng));
-  const needsExtension = maxLng > -87.55 && maxLng < -87.52;
+  const minLat = Math.min(...ring.map(([, lat]) => lat));
+  const maxLat = Math.max(...ring.map(([, lat]) => lat));
   
-  return hasEasternBoundary && needsExtension;
+  // Tract is coastal if it's on the eastern edge of Chicago and within city bounds
+  return maxLng > -87.65 && 
+         minLat > CHICAGO_SOUTH_LAT && 
+         maxLat < CHICAGO_NORTH_LAT &&
+         maxLng < LAKE_MICHIGAN_LONGITUDE + 0.01; // Not already at shoreline
 }
 
 /**
@@ -41,43 +40,41 @@ function extendToShoreline(coordinates: number[][][]): number[][][] {
   const ring = coordinates[0];
   if (!ring || ring.length < 3) return coordinates;
   
-  // Find easternmost points that need extension
-  const easternPoints: Array<{index: number, lng: number, lat: number}> = [];
+  const newRing: number[][] = [];
+  let addedShorelinePoints = false;
   
-  ring.forEach(([lng, lat], index) => {
-    if (lng > -87.55 && lng < -87.52 && lat > CHICAGO_SOUTH_LAT && lat < CHICAGO_NORTH_LAT) {
-      easternPoints.push({index, lng, lat});
+  for (let i = 0; i < ring.length; i++) {
+    const [lng, lat] = ring[i];
+    
+    // If this point is east of -87.60 and within Chicago bounds, extend it to shoreline
+    if (lng > -87.60 && lat > CHICAGO_SOUTH_LAT && lat < CHICAGO_NORTH_LAT) {
+      newRing.push([LAKE_MICHIGAN_LONGITUDE, lat]);
+      addedShorelinePoints = true;
+    } else {
+      newRing.push([lng, lat]);
     }
-  });
+  }
   
-  if (easternPoints.length === 0) return coordinates;
-  
-  // Create new ring with extended boundaries
-  const newRing = [...ring];
-  
-  // Extend all eastern points to shoreline
-  easternPoints.forEach(point => {
-    newRing[point.index] = [LAKE_MICHIGAN_LONGITUDE, point.lat];
-  });
-  
-  // Find northernmost and southernmost extended points
-  const extendedLats = easternPoints.map(p => p.lat).sort((a, b) => a - b);
-  if (extendedLats.length >= 2) {
-    const minLat = extendedLats[0];
-    const maxLat = extendedLats[extendedLats.length - 1];
-    
-    // Insert additional shoreline points to ensure complete coverage
-    const firstEasternIndex = easternPoints[0].index;
-    const lastEasternIndex = easternPoints[easternPoints.length - 1].index;
-    
-    // Add shoreline segment between extended points
-    const shorelineSegment = [
-      [LAKE_MICHIGAN_LONGITUDE, maxLat],
-      [LAKE_MICHIGAN_LONGITUDE, minLat]
-    ];
-    
-    // Insert shoreline segment
-    newRing.splice(Math.max(firstEasternIndex, lastEasternIndex) + 1, 0, ...shorelineSegment);
+  // If we extended any points, add connecting shoreline segments
+  if (addedShorelinePoints) {
+    const shorelinePoints = newRing.filter(([lng]) => lng === LAKE_MICHIGAN_LONGITUDE);
+    if (shorelinePoints.length >= 2) {
+      const minLat = Math.min(...shorelinePoints.map(([, lat]) => lat));
+      const maxLat = Math.max(...shorelinePoints.map(([, lat]) => lat));
+      
+      // Find where to insert shoreline connector
+      const firstShorelineIndex = newRing.findIndex(([lng]) => lng === LAKE_MICHIGAN_LONGITUDE);
+      const lastShorelineIndex = newRing.findLastIndex(([lng]) => lng === LAKE_MICHIGAN_LONGITUDE);
+      
+      if (firstShorelineIndex !== lastShorelineIndex) {
+        // Insert vertical shoreline connector between first and last shoreline points
+        const connector = [
+          [LAKE_MICHIGAN_LONGITUDE, maxLat],
+          [LAKE_MICHIGAN_LONGITUDE, minLat]
+        ];
+        newRing.splice(lastShorelineIndex + 1, 0, ...connector);
+      }
+    }
   }
   
   return [newRing];
