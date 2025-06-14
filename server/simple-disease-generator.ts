@@ -1,0 +1,93 @@
+/**
+ * Simple disease prevalence generator for Chicago
+ * Using realistic epidemiological rates without density adjustments
+ */
+
+interface DiseaseData {
+  id: string;
+  name: string;
+  icdCodes: string;
+  count: number;
+  rate: number;
+}
+
+// Realistic disease prevalence rates per 1,000 population based on CDC data
+const BASE_RATES = {
+  diabetes: 70,        // 7% prevalence
+  hypertension: 300,   // 30% prevalence  
+  heart_disease: 40,   // 4% prevalence
+  stroke: 20,          // 2% prevalence
+  asthma: 60,          // 6% prevalence
+  copd: 35,            // 3.5% prevalence
+  obesity: 200,        // 20% prevalence
+  mental_health: 80    // 8% prevalence
+};
+
+const DISEASE_NAMES = {
+  diabetes: 'Diabetes',
+  hypertension: 'Hypertension', 
+  heart_disease: 'Heart Disease',
+  stroke: 'Stroke',
+  asthma: 'Asthma',
+  copd: 'COPD',
+  obesity: 'Obesity',
+  mental_health: 'Mental Health'
+};
+
+const ICD_CODES = {
+  diabetes: 'E10-E14',
+  hypertension: 'I10-I15',
+  heart_disease: 'I20-I25', 
+  stroke: 'I60-I69',
+  asthma: 'J45-J46',
+  copd: 'J40-J44',
+  obesity: 'E66',
+  mental_health: 'F32-F41'
+};
+
+/**
+ * Generate disease data with realistic rates
+ */
+export function generateDiseaseData(population: number, disparityFactor: number = 1.0): Record<string, DiseaseData> {
+  const diseases: Record<string, DiseaseData> = {};
+  
+  Object.keys(BASE_RATES).forEach(diseaseId => {
+    const baseRate = BASE_RATES[diseaseId as keyof typeof BASE_RATES];
+    
+    // Apply disparity factor with small random variation
+    const adjustedRate = baseRate * disparityFactor * (0.9 + Math.random() * 0.2);
+    const prevalence = adjustedRate / 1000; // Convert to decimal
+    
+    const count = Math.round(population * prevalence);
+    const ratePerThousand = parseFloat((count / population * 1000).toFixed(1));
+    
+    diseases[diseaseId] = {
+      id: diseaseId,
+      name: DISEASE_NAMES[diseaseId as keyof typeof DISEASE_NAMES],
+      icdCodes: ICD_CODES[diseaseId as keyof typeof ICD_CODES],
+      count: count,
+      rate: ratePerThousand
+    };
+  });
+  
+  return diseases;
+}
+
+/**
+ * Calculate simple health disparity factor based on demographics
+ */
+export function calculateDisparityFactor(demographics: any): number {
+  let factor = 1.0;
+  
+  if (demographics?.race && demographics?.totalPopulation > 0) {
+    const totalPop = demographics.totalPopulation;
+    const blackPct = (demographics.race.black || 0) / totalPop;
+    const hispanicPct = (demographics.ethnicity?.hispanic || 0) / totalPop;
+    
+    // South/west Chicago areas get modestly higher disease rates
+    factor += (blackPct * 0.3) + (hispanicPct * 0.2);
+  }
+  
+  // Cap maximum disparity at 1.8x baseline
+  return Math.min(factor, 1.8);
+}
