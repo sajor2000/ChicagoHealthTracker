@@ -354,7 +354,7 @@ function aggregateDiseaseData(overlaps: Array<{tract: CensusTract, overlapRatio:
   const dataQuality = Math.round((avgOverlapRatio * 0.6 + tractCountFactor * 0.4) * 100);
 
   // Calculate final aggregated values with health disparity enhancement
-  const diseases: Record<string, any> = {};
+  let diseases: Record<string, any> = {};
   
   // Use research-based disease generation for aggregated units
   // This ensures authentic CDC/NIH prevalence patterns are maintained at community/ward level

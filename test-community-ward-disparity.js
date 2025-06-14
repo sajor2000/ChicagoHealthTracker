@@ -17,12 +17,12 @@ async function testCommunityWardDisparity() {
     const communities = communityData.features.map(f => ({
       name: f.properties.name,
       population: f.properties.population,
-      diabetesCount: f.properties.diabetes_count,
-      diabetesRate: f.properties.diabetes_rate,
-      obesityCount: f.properties.obesity_count,
-      obesityRate: f.properties.obesity_rate,
+      diabetesCount: f.properties.diseases?.diabetes?.count || 0,
+      diabetesRate: f.properties.diseases?.diabetes?.rate || 0,
+      obesityCount: f.properties.diseases?.obesity?.count || 0,
+      obesityRate: f.properties.diseases?.obesity?.rate || 0,
       demographics: f.properties.demographics
-    })).filter(c => c.demographics);
+    })).filter(c => c.diabetesRate > 0);
     
     // Sort by diabetes rate
     communities.sort((a, b) => b.diabetesRate - a.diabetesRate);
@@ -86,12 +86,12 @@ async function testCommunityWardDisparity() {
     const wards = wardData.features.map(f => ({
       name: f.properties.name,
       population: f.properties.population,
-      diabetesCount: f.properties.diabetes_count,
-      diabetesRate: f.properties.diabetes_rate,
-      obesityCount: f.properties.obesity_count,
-      obesityRate: f.properties.obesity_rate,
+      diabetesCount: f.properties.diseases?.diabetes?.count || 0,
+      diabetesRate: f.properties.diseases?.diabetes?.rate || 0,
+      obesityCount: f.properties.diseases?.obesity?.count || 0,
+      obesityRate: f.properties.diseases?.obesity?.rate || 0,
       demographics: f.properties.demographics
-    })).filter(w => w.demographics);
+    })).filter(w => w.diabetesRate > 0);
     
     // Sort by diabetes rate
     wards.sort((a, b) => b.diabetesRate - a.diabetesRate);
