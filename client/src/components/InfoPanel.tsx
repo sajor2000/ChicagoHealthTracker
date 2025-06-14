@@ -191,7 +191,7 @@ export default function InfoPanel({ selectedArea, isOpen, onClose }: InfoPanelPr
                       className="font-mono font-medium"
                       style={{ color: 'var(--text-primary)' }}
                     >
-                      {formatNumber(item.value)} ({selectedArea.demographics ? ((item.value / selectedArea.demographics.population.total) * 100).toFixed(1) : '0.0'}%)
+                      {formatNumber(item.value)} ({selectedArea.population ? ((item.value / selectedArea.population) * 100).toFixed(1) : '0.0'}%)
                     </span>
                   </div>
                 ))}
@@ -216,7 +216,7 @@ export default function InfoPanel({ selectedArea, isOpen, onClose }: InfoPanelPr
                     className="font-mono font-medium"
                     style={{ color: 'var(--text-primary)' }}
                   >
-                    {formatNumber(selectedArea.demographics.ethnicity.hispanic)} ({((selectedArea.demographics.ethnicity.hispanic / selectedArea.demographics.ethnicity.total) * 100).toFixed(1)}%)
+                    {formatNumber(selectedArea.demographics.ethnicity.hispanic)} ({selectedArea.demographics.ethnicity.total ? ((selectedArea.demographics.ethnicity.hispanic / selectedArea.demographics.ethnicity.total) * 100).toFixed(1) : '0.0'}%)
                   </span>
                 </div>
                 <div 
@@ -228,7 +228,7 @@ export default function InfoPanel({ selectedArea, isOpen, onClose }: InfoPanelPr
                     className="font-mono font-medium"
                     style={{ color: 'var(--text-primary)' }}
                   >
-                    {formatNumber(selectedArea.demographics.ethnicity.nonHispanic)} ({((selectedArea.demographics.ethnicity.nonHispanic / selectedArea.demographics.ethnicity.total) * 100).toFixed(1)}%)
+                    {formatNumber(selectedArea.demographics.ethnicity.nonHispanic)} ({selectedArea.demographics.ethnicity.total ? ((selectedArea.demographics.ethnicity.nonHispanic / selectedArea.demographics.ethnicity.total) * 100).toFixed(1) : '0.0'}%)
                   </span>
                 </div>
               </div>
@@ -300,7 +300,7 @@ export default function InfoPanel({ selectedArea, isOpen, onClose }: InfoPanelPr
                     className="font-mono font-medium"
                     style={{ color: 'var(--text-primary)' }}
                   >
-                    {formatNumber(selectedArea.demographics.population.total - selectedArea.demographics.population.adults18Plus)} ({(((selectedArea.demographics.population.total - selectedArea.demographics.population.adults18Plus) / selectedArea.demographics.population.total) * 100).toFixed(1)}%)
+                    {formatNumber(selectedArea.demographics.age.under18)} ({selectedArea.population ? ((selectedArea.demographics.age.under18 / selectedArea.population) * 100).toFixed(1) : '0.0'}%)
                   </span>
                 </div>
                 <div 
@@ -312,7 +312,7 @@ export default function InfoPanel({ selectedArea, isOpen, onClose }: InfoPanelPr
                     className="font-mono font-medium"
                     style={{ color: 'var(--text-primary)' }}
                   >
-                    {formatNumber(selectedArea.demographics.population.adults18Plus)} ({((selectedArea.demographics.population.adults18Plus / selectedArea.demographics.population.total) * 100).toFixed(1)}%)
+                    {formatNumber(selectedArea.demographics.age.age18Plus)} ({selectedArea.population ? ((selectedArea.demographics.age.age18Plus / selectedArea.population) * 100).toFixed(1) : '0.0'}%)
                   </span>
                 </div>
               </div>

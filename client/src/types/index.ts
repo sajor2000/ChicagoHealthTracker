@@ -7,10 +7,6 @@ export interface Disease {
 }
 
 export interface Demographics {
-  population: {
-    total: number;
-    adults18Plus: number;
-  };
   race: {
     white: number;
     black: number;
@@ -29,6 +25,11 @@ export interface Demographics {
     totalUnits: number;
     occupied: number;
     vacant: number;
+  };
+  age: {
+    under18: number;
+    age18Plus: number;
+    age65Plus: number;
   };
 }
 
