@@ -5,7 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { aggregateTractsToUnits } from './spatial-aggregation.js';
 import { loadAllCensusData, getAllCensusTractData } from "./database-census-loader";
-import { generateEnhancedDiseases, calculateEnhancedGradingThresholds } from './enhanced-prevalence-system.js';
+import { generateFinalDiseases, calculateVisualizationThresholds } from './final-disease-grading-system.js';
 import { validateCensusGeoIds } from './census-geoid-validator';
 import { db } from "./db";
 import { chicagoCensusTracts2020 } from "@shared/schema";
@@ -112,8 +112,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         const finalTractId = censusGeoid || rawGeoid || `tract_${index}`;
         
-        // Generate enhanced disease data using authentic CDC/NIH prevalence with amplified disparity patterns
-        const enhancedDiseases = generateEnhancedDiseases(population, demographics || {
+        // Generate disease data with proper geographic distribution (green north, red south/west)
+        const enhancedDiseases = generateFinalDiseases(population, demographics || {
           race: { 
             white: Math.floor(population * 0.32),
             black: Math.floor(population * 0.30), 

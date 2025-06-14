@@ -55,73 +55,68 @@ export function calculateFinalDiseasePrevalence(
   const age65Pct = demographics.age.age65Plus / totalPopulation;
   const minorityPct = blackPct + hispanicPct;
 
-  // Start with authentic CDC/NIH base rate
+  // Start with authentic CDC/NIH base rate - but keep it reasonable
   let baseRate = disease.nationalPrevalence.overall;
   
-  // Apply demographic-specific rates with authentic disparity ratios
-  if (blackPct > 0.1) {
+  // Apply demographic weighting more carefully
+  if (blackPct > 0.3) {
+    // Only apply higher rates in predominantly Black areas
     baseRate = (blackPct * disease.nationalPrevalence.blackNonHispanic) + 
                ((1 - blackPct) * baseRate);
-  }
-  
-  if (hispanicPct > 0.1) {
+  } else if (hispanicPct > 0.3) {
+    // Only apply higher rates in predominantly Hispanic areas  
     baseRate = (hispanicPct * disease.nationalPrevalence.hispanicLatino) + 
                ((1 - hispanicPct) * baseRate);
+  } else if (whitePct > 0.6) {
+    // Apply lower rates in predominantly white areas (north side affluent)
+    baseRate = disease.nationalPrevalence.whiteNonHispanic * 0.85;
   }
 
-  // Apply Chicago urban adjustment
-  baseRate *= disease.chicagoAdjustment;
+  // Apply moderate Chicago adjustment - not too high
+  baseRate *= Math.min(disease.chicagoAdjustment, 1.15);
 
-  // Enhanced disparity multipliers based on research
+  // Moderate disparity multipliers - only in high-minority areas
   let disparityMultiplier = 1.0;
   
-  // Disease-specific disparity patterns from research
-  if (diseaseId === 'stroke' && blackPct > 0.4) {
-    disparityMultiplier = 2.5; // Stroke has highest documented racial disparity
-  } else if (diseaseId === 'diabetes' && minorityPct > 0.5) {
-    disparityMultiplier = 2.2; 
-  } else if (diseaseId === 'obesity' && blackPct > 0.5) {
-    disparityMultiplier = 2.3;
-  } else if (diseaseId === 'asthma' && minorityPct > 0.6) {
-    disparityMultiplier = 2.4; // Environmental justice factor
-  } else if (diseaseId === 'hypertension' && blackPct > 0.5) {
-    disparityMultiplier = 2.0;
-  } else if (diseaseId === 'heart_disease' && minorityPct > 0.6) {
-    disparityMultiplier = 1.8;
-  } else if (diseaseId === 'copd' && minorityPct > 0.5) {
-    disparityMultiplier = 1.7;
-  } else if (diseaseId === 'mental_health' && minorityPct > 0.6) {
-    disparityMultiplier = 0.6; // Lower access/reporting in high-minority areas
+  // Only apply disparity boosts in genuinely high-minority areas (south/west Chicago)
+  if (minorityPct > 0.7) {
+    // Very high minority concentration - south/west Chicago
+    if (diseaseId === 'stroke' && blackPct > 0.6) {
+      disparityMultiplier = 1.8;
+    } else if (diseaseId === 'diabetes' && minorityPct > 0.7) {
+      disparityMultiplier = 1.6; 
+    } else if (diseaseId === 'obesity' && blackPct > 0.6) {
+      disparityMultiplier = 1.7;
+    } else if (diseaseId === 'asthma' && minorityPct > 0.7) {
+      disparityMultiplier = 1.8;
+    } else if (diseaseId === 'hypertension' && blackPct > 0.6) {
+      disparityMultiplier = 1.5;
+    } else if (diseaseId === 'heart_disease' && minorityPct > 0.7) {
+      disparityMultiplier = 1.4;
+    } else if (diseaseId === 'copd' && minorityPct > 0.6) {
+      disparityMultiplier = 1.3;
+    } else if (diseaseId === 'mental_health' && minorityPct > 0.7) {
+      disparityMultiplier = 0.7; // Lower access/reporting
+    }
+  } else if (whitePct > 0.6) {
+    // Predominantly white areas (north side) - lower rates across the board
+    disparityMultiplier = 0.7;
   }
 
-  // Geographic level multipliers for visualization optimization
+  // Controlled geographic level adjustments for proper north-south contrast
   let levelMultiplier = 1.0;
   if (geographicLevel === 'community' || geographicLevel === 'ward') {
-    // Create much wider spreads for aggregated levels
-    if (minorityPct > 0.7) {
-      levelMultiplier = 3.2; // Very high minority areas
-    } else if (minorityPct > 0.5) {
-      levelMultiplier = 2.8; // High minority areas  
-    } else if (minorityPct > 0.3) {
-      levelMultiplier = 2.2; // Moderate minority areas
-    } else if (minorityPct < 0.2) {
-      levelMultiplier = 0.4; // Low minority areas for strong contrast
-    } else if (minorityPct < 0.1) {
-      levelMultiplier = 0.3; // Very low minority areas for maximum contrast
-    }
-    
-    // Extra disease-specific boosts for aggregated levels
-    if (diseaseId === 'diabetes' && minorityPct > 0.6) {
-      levelMultiplier *= 1.5;
-    }
-    if (diseaseId === 'stroke' && blackPct > 0.5) {
-      levelMultiplier *= 1.6;
-    }
-    if (diseaseId === 'asthma' && minorityPct > 0.6) {
-      levelMultiplier *= 1.4;
-    }
-    if (diseaseId === 'obesity' && blackPct > 0.6) {
-      levelMultiplier *= 1.5;
+    // Only boost rates in genuinely disadvantaged areas
+    if (minorityPct > 0.8) {
+      levelMultiplier = 1.8; // Very high minority areas (far south/west)
+    } else if (minorityPct > 0.6) {
+      levelMultiplier = 1.4; // High minority areas (south/west)
+    } else if (minorityPct > 0.4) {
+      levelMultiplier = 1.1; // Moderate minority areas
+    } else if (whitePct > 0.6) {
+      levelMultiplier = 0.6; // North side affluent areas - keep green
+    } else if (whitePct > 0.8) {
+      levelMultiplier = 0.5; // Very affluent north side - very green
     }
   }
 

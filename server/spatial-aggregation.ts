@@ -1,7 +1,7 @@
 // Spatial aggregation utilities for Chicago health data
 // Aggregates census tract data to community areas and wards based on geographic overlap
 
-import { generateEnhancedDiseases } from './enhanced-prevalence-system.js';
+import { generateFinalDiseases } from './final-disease-grading-system.js';
 
 interface Point {
   lng: number;
@@ -385,8 +385,8 @@ function aggregateDiseaseData(overlaps: Array<{tract: CensusTract, overlapRatio:
     }
   };
 
-  // Generate enhanced disease data for the aggregated geographic unit
-  diseases = generateEnhancedDiseases(
+  // Generate disease data with proper north-south geographic distribution
+  diseases = generateFinalDiseases(
     Math.round(totalWeightedPopulation),
     aggregatedDemographics,
     'community' // Use community level adjustments for both community areas and wards
