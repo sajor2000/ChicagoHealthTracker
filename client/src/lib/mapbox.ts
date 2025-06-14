@@ -36,17 +36,36 @@ export function addDataLayer(
   visualizationMode: 'count' | 'rate'
 ) {
   try {
+    console.log('addDataLayer called with:', {
+      layerId,
+      selectedDisease,
+      visualizationMode,
+      featuresCount: data.features?.length,
+      hasValidFeatures: data.features?.length > 0,
+      firstFeatureGeometry: data.features?.[0]?.geometry?.type
+    });
+
+    // Validate data structure
+    if (!data || !data.features || data.features.length === 0) {
+      console.error('Invalid or empty GeoJSON data:', data);
+      return;
+    }
+
     // Remove existing layers if they exist
     const existingLayers = [`${layerId}-fill`, `${layerId}-border`, `${layerId}-hover`, `${layerId}-labels`, `${layerId}-population`];
     existingLayers.forEach(layer => {
       if (map.getLayer(layer)) {
+        console.log('Removing existing layer:', layer);
         map.removeLayer(layer);
       }
     });
 
+    // Remove existing source if it exists
     if (map.getSource(layerId)) {
+      console.log('Updating existing source:', layerId);
       (map.getSource(layerId) as mapboxgl.GeoJSONSource).setData(data);
     } else {
+      console.log('Adding new source:', layerId);
       map.addSource(layerId, {
         type: 'geojson',
         data,
@@ -63,10 +82,12 @@ export function addDataLayer(
       console.log(`Property value for ${propertyKey}:`, firstFeature.properties?.[propertyKey]);
     }
 
-    // Add fill layer
-    map.addLayer({
+    // Add fill layer with comprehensive error handling
+    console.log('Adding fill layer with paint expression...');
+    
+    const fillLayer = {
       id: `${layerId}-fill`,
-      type: 'fill',
+      type: 'fill' as const,
       source: layerId,
       paint: {
         'fill-color': [
@@ -155,7 +176,10 @@ export function addDataLayer(
         ],
         'fill-opacity': 0.8
       }
-    });
+    };
+    
+    console.log('Attempting to add fill layer...');
+    map.addLayer(fillLayer);
 
     // Determine border style based on geographic level
     const getBorderStyle = (layerId: string) => {

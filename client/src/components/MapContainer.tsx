@@ -96,6 +96,15 @@ export default function MapContainer({
 
   // Update map data when props change
   useEffect(() => {
+    console.log('Map data update:', {
+      hasMap: !!map.current,
+      hasGeoData: !!geoData,
+      isLoading,
+      activeView,
+      selectedDisease,
+      featuresCount: geoData?.features?.length
+    });
+
     if (!map.current || !geoData || isLoading) return;
 
     const layerId = `${activeView}-data`;
@@ -105,10 +114,17 @@ export default function MapContainer({
       clearAllGeographicLayers();
 
       // Process data for visualization
+      console.log('Raw geoData sample:', {
+        type: geoData.type,
+        featuresCount: geoData.features?.length,
+        firstFeatureProps: geoData.features?.[0]?.properties ? Object.keys(geoData.features[0].properties) : 'none',
+        firstFeatureDiseases: geoData.features?.[0]?.properties?.diseases ? Object.keys(geoData.features[0].properties.diseases) : 'none'
+      });
+
       const processedData: GeoJSON.FeatureCollection = {
         type: 'FeatureCollection',
         features: geoData.features.map(feature => {
-          const diseaseData = feature.properties.diseases[selectedDisease];
+          const diseaseData = feature.properties?.diseases?.[selectedDisease];
           const count = diseaseData?.count || 0;
           const rate = diseaseData?.rate || 0;
           
@@ -123,6 +139,12 @@ export default function MapContainer({
           } as GeoJSON.Feature;
         })
       };
+
+      console.log('Processed data ready:', {
+        featuresCount: processedData.features.length,
+        sampleFeature: processedData.features[0]?.properties,
+        hasGeometry: !!processedData.features[0]?.geometry
+      });
 
       // Filter suppressed data if needed
       if (!showSuppressed) {
