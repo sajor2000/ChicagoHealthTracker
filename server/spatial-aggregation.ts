@@ -273,6 +273,17 @@ function aggregateDiseaseData(overlaps: Array<{tract: CensusTract, overlapRatio:
   let totalOverlapArea = 0;
   const diseaseAggregates: Record<string, {totalCount: number, totalWeightedRate: number, weightSum: number}> = {};
   const constituentTracts: string[] = [];
+  
+  // Demographics aggregation
+  const demographicsAggregate = {
+    race: {
+      white: 0, black: 0, americanIndian: 0, asian: 0,
+      pacificIslander: 0, otherRace: 0, multiRace: 0
+    },
+    ethnicity: { total: 0, hispanic: 0, nonHispanic: 0 },
+    housing: { totalUnits: 0, occupied: 0, vacant: 0 },
+    age: { under18: 0, age18Plus: 0, age65Plus: 0 }
+  };
 
   for (const { tract, overlapRatio } of overlaps) {
     // Calculate effective population in the overlapping area
@@ -286,6 +297,35 @@ function aggregateDiseaseData(overlaps: Array<{tract: CensusTract, overlapRatio:
     totalOverlapArea += overlapRatio;
     
     constituentTracts.push(tract.id);
+
+    // Aggregate demographics if available
+    if (tract.demographics) {
+      const demo = tract.demographics;
+      
+      // Aggregate race data
+      demographicsAggregate.race.white += demo.race.white * overlapRatio;
+      demographicsAggregate.race.black += demo.race.black * overlapRatio;
+      demographicsAggregate.race.americanIndian += demo.race.americanIndian * overlapRatio;
+      demographicsAggregate.race.asian += demo.race.asian * overlapRatio;
+      demographicsAggregate.race.pacificIslander += demo.race.pacificIslander * overlapRatio;
+      demographicsAggregate.race.otherRace += demo.race.otherRace * overlapRatio;
+      demographicsAggregate.race.multiRace += demo.race.multiRace * overlapRatio;
+      
+      // Aggregate ethnicity data
+      demographicsAggregate.ethnicity.total += demo.ethnicity.total * overlapRatio;
+      demographicsAggregate.ethnicity.hispanic += demo.ethnicity.hispanic * overlapRatio;
+      demographicsAggregate.ethnicity.nonHispanic += demo.ethnicity.nonHispanic * overlapRatio;
+      
+      // Aggregate housing data
+      demographicsAggregate.housing.totalUnits += demo.housing.totalUnits * overlapRatio;
+      demographicsAggregate.housing.occupied += demo.housing.occupied * overlapRatio;
+      demographicsAggregate.housing.vacant += demo.housing.vacant * overlapRatio;
+      
+      // Aggregate age data
+      demographicsAggregate.age.under18 += demo.age.under18 * overlapRatio;
+      demographicsAggregate.age.age18Plus += demo.age.age18Plus * overlapRatio;
+      demographicsAggregate.age.age65Plus += demo.age.age65Plus * overlapRatio;
+    }
 
     // Aggregate each disease using population weighting
     for (const [diseaseId, diseaseData] of Object.entries(tract.diseases)) {
@@ -324,12 +364,41 @@ function aggregateDiseaseData(overlaps: Array<{tract: CensusTract, overlapRatio:
     };
   }
 
+  // Round demographics values
+  const finalDemographics = overlaps.some(o => o.tract.demographics) ? {
+    race: {
+      white: Math.round(demographicsAggregate.race.white),
+      black: Math.round(demographicsAggregate.race.black),
+      americanIndian: Math.round(demographicsAggregate.race.americanIndian),
+      asian: Math.round(demographicsAggregate.race.asian),
+      pacificIslander: Math.round(demographicsAggregate.race.pacificIslander),
+      otherRace: Math.round(demographicsAggregate.race.otherRace),
+      multiRace: Math.round(demographicsAggregate.race.multiRace)
+    },
+    ethnicity: {
+      total: Math.round(demographicsAggregate.ethnicity.total),
+      hispanic: Math.round(demographicsAggregate.ethnicity.hispanic),
+      nonHispanic: Math.round(demographicsAggregate.ethnicity.nonHispanic)
+    },
+    housing: {
+      totalUnits: Math.round(demographicsAggregate.housing.totalUnits),
+      occupied: Math.round(demographicsAggregate.housing.occupied),
+      vacant: Math.round(demographicsAggregate.housing.vacant)
+    },
+    age: {
+      under18: Math.round(demographicsAggregate.age.under18),
+      age18Plus: Math.round(demographicsAggregate.age.age18Plus),
+      age65Plus: Math.round(demographicsAggregate.age.age65Plus)
+    }
+  } : undefined;
+
   return {
     diseases,
     totalPopulation: Math.round(totalWeightedPopulation),
     weightedDensity: totalWeightedPopulation > 0 ? Math.round(totalAreaWeightedDensity / totalWeightedPopulation) : 0,
     dataQuality,
-    constituentTracts
+    constituentTracts,
+    demographics: finalDemographics
   };
 }
 
@@ -344,7 +413,33 @@ export function aggregateTractsToUnits(
   density: number,
   diseases: Record<string, any>,
   dataQuality: number,
-  constituentTracts: string[]
+  constituentTracts: string[],
+  demographics?: {
+    race: {
+      white: number;
+      black: number;
+      americanIndian: number;
+      asian: number;
+      pacificIslander: number;
+      otherRace: number;
+      multiRace: number;
+    };
+    ethnicity: {
+      total: number;
+      hispanic: number;
+      nonHispanic: number;
+    };
+    housing: {
+      totalUnits: number;
+      occupied: number;
+      vacant: number;
+    };
+    age: {
+      under18: number;
+      age18Plus: number;
+      age65Plus: number;
+    };
+  }
 }> {
   console.log(`Starting spatial aggregation for ${units.length} geographic units from ${tracts.length} census tracts...`);
   
@@ -376,7 +471,8 @@ export function aggregateTractsToUnits(
         aggregatedData.diseases : 
         generateFallbackDiseases(finalPopulation),
       dataQuality: overlappingTracts.length > 0 ? dataQuality : 75,
-      constituentTracts: overlappingTracts.map(o => o.tract.id)
+      constituentTracts: overlappingTracts.map(o => o.tract.id),
+      demographics: aggregatedData.demographics
     };
   });
 }
