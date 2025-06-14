@@ -322,11 +322,14 @@ export default function MapContainer({
   }
 
   return (
-    <div 
-      id="map"
-      ref={mapContainer}
-      className={`fixed inset-0 top-32 ${isLoading ? 'loading' : ''}`}
-      style={{ background: 'var(--bg-base)' }}
-    />
+    <div className="relative">
+      <div 
+        id="map"
+        ref={mapContainer}
+        className={`fixed inset-0 top-32 ${isLoading ? 'loading' : ''}`}
+        style={{ background: 'var(--bg-base)' }}
+      />
+      {/* Disable SVG overlay that covers Mapbox borders */}
+    </div>
   );
 }

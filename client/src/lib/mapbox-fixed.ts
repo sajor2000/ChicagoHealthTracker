@@ -148,27 +148,35 @@ export function addDataLayer(
         }
       });
 
-      // Add border layer after fill layer - no positioning conflicts
-      setTimeout(() => {
-        if (!map.getLayer(`${layerId}-line`)) {
-          map.addLayer({
-            id: `${layerId}-line`,
-            type: 'line',
-            source: layerId,
-            layout: {
-              'line-join': 'round',
-              'line-cap': 'round'
-            },
-            paint: {
-              'line-color': '#ffffff',
-              'line-width': 3.0,
-              'line-opacity': 1.0
-            }
-          });
-          
-          console.log(`✅ Border layer added: ${layerId}-line`);
+      // Add white border layer immediately after fill layer
+      map.addLayer({
+        id: `${layerId}-line`,
+        type: 'line',
+        source: layerId,
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round'
+        },
+        paint: {
+          'line-color': '#ffffff',
+          'line-width': 4.0,
+          'line-opacity': 1.0
         }
-      }, 50);
+      });
+      
+      // Debug layer ordering
+      const allLayers = map.getStyle().layers;
+      const fillLayerIndex = allLayers.findIndex(layer => layer.id === `${layerId}-fill`);
+      const lineLayerIndex = allLayers.findIndex(layer => layer.id === `${layerId}-line`);
+      
+      console.log(`Layer ordering debug:`, {
+        fillIndex: fillLayerIndex,
+        lineIndex: lineLayerIndex,
+        totalLayers: allLayers.length,
+        lastFewLayers: allLayers.slice(-5).map(l => l.id)
+      });
+      
+      console.log(`✅ White border layer added: ${layerId}-line`);
 
       // Force enable all map interaction controls after adding layers
       setTimeout(() => {
