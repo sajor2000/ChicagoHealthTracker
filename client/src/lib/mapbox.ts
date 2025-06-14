@@ -63,18 +63,84 @@ export function addDataLayer(
         'fill-color': [
           'case',
           ['>', ['get', `${selectedDisease}_${visualizationMode}`], 0],
-          [
-            'interpolate',
-            ['linear'],
-            ['get', `${selectedDisease}_${visualizationMode}`],
-            7, '#006747',      // Dark green - lowest values (min: 7.4)
-            25, '#4a8c2a',     // Medium green - low values (25th percentile: 27.2)
-            37, '#a4c441',     // Yellow-green - below median (median: 37.1)
-            50, '#f4e04d',     // Yellow - moderate values
-            68, '#ff8c42',     // Orange - high values (75th percentile: 68.3)
-            100, '#f76c5e',    // Red - very high values
-            138, '#d32f2f',    // Dark red - highest values (90th percentile: 137.9)
-            260, '#8b0000'     // Deep red - extreme values (max: 257.4)
+          // Disease-specific color thresholds based on actual data distributions
+          selectedDisease === 'diabetes' ? [
+            'interpolate', ['linear'], ['get', `${selectedDisease}_${visualizationMode}`],
+            19, '#006747',     // Green - lowest (19.6)
+            42, '#4a8c2a',     // Medium green - 25th percentile
+            57, '#a4c441',     // Yellow-green - median
+            66, '#f4e04d',     // Yellow - 75th percentile
+            71, '#ff8c42',     // Orange - 90th percentile
+            78, '#f76c5e',     // Red - high values
+            84, '#d32f2f'      // Dark red - max (83.9)
+          ] : selectedDisease === 'hypertension' ? [
+            'interpolate', ['linear'], ['get', `${selectedDisease}_${visualizationMode}`],
+            74, '#006747',     // Green - lowest (74.5)
+            144, '#4a8c2a',    // Medium green - 25th percentile
+            178, '#a4c441',    // Yellow-green - median
+            204, '#f4e04d',    // Yellow - 75th percentile
+            221, '#ff8c42',    // Orange - 90th percentile
+            237, '#f76c5e',    // Red - high values
+            254, '#d32f2f'     // Dark red - max (253.4)
+          ] : selectedDisease === 'heart' ? [
+            'interpolate', ['linear'], ['get', `${selectedDisease}_${visualizationMode}`],
+            12, '#006747',     // Green - lowest (12.4)
+            27, '#4a8c2a',     // Medium green - 25th percentile
+            37, '#a4c441',     // Yellow-green - median
+            42, '#f4e04d',     // Yellow - 75th percentile
+            45, '#ff8c42',     // Orange - 90th percentile
+            50, '#f76c5e',     // Red - high values
+            54, '#d32f2f'      // Dark red - max (53.8)
+          ] : selectedDisease === 'stroke' ? [
+            'interpolate', ['linear'], ['get', `${selectedDisease}_${visualizationMode}`],
+            7, '#006747',      // Green - lowest (7.6)
+            17, '#4a8c2a',     // Medium green - 25th percentile
+            22, '#a4c441',     // Yellow-green - median
+            25, '#f4e04d',     // Yellow - 75th percentile
+            28, '#ff8c42',     // Orange - 90th percentile
+            32, '#f76c5e',     // Red - high values
+            36, '#d32f2f'      // Dark red - max (35.8)
+          ] : selectedDisease === 'asthma' ? [
+            'interpolate', ['linear'], ['get', `${selectedDisease}_${visualizationMode}`],
+            11, '#006747',     // Green - lowest (11)
+            22, '#4a8c2a',     // Medium green - 25th percentile
+            28, '#a4c441',     // Yellow-green - median
+            32, '#f4e04d',     // Yellow - 75th percentile
+            35, '#ff8c42',     // Orange - 90th percentile
+            38, '#f76c5e',     // Red - high values
+            40, '#d32f2f'      // Dark red - max (40.3)
+          ] : selectedDisease === 'copd' ? [
+            'interpolate', ['linear'], ['get', `${selectedDisease}_${visualizationMode}`],
+            14, '#006747',     // Green - lowest (13.9)
+            31, '#4a8c2a',     // Medium green - 25th percentile
+            41, '#a4c441',     // Yellow-green - median
+            47, '#f4e04d',     // Yellow - 75th percentile
+            52, '#ff8c42',     // Orange - 90th percentile
+            56, '#f76c5e',     // Red - high values
+            60, '#d32f2f'      // Dark red - max (59.7)
+          ] : selectedDisease === 'obesity' ? [
+            'interpolate', ['linear'], ['get', `${selectedDisease}_${visualizationMode}`],
+            42, '#006747',     // Green - lowest (42.2)
+            75, '#4a8c2a',     // Medium green - 25th percentile
+            91, '#a4c441',     // Yellow-green - median
+            102, '#f4e04d',    // Yellow - 75th percentile
+            111, '#ff8c42',    // Orange - 90th percentile
+            120, '#f76c5e',    // Red - high values
+            130, '#d32f2f'     // Dark red - max (130)
+          ] : selectedDisease === 'depression' ? [
+            'interpolate', ['linear'], ['get', `${selectedDisease}_${visualizationMode}`],
+            18, '#006747',     // Green - lowest (18.4)
+            27, '#4a8c2a',     // Medium green - 25th percentile
+            29, '#a4c441',     // Yellow-green - median
+            33, '#f4e04d',     // Yellow - 75th percentile
+            35, '#ff8c42',     // Orange - 90th percentile
+            37, '#f76c5e',     // Red - high values
+            38, '#d32f2f'      // Dark red - max (38.1)
+          ] : [
+            // Default fallback (original diabetes scale)
+            'interpolate', ['linear'], ['get', `${selectedDisease}_${visualizationMode}`],
+            7, '#006747', 25, '#4a8c2a', 37, '#a4c441', 50, '#f4e04d',
+            68, '#ff8c42', 100, '#f76c5e', 138, '#d32f2f', 260, '#8b0000'
           ],
           'rgba(107, 114, 128, 0.3)' // Suppressed data color
         ],
