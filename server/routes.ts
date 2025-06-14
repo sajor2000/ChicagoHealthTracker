@@ -219,15 +219,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     chicagoCommunitiesData = {
       type: 'FeatureCollection',
-      features: aggregatedCommunities.map(community => ({
-        type: 'Feature',
-        id: community.id,
-        properties: {
-          ...community,
-          geometry: undefined // Remove geometry from properties to avoid duplication
-        },
-        geometry: community.geometry
-      }))
+      features: aggregatedCommunities.map(community => {
+        // Extract flattened disease properties from community object
+        const { geometry, ...communityProps } = community;
+        return {
+          type: 'Feature',
+          id: community.id,
+          properties: {
+            ...communityProps // This includes the flattened disease properties from spatial aggregation
+          },
+          geometry: community.geometry
+        };
+      })
     };
     console.log(`Generated ${chicagoCommunitiesData.features.length} Chicago community areas with aggregated census tract data`);
   } catch (error) {
