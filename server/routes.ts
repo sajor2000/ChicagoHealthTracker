@@ -106,12 +106,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         const finalTractId = censusGeoid || rawGeoid || `tract_${index}`;
         
-        // Generate epidemiologically-accurate disease data
+        // Generate epidemiologically-accurate disease data with geographic coordinates
         const tractName = `Census Tract ${feature.properties.TRACTCE || finalTractId.slice(-4)}`;
         const epidemiologicalDiseases = generateEpidemiologicalDiseaseData(
           population,
           tractName,
-          demographics
+          demographics,
+          feature.geometry.coordinates
         );
         
         // Calculate data quality score

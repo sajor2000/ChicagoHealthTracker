@@ -244,32 +244,51 @@ function getEnvironmentalRiskFactors(areaName: string): { foodDesert: number; ai
 }
 
 /**
- * Calculate SES disparity multiplier based on area characteristics
+ * Calculate SES disparity multiplier based on geographic coordinates and demographics
  */
-function getSESMultiplier(areaName: string, demographics: any): number {
+function getSESMultiplier(areaName: string, demographics: any, coordinates?: number[][][]): number {
   const name = areaName.toLowerCase();
   
-  // Enhanced gradients for pronounced geographic visualization
-  if (CHICAGO_SES_RISK_AREAS.highRisk.some(area => area.toLowerCase() === name)) {
-    return 4.8; // Red zones - South/West Side high disease burden
-  } else if (CHICAGO_SES_RISK_AREAS.moderateHighRisk.some(area => area.toLowerCase() === name)) {
-    return 3.2; // Orange zones - moderate-high burden
-  } else if (CHICAGO_SES_RISK_AREAS.moderateRisk.some(area => area.toLowerCase() === name)) {
-    return 2.1; // Yellow zones - transition areas
-  } else if (CHICAGO_SES_RISK_AREAS.lowRisk.some(area => area.toLowerCase() === name)) {
-    return 0.3; // Green zones - North Side lower burden
+  // Geographic coordinate-based risk assessment for Chicago
+  let geographicRisk = 1.0;
+  if (coordinates && coordinates.length > 0) {
+    // Calculate centroid of the area
+    const ring = coordinates[0];
+    if (ring && ring.length > 0) {
+      let totalLat = 0, totalLng = 0;
+      ring.forEach(coord => {
+        totalLng += coord[0];
+        totalLat += coord[1];
+      });
+      const centroidLng = totalLng / ring.length;
+      const centroidLat = totalLat / ring.length;
+      
+      // Chicago coordinates: Longitude -87.9 to -87.5, Latitude 41.6 to 42.0
+      // South/West Chicago health disparity zones (higher disease burden)
+      if (centroidLat < 41.78) { // South side
+        if (centroidLng > -87.65) { // Far South/Southeast
+          geographicRisk = 5.8; // Highest burden - deep red zones
+        } else { // Southwest 
+          geographicRisk = 5.2; // Very high burden - red zones
+        }
+      } else if (centroidLat < 41.88) { // Central Chicago
+        if (centroidLng > -87.65) { // Central/Near South
+          geographicRisk = 4.4; // High burden - red zones
+        } else { // West side
+          geographicRisk = 5.4; // Very high burden - red zones
+        }
+      } else { // North side (lower disease burden)
+        if (centroidLng > -87.65) { // Near North/Downtown
+          geographicRisk = 0.3; // Lowest burden - green zones
+        } else { // Northwest
+          geographicRisk = 0.5; // Low burden - green zones
+        }
+      }
+    }
   }
   
-  // Geographic pattern recognition for visual health disparities
-  if (name.includes('south') || name.includes('west')) {
-    return 4.2; // South/West Side high burden zones
-  }
-  
-  if (name.includes('north') || name.includes('downtown') || name.includes('loop')) {
-    return 0.35; // North Side/Downtown lower burden zones
-  }
-  
-  // Enhanced demographic-based SES calculation
+  // Enhanced demographic-based SES calculation for health disparities
+  let demographicRisk = 1.0;
   if (demographics?.race) {
     const totalPop = Object.values(demographics.race).reduce((sum: number, val: any) => sum + (val || 0), 0);
     if (totalPop > 0) {
@@ -277,24 +296,23 @@ function getSESMultiplier(areaName: string, demographics: any): number {
       const hispanicProportion = demographics.ethnicity?.hispanic ? 
         (demographics.ethnicity.hispanic / (demographics.ethnicity.total || 1)) : 0;
       
-      // Stronger gradients based on demographic composition for visual clarity
-      if (blackProportion > 0.8 || hispanicProportion > 0.7) {
-        return 5.2; // Highest burden areas - deep red zones
-      } else if (blackProportion > 0.6 || hispanicProportion > 0.5) {
-        return 4.4; // High burden areas - red zones
-      } else if (blackProportion > 0.4 || hispanicProportion > 0.3) {
-        return 3.6; // Moderate-high burden - orange zones
-      } else if (blackProportion > 0.2 || hispanicProportion > 0.2) {
-        return 2.4; // Moderate burden - yellow zones
-      } else if (blackProportion > 0.1 || hispanicProportion > 0.1) {
-        return 1.5; // Lower burden - light zones
+      // Strong health disparity patterns based on race/ethnicity
+      if (blackProportion > 0.7 || hispanicProportion > 0.6) {
+        demographicRisk = 2.4; // High disparity multiplier
+      } else if (blackProportion > 0.5 || hispanicProportion > 0.4) {
+        demographicRisk = 2.0; // Moderate-high disparity
+      } else if (blackProportion > 0.3 || hispanicProportion > 0.3) {
+        demographicRisk = 1.6; // Moderate disparity
+      } else if (blackProportion > 0.15 || hispanicProportion > 0.2) {
+        demographicRisk = 1.2; // Low-moderate disparity
       } else {
-        return 0.4; // Lowest burden - green zones
+        demographicRisk = 0.8; // Lower disparity
       }
     }
   }
   
-  return 1.0; // Default areas
+  // Combine geographic and demographic risk factors
+  return geographicRisk * demographicRisk;
 }
 
 /**
@@ -377,7 +395,8 @@ function getAgeMultiplier(disease: string, demographics: any): number {
 export function generateEpidemiologicalDiseaseData(
   population: number,
   areaName: string,
-  demographics: any
+  demographics: any,
+  coordinates?: number[][][]
 ): Record<string, { count: number; rate: number }> {
   const diseases: Record<string, { count: number; rate: number }> = {};
 
@@ -385,8 +404,8 @@ export function generateEpidemiologicalDiseaseData(
     // Base prevalence rate per 100,000
     let prevalenceRate = epidemiology.basePrevalence;
 
-    // Apply SES disparity with stronger effects
-    const sesMultiplier = getSESMultiplier(areaName, demographics);
+    // Apply SES disparity with stronger effects (including geographic coordinates)
+    const sesMultiplier = getSESMultiplier(areaName, demographics, coordinates);
     const sesEffect = 1 + (sesMultiplier - 1) * (epidemiology.sesDisparity - 1);
     prevalenceRate *= sesEffect;
 
@@ -410,8 +429,8 @@ export function generateEpidemiologicalDiseaseData(
     
     prevalenceRate *= envEffect;
 
-    // Add geographic variation (±15%) to simulate local health factors
-    const randomVariation = 0.85 + Math.random() * 0.3;
+    // Add minimal geographic variation (±5%) to preserve health disparity patterns
+    const randomVariation = 0.95 + Math.random() * 0.1;
     prevalenceRate *= randomVariation;
 
     // Calculate final count and rate
