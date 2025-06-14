@@ -163,7 +163,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error(`Error processing tract ${index}:`, tractError);
         return null;
       }
-    }).filter(tract => tract !== null);
+    }).filter((tract: any) => tract !== null);
 
     chicagoCensusTractsData = {
       type: 'FeatureCollection',
