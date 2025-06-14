@@ -16,7 +16,7 @@ export default function Home() {
     isInfoPanelOpen: false,
   });
   
-  const [isControlPanelCollapsed, setIsControlPanelCollapsed] = useState(false);
+
 
   const handleViewChange = (view: ViewMode) => {
     setAppState(prev => ({ ...prev, activeView: view }));
@@ -44,9 +44,7 @@ export default function Home() {
     setAppState(prev => ({ ...prev, isInfoPanelOpen: false }));
   };
 
-  const handleToggleControlPanelCollapse = () => {
-    setIsControlPanelCollapsed(prev => !prev);
-  };
+
 
   // Close info panel when clicking outside (handled by MapContainer clicks)
   const handleMapClick = () => {
@@ -89,11 +87,9 @@ export default function Home() {
         activeView={appState.activeView}
         selectedDisease={appState.selectedDisease}
         visualizationMode={appState.visualizationMode}
-        isCollapsed={isControlPanelCollapsed}
         onViewChange={handleViewChange}
         onDiseaseChange={handleDiseaseChange}
         onVisualizationModeChange={handleVisualizationModeChange}
-        onToggleCollapse={handleToggleControlPanelCollapse}
       />
       
       <WaterSideControls
