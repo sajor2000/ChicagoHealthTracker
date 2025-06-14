@@ -25,6 +25,7 @@ export default function MapContainer({
   const tooltip = useRef<mapboxgl.Popup | null>(null);
   const [hoveredFeatureId, setHoveredFeatureId] = useState<string | null>(null);
   const [useMapboxFallback, setUseMapboxFallback] = useState(false);
+  const [mapStyleLoaded, setMapStyleLoaded] = useState(false);
 
   const { data: geoData, isLoading, error } = useChicagoGeoData(activeView);
 
@@ -48,6 +49,7 @@ export default function MapContainer({
       // Add map load event listener
       map.current.on('load', () => {
         console.log('Mapbox map loaded successfully');
+        setMapStyleLoaded(true);
       });
 
       map.current.on('error', (e) => {
@@ -105,7 +107,7 @@ export default function MapContainer({
       featuresCount: (geoData as any)?.features?.length
     });
 
-    if (!map.current || !geoData || isLoading) return;
+    if (!map.current || !geoData || isLoading || !mapStyleLoaded) return;
 
     const layerId = `${activeView}-data`;
 
@@ -162,7 +164,7 @@ export default function MapContainer({
     } catch (error) {
       console.error('Error updating map data:', error);
     }
-  }, [geoData, activeView, selectedDisease, visualizationMode, showSuppressed, isLoading]);
+  }, [geoData, activeView, selectedDisease, visualizationMode, showSuppressed, isLoading, mapStyleLoaded]);
 
   // Setup map interactions
   const setupMapInteractions = (layerId: string) => {
