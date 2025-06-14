@@ -100,7 +100,40 @@ export function addDataLayer(
       min, q25, median, q75, q90, q95, max
     });
 
-    // Add fill layer with enhanced green-to-red color scaling for all diseases
+    // Use disease-specific color scaling for better visualization
+    const isHighPrevalenceDisease = ['hypertension', 'obesity'].includes(selectedDisease);
+    const range = max - min;
+    
+    // For high-prevalence diseases, use the full data range for color scaling
+    // For low-prevalence diseases, use standard quartile scaling
+    let colorStops;
+    
+    if (isHighPrevalenceDisease && range > 200) {
+      // Enhanced scaling for high-prevalence diseases to show geographic disparities
+      const step = range / 6;
+      colorStops = [
+        min, '#16a34a',                    // Green - lowest actual values
+        min + step, '#22c55e',            // Light green
+        min + step * 2, '#65a30d',        // Yellow-green
+        min + step * 3, '#eab308',        // Yellow
+        min + step * 4, '#f97316',        // Orange
+        min + step * 5, '#dc2626',        // Red
+        max, '#7f1d1d'                    // Dark red - highest values
+      ];
+    } else {
+      // Standard quartile-based scaling for other diseases
+      colorStops = [
+        min, '#16a34a',        // Dark green - lowest values
+        q25, '#22c55e',        // Medium green - 25th percentile
+        median, '#eab308',     // Yellow - median
+        q75, '#f97316',        // Orange - 75th percentile
+        q90, '#dc2626',        // Red - 90th percentile
+        q95, '#b91c1c',        // Dark red - 95th percentile
+        max, '#7f1d1d'         // Very dark red - maximum values
+      ];
+    }
+
+    // Add fill layer with adaptive color scaling
     map.addLayer({
       id: `${layerId}-fill`,
       type: 'fill',
@@ -109,16 +142,7 @@ export function addDataLayer(
         'fill-color': [
           'case',
           ['>', ['get', propertyKey], 0],
-          [
-            'interpolate', ['linear'], ['get', propertyKey],
-            min, '#16a34a',        // Dark green - lowest values (healthy areas)
-            q25, '#22c55e',        // Medium green - 25th percentile
-            median, '#eab308',     // Yellow - median (moderate risk)
-            q75, '#f97316',        // Orange - 75th percentile (high risk)
-            q90, '#dc2626',        // Red - 90th percentile (very high risk)
-            q95, '#b91c1c',        // Dark red - 95th percentile
-            max, '#7f1d1d'         // Very dark red - maximum values (highest risk)
-          ],
+          ['interpolate', ['linear'], ['get', propertyKey], ...colorStops],
           'rgba(107, 114, 128, 0.3)' // Suppressed data color
         ],
         'fill-opacity': [
