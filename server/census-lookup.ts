@@ -162,7 +162,15 @@ function loadTractGeometry(): Map<string, any> {
     for (const feature of geometryData.features) {
       const geoid = feature.properties.GEOID || feature.properties.geoid || feature.properties.id;
       if (geoid) {
-        geometryMap.set(geoid.toString(), feature.geometry);
+        // Store geometry with both full and shortened GEOID formats for compatibility
+        const geoidStr = geoid.toString();
+        geometryMap.set(geoidStr, feature.geometry);
+        
+        // Also store with Census API format (11-digit GEOID)
+        if (geoidStr.length === 9 && geoidStr.startsWith('17031')) {
+          const fullGeoid = '17031' + geoidStr.slice(5).padStart(6, '0');
+          geometryMap.set(fullGeoid, feature.geometry);
+        }
       }
     }
     
@@ -255,7 +263,7 @@ export async function createCensusDataForFrontend(): Promise<any> {
   const features = [];
   
   // Process each census tract
-  for (const [geoid, tractInfo] of censusData.entries()) {
+  for (const [geoid, tractInfo] of Array.from(censusData.entries())) {
     const geometry = geometryMap.get(geoid);
     
     if (!geometry) {
@@ -271,7 +279,7 @@ export async function createCensusDataForFrontend(): Promise<any> {
     const diseases = generateDiseaseData(population, tractInfo.demographics);
     
     // Build feature properties
-    const properties = {
+    const properties: Record<string, any> = {
       id: geoid,
       name: `Census Tract ${geoid.slice(-6)}`,
       geoid: geoid,
