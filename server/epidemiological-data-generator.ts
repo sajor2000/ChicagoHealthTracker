@@ -264,25 +264,13 @@ function getSESMultiplier(areaName: string, demographics: any, coordinates?: num
       const centroidLat = totalLat / ring.length;
       
       // Chicago coordinates: Longitude -87.9 to -87.5, Latitude 41.6 to 42.0
-      // South/West Chicago health disparity zones (higher disease burden)
-      if (centroidLat < 41.78) { // South side
-        if (centroidLng > -87.65) { // Far South/Southeast
-          geographicRisk = 5.8; // Highest burden - deep red zones
-        } else { // Southwest 
-          geographicRisk = 5.2; // Very high burden - red zones
-        }
+      // Base geographic risk with general patterns but allowing demographic override
+      if (centroidLat < 41.78) { // South side - generally higher risk
+        geographicRisk = centroidLng > -87.65 ? 3.2 : 2.8; // Far South vs Southwest
       } else if (centroidLat < 41.88) { // Central Chicago
-        if (centroidLng > -87.65) { // Central/Near South
-          geographicRisk = 4.4; // High burden - red zones
-        } else { // West side
-          geographicRisk = 5.4; // Very high burden - red zones
-        }
-      } else { // North side (lower disease burden)
-        if (centroidLng > -87.65) { // Near North/Downtown
-          geographicRisk = 0.3; // Lowest burden - green zones
-        } else { // Northwest
-          geographicRisk = 0.5; // Low burden - green zones
-        }
+        geographicRisk = centroidLng > -87.65 ? 2.4 : 2.8; // Central vs West side
+      } else { // North side - generally lower risk but can be overridden
+        geographicRisk = centroidLng > -87.65 ? 0.6 : 0.8; // Near North vs Northwest
       }
     }
   }
@@ -296,23 +284,27 @@ function getSESMultiplier(areaName: string, demographics: any, coordinates?: num
       const hispanicProportion = demographics.ethnicity?.hispanic ? 
         (demographics.ethnicity.hispanic / (demographics.ethnicity.total || 1)) : 0;
       
-      // Strong health disparity patterns based on race/ethnicity
+      // Strong health disparity patterns that can override geographic patterns
       if (blackProportion > 0.7 || hispanicProportion > 0.6) {
-        demographicRisk = 2.4; // High disparity multiplier
+        demographicRisk = 4.5; // High disparity - can make north side red
       } else if (blackProportion > 0.5 || hispanicProportion > 0.4) {
-        demographicRisk = 2.0; // Moderate-high disparity
+        demographicRisk = 3.2; // Moderate-high disparity - can make north side orange/yellow
       } else if (blackProportion > 0.3 || hispanicProportion > 0.3) {
-        demographicRisk = 1.6; // Moderate disparity
+        demographicRisk = 2.1; // Moderate disparity
       } else if (blackProportion > 0.15 || hispanicProportion > 0.2) {
-        demographicRisk = 1.2; // Low-moderate disparity
+        demographicRisk = 1.4; // Low-moderate disparity
       } else {
-        demographicRisk = 0.8; // Lower disparity
+        demographicRisk = 0.7; // Lower disparity
       }
     }
   }
   
   // Combine geographic and demographic risk factors
-  return geographicRisk * demographicRisk;
+  // Allow demographic factors to significantly influence final risk
+  const finalRisk = (geographicRisk * 0.6) + (demographicRisk * 0.4);
+  
+  // Ensure minimum contrast between high and low risk areas
+  return Math.max(0.2, Math.min(6.0, finalRisk));
 }
 
 /**
