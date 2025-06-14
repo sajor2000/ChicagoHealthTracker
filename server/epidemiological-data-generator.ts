@@ -28,37 +28,37 @@ interface EpidemiologicalFactors {
 const DISEASE_EPIDEMIOLOGY: Record<string, EpidemiologicalFactors> = {
   diabetes: {
     basePrevalence: 11300, // 11.3% national prevalence
-    sesDisparity: 2.1, // Low SES areas have 2.1x higher rates
-    ageAdjustment: 1.8, // Higher in older populations
+    sesDisparity: 3.8, // Enhanced SES disparity for visual contrast
+    ageAdjustment: 1.8,
     raceEthnicityRisk: {
       white: 1.0,
-      black: 1.9, // Nearly double the risk
-      hispanic: 1.7,
+      black: 2.6, // Enhanced disparity for south/west sides
+      hispanic: 2.3,
       asian: 1.2,
-      other: 1.4
+      other: 1.9
     },
     environmentalFactors: {
-      foodDesert: 1.6,
-      airQuality: 1.2,
-      walkability: 1.3
+      foodDesert: 2.4, // Enhanced environmental risk
+      airQuality: 1.6,
+      walkability: 1.8
     }
   },
   
   hypertension: {
     basePrevalence: 47300, // 47.3% national prevalence
-    sesDisparity: 1.8,
+    sesDisparity: 3.2, // Enhanced SES disparity
     ageAdjustment: 2.2,
     raceEthnicityRisk: {
       white: 1.0,
-      black: 1.6, // Significantly higher in Black Americans
-      hispanic: 1.2,
+      black: 2.4, // Enhanced disparity for visual contrast
+      hispanic: 1.8,
       asian: 0.9,
-      other: 1.1
+      other: 1.6
     },
     environmentalFactors: {
-      foodDesert: 1.4,
-      airQuality: 1.3,
-      walkability: 1.2
+      foodDesert: 2.1,
+      airQuality: 1.7,
+      walkability: 1.5
     }
   },
 
@@ -251,22 +251,22 @@ function getSESMultiplier(areaName: string, demographics: any): number {
   
   // Enhanced gradients for pronounced geographic visualization
   if (CHICAGO_SES_RISK_AREAS.highRisk.some(area => area.toLowerCase() === name)) {
-    return 3.5; // Red zones - South/West Side high disease burden
+    return 4.8; // Red zones - South/West Side high disease burden
   } else if (CHICAGO_SES_RISK_AREAS.moderateHighRisk.some(area => area.toLowerCase() === name)) {
-    return 2.4; // Orange zones - moderate-high burden
+    return 3.2; // Orange zones - moderate-high burden
   } else if (CHICAGO_SES_RISK_AREAS.moderateRisk.some(area => area.toLowerCase() === name)) {
-    return 1.6; // Yellow zones - transition areas
+    return 2.1; // Yellow zones - transition areas
   } else if (CHICAGO_SES_RISK_AREAS.lowRisk.some(area => area.toLowerCase() === name)) {
-    return 0.4; // Green zones - North Side lower burden
+    return 0.3; // Green zones - North Side lower burden
   }
   
   // Geographic pattern recognition for visual health disparities
   if (name.includes('south') || name.includes('west')) {
-    return 3.0; // South/West Side high burden zones
+    return 4.2; // South/West Side high burden zones
   }
   
   if (name.includes('north') || name.includes('downtown') || name.includes('loop')) {
-    return 0.5; // North Side/Downtown lower burden zones
+    return 0.35; // North Side/Downtown lower burden zones
   }
   
   // Enhanced demographic-based SES calculation
@@ -277,19 +277,19 @@ function getSESMultiplier(areaName: string, demographics: any): number {
       const hispanicProportion = demographics.ethnicity?.hispanic ? 
         (demographics.ethnicity.hispanic / (demographics.ethnicity.total || 1)) : 0;
       
-      // Stronger gradients based on demographic composition
+      // Stronger gradients based on demographic composition for visual clarity
       if (blackProportion > 0.8 || hispanicProportion > 0.7) {
-        return 3.8; // Highest burden areas - deep red zones
+        return 5.2; // Highest burden areas - deep red zones
       } else if (blackProportion > 0.6 || hispanicProportion > 0.5) {
-        return 3.2; // High burden areas - red zones
+        return 4.4; // High burden areas - red zones
       } else if (blackProportion > 0.4 || hispanicProportion > 0.3) {
-        return 2.6; // Moderate-high burden - orange zones
+        return 3.6; // Moderate-high burden - orange zones
       } else if (blackProportion > 0.2 || hispanicProportion > 0.2) {
-        return 1.8; // Moderate burden - yellow zones
+        return 2.4; // Moderate burden - yellow zones
       } else if (blackProportion > 0.1 || hispanicProportion > 0.1) {
-        return 1.2; // Lower burden - light zones
+        return 1.5; // Lower burden - light zones
       } else {
-        return 0.6; // Lowest burden - green zones
+        return 0.4; // Lowest burden - green zones
       }
     }
   }
