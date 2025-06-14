@@ -1,5 +1,6 @@
 import { ViewMode, DiseaseType, VisualizationMode } from '@/types';
-import { MapPin, Home, Building2, Activity, BarChart3, ChevronDown } from 'lucide-react';
+import { MapPin, Home, Building2, Activity, BarChart3, ChevronDown, ChevronUp } from 'lucide-react';
+import { useState } from 'react';
 
 interface WaterSideControlsProps {
   activeView: ViewMode;
@@ -36,6 +37,8 @@ export default function WaterSideControls({
   onDiseaseChange,
   onVisualizationModeChange
 }: WaterSideControlsProps) {
+  const [isDiseaseCollapsed, setIsDiseaseCollapsed] = useState(false);
+  const [isRateCalculationCollapsed, setIsRateCalculationCollapsed] = useState(false);
   return (
     <div className="fixed top-[120px] right-6 z-[90] flex flex-col gap-3">
       {/* Geographic View Toggle */}
@@ -149,7 +152,10 @@ export default function WaterSideControls({
           boxShadow: '0 2px 12px rgba(0, 0, 0, 0.3)'
         }}
       >
-        <div className="px-3 py-2 border-b border-[var(--border-subtle)]">
+        <div 
+          className="px-3 py-2 border-b border-[var(--border-subtle)] cursor-pointer flex items-center justify-between"
+          onClick={() => setIsDiseaseCollapsed(!isDiseaseCollapsed)}
+        >
           <span 
             className="text-xs uppercase tracking-wider font-medium"
             style={{ 
@@ -159,26 +165,33 @@ export default function WaterSideControls({
           >
             Disease Category
           </span>
+          {isDiseaseCollapsed ? (
+            <ChevronDown className="w-3 h-3" style={{ color: 'var(--text-tertiary)' }} />
+          ) : (
+            <ChevronUp className="w-3 h-3" style={{ color: 'var(--text-tertiary)' }} />
+          )}
         </div>
         
-        <div className="p-2">
-          <select
-            value={selectedDisease}
-            onChange={(e) => onDiseaseChange(e.target.value as DiseaseType)}
-            className="w-full px-3 py-2 text-xs rounded border transition-all duration-200"
-            style={{
-              background: 'var(--bg-overlay)',
-              borderColor: 'var(--border-default)',
-              color: 'var(--text-secondary)'
-            }}
-          >
-            {diseaseOptions.map((disease) => (
-              <option key={disease.value} value={disease.value}>
-                {disease.label}
-              </option>
-            ))}
-          </select>
-        </div>
+        {!isDiseaseCollapsed && (
+          <div className="p-2">
+            <select
+              value={selectedDisease}
+              onChange={(e) => onDiseaseChange(e.target.value as DiseaseType)}
+              className="w-full px-3 py-2 text-xs rounded border transition-all duration-200"
+              style={{
+                background: 'var(--bg-overlay)',
+                borderColor: 'var(--border-default)',
+                color: 'var(--text-secondary)'
+              }}
+            >
+              {diseaseOptions.map((disease) => (
+                <option key={disease.value} value={disease.value}>
+                  {disease.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {/* Rate Calculation Method */}
@@ -190,7 +203,10 @@ export default function WaterSideControls({
           boxShadow: '0 2px 12px rgba(0, 0, 0, 0.3)'
         }}
       >
-        <div className="px-3 py-2 border-b border-[var(--border-subtle)]">
+        <div 
+          className="px-3 py-2 border-b border-[var(--border-subtle)] cursor-pointer flex items-center justify-between"
+          onClick={() => setIsRateCalculationCollapsed(!isRateCalculationCollapsed)}
+        >
           <span 
             className="text-xs uppercase tracking-wider font-medium"
             style={{ 
@@ -200,9 +216,15 @@ export default function WaterSideControls({
           >
             Rate Calculation
           </span>
+          {isRateCalculationCollapsed ? (
+            <ChevronDown className="w-3 h-3" style={{ color: 'var(--text-tertiary)' }} />
+          ) : (
+            <ChevronUp className="w-3 h-3" style={{ color: 'var(--text-tertiary)' }} />
+          )}
         </div>
         
-        <div className="p-2 flex flex-col gap-1">
+        {!isRateCalculationCollapsed && (
+          <div className="p-2 flex flex-col gap-1">
           <button
             className={`flex items-center gap-2 px-3 py-2 rounded text-xs transition-all duration-200 text-left ${
               visualizationMode === 'count' ? 'text-white' : 'hover:bg-[var(--bg-hover)]'
@@ -290,6 +312,7 @@ export default function WaterSideControls({
             </div>
           </button>
         </div>
+        )}
       </div>
     </div>
   );
