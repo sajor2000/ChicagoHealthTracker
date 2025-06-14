@@ -7,6 +7,64 @@ import { fileURLToPath } from 'url';
 // Cache for Census Bureau API data
 let censusBureauDataCache: Map<string, any> | null = null;
 
+// Enhanced GEOID matching function
+function normalizeGeoid(rawGeoid: string): string[] {
+  if (!rawGeoid) return [];
+  
+  const geoid = rawGeoid.toString().replace(/[^0-9]/g, ''); // Remove any non-numeric chars
+  const attempts = new Set<string>();
+  
+  // Standard 11-digit format check
+  if (geoid.length === 11 && geoid.startsWith('17031')) {
+    attempts.add(geoid);
+    return Array.from(attempts);
+  }
+  
+  // Handle 9-digit format (common in our tract data): 170312001 -> 17031200100
+  if (geoid.length === 9 && geoid.startsWith('17031')) {
+    const tractPart = geoid.substring(5); // Extract last 4 digits (e.g., "2001")
+    attempts.add(`17031${tractPart}00`); // Pad with 00 to make 6-digit tract code
+    attempts.add(`17031${tractPart.substring(0,2)}0${tractPart.substring(2)}`); // Alternative padding
+    attempts.add(`17031${tractPart.substring(0,3)}${tractPart.substring(3)}0`); // Different padding
+  }
+  
+  // Handle different formats systematically
+  if (geoid.startsWith('17031')) {
+    const tractPart = geoid.substring(5); // Everything after county code
+    
+    // Census tracts can have formats like:
+    // - 4 digits: "0101" -> "17031010100"
+    // - 6 digits: "010100" -> "17031010100"
+    // - Other variations
+    
+    if (tractPart.length === 4) {
+      // 4-digit tract code - most common shortened format
+      attempts.add(`17031${tractPart}00`); // Standard padding
+      attempts.add(`17031${tractPart.substring(0,2)}${tractPart.substring(2)}00`); // Split format
+      attempts.add(`170310${tractPart}`); // Leading zero on tract
+      attempts.add(`17031${tractPart.substring(0,3)}${tractPart.substring(3)}0`); // Alternative split
+      attempts.add(`17031${tractPart.substring(0,1)}0${tractPart.substring(1)}0`); // Middle padding
+    } else if (tractPart.length === 6) {
+      // Already correct length
+      attempts.add(`17031${tractPart}`);
+    } else if (tractPart.length === 5) {
+      // Missing one digit - could be leading or trailing
+      attempts.add(`17031${tractPart}0`); // Trailing zero
+      attempts.add(`170310${tractPart}`); // Leading zero
+    }
+  } else if (geoid.length <= 6) {
+    // Just tract code without state/county
+    if (geoid.length === 4) {
+      attempts.add(`17031${geoid}00`);
+      attempts.add(`170310${geoid}0`);
+    } else if (geoid.length === 6) {
+      attempts.add(`17031${geoid}`);
+    }
+  }
+  
+  return Array.from(attempts);
+}
+
 async function fetchAuthenticCensusData(): Promise<Map<string, any>> {
   if (censusBureauDataCache) {
     return censusBureauDataCache;
@@ -15,8 +73,8 @@ async function fetchAuthenticCensusData(): Promise<Map<string, any>> {
   const tractData = new Map<string, any>();
   
   try {
-    // Fetch total population data from Census Bureau API
-    const populationUrl = 'https://api.census.gov/data/2020/dec/pl?get=P1_001N,P1_003N,P1_004N,P1_006N&for=tract:*&in=state:17&in=county:031';
+    // Fetch comprehensive demographic data from Census Bureau API
+    const populationUrl = 'https://api.census.gov/data/2020/dec/pl?get=NAME,P1_001N,P1_003N,P1_004N,P1_005N,P1_006N,P1_007N,P1_008N,P1_009N,P2_001N,P2_002N,P2_003N&for=tract:*&in=state:17&in=county:031';
     
     const response = await fetch(populationUrl);
     if (!response.ok) {
@@ -35,7 +93,14 @@ async function fetchAuthenticCensusData(): Promise<Map<string, any>> {
       const totalPop = parseInt(row[headers.indexOf('P1_001N')]) || 0;
       const whitePop = parseInt(row[headers.indexOf('P1_003N')]) || 0;
       const blackPop = parseInt(row[headers.indexOf('P1_004N')]) || 0;
+      const americanIndianPop = parseInt(row[headers.indexOf('P1_005N')]) || 0;
       const asianPop = parseInt(row[headers.indexOf('P1_006N')]) || 0;
+      const pacificIslanderPop = parseInt(row[headers.indexOf('P1_007N')]) || 0;
+      const otherRacePop = parseInt(row[headers.indexOf('P1_008N')]) || 0;
+      const multiRacePop = parseInt(row[headers.indexOf('P1_009N')]) || 0;
+      const totalEthnicityPop = parseInt(row[headers.indexOf('P2_001N')]) || 0;
+      const hispanicPop = parseInt(row[headers.indexOf('P2_002N')]) || 0;
+      const nonHispanicPop = parseInt(row[headers.indexOf('P2_003N')]) || 0;
       
       tractData.set(geoid, {
         population: totalPop,
@@ -43,8 +108,16 @@ async function fetchAuthenticCensusData(): Promise<Map<string, any>> {
           race: {
             white: whitePop,
             black: blackPop,
+            americanIndian: americanIndianPop,
             asian: asianPop,
-            hispanic: 0
+            pacificIslander: pacificIslanderPop,
+            otherRace: otherRacePop,
+            multiRace: multiRacePop
+          },
+          ethnicity: {
+            total: totalEthnicityPop,
+            hispanic: hispanicPop,
+            nonHispanic: nonHispanicPop
           }
         }
       });
@@ -53,6 +126,10 @@ async function fetchAuthenticCensusData(): Promise<Map<string, any>> {
     // Cache the results
     censusBureauDataCache = tractData;
     console.log(`Cached authentic Census data for ${tractData.size} tracts`);
+    
+    // Log sample GEOIDs for debugging
+    const sampleGeoIds = Array.from(tractData.keys()).slice(0, 5);
+    console.log('Sample Census API GEOIDs:', sampleGeoIds);
     
     return tractData;
     
@@ -192,23 +269,60 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (censusData.size > 0) {
           let enhancedCount = 0;
           
+          // Log sample tract GEOIDs for debugging
+          const sampleTractGeoIds = baseData.features.slice(0, 5).map((f: any) => ({
+            raw: f.properties.GEOID || f.properties.geoid,
+            length: (f.properties.GEOID || f.properties.geoid || '').length
+          }));
+          console.log('Sample tract GEOIDs:', sampleTractGeoIds);
+
           baseData.features.forEach((feature: any) => {
-            const geoid = feature.properties.geoid; // e.g., "17031051100"
+            const rawGeoid = feature.properties.geoid || feature.properties.GEOID;
             
-            // Direct lookup using the complete FIPS code
-            if (censusData.has(geoid)) {
-              const censusInfo = censusData.get(geoid);
-              
+            // Try normalized GEOID matching
+            const geoAttempts = normalizeGeoid(rawGeoid);
+            let censusInfo = null;
+            let matchedGeoid = null;
+            
+            // Try each normalized attempt
+            for (const attempt of geoAttempts) {
+              if (censusData.has(attempt)) {
+                censusInfo = censusData.get(attempt);
+                matchedGeoid = attempt;
+                console.log(`Matched GEOID ${rawGeoid} -> ${attempt}`);
+                break;
+              }
+            }
+            
+            // If still no match, try direct lookup
+            if (!censusInfo && censusData.has(rawGeoid)) {
+              censusInfo = censusData.get(rawGeoid);
+              matchedGeoid = rawGeoid;
+              console.log(`Direct matched GEOID ${rawGeoid}`);
+            }
+            
+            if (censusInfo) {
               // Update with authentic population data
               feature.properties.population = censusInfo.population;
               
-              // Update demographic data
+              // Update demographic data with complete Census information
               if (feature.properties.demographics) {
                 feature.properties.demographics.race = {
                   ...feature.properties.demographics.race,
                   white: censusInfo.demographics.race.white,
                   black: censusInfo.demographics.race.black,
-                  asian: censusInfo.demographics.race.asian
+                  americanIndian: censusInfo.demographics.race.americanIndian,
+                  asian: censusInfo.demographics.race.asian,
+                  pacificIslander: censusInfo.demographics.race.pacificIslander,
+                  otherRace: censusInfo.demographics.race.otherRace,
+                  multiRace: censusInfo.demographics.race.multiRace
+                };
+                
+                feature.properties.demographics.ethnicity = {
+                  ...feature.properties.demographics.ethnicity,
+                  total: censusInfo.demographics.ethnicity.total,
+                  hispanic: censusInfo.demographics.ethnicity.hispanic,
+                  nonHispanic: censusInfo.demographics.ethnicity.nonHispanic
                 };
               }
               
@@ -219,6 +333,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
               }
               
               enhancedCount++;
+            } else {
+              // Log failed matches for debugging
+              console.warn(`No demographic match for GEOID: ${rawGeoid}, tried: ${geoAttempts.join(', ')}`);
             }
           });
           

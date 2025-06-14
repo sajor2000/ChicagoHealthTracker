@@ -1,0 +1,201 @@
+Looking at your code, I can see the issue with the GEOID matching between your census tract boundaries and the Census API demographic data. The problem is in how the GEOIDs are formatted and matched. Here are the main issues:
+
+## 1. **GEOID Format Inconsistency**
+
+The Census API returns data with standard 11-digit FIPS codes (e.g., `17031010100`), but your census tract GeoJSON likely has different formats. The code is trying multiple transformations, but they seem arbitrary.
+
+## 2. **Fixing the GEOID Matching**
+
+Here's a more systematic approach to handle GEOID matching:
+
+```javascript
+// Enhanced GEOID matching function
+function normalizeGeoid(rawGeoid: string): string[] {
+  if (!rawGeoid) return [];
+  
+  const geoid = rawGeoid.toString().replace(/[^0-9]/g, ''); // Remove any non-numeric chars
+  const attempts = new Set<string>();
+  
+  // Standard 11-digit format check
+  if (geoid.length === 11 && geoid.startsWith('17031')) {
+    attempts.add(geoid);
+    return Array.from(attempts);
+  }
+  
+  // Handle different formats systematically
+  if (geoid.startsWith('17031')) {
+    const tractPart = geoid.substring(5); // Everything after county code
+    
+    // Census tracts can have formats like:
+    // - 4 digits: "0101" -> "17031010100"
+    // - 6 digits: "010100" -> "17031010100"
+    // - Other variations
+    
+    if (tractPart.length === 4) {
+      // 4-digit tract code - most common shortened format
+      attempts.add(`17031${tractPart}00`); // Standard padding
+      attempts.add(`17031${tractPart.substring(0,2)}${tractPart.substring(2)}00`); // Split format
+      attempts.add(`170310${tractPart}`); // Leading zero on tract
+    } else if (tractPart.length === 6) {
+      // Already correct length
+      attempts.add(`17031${tractPart}`);
+    } else if (tractPart.length === 5) {
+      // Missing one digit - could be leading or trailing
+      attempts.add(`17031${tractPart}0`); // Trailing zero
+      attempts.add(`170310${tractPart}`); // Leading zero
+    }
+  } else if (geoid.length <= 6) {
+    // Just tract code without state/county
+    if (geoid.length === 4) {
+      attempts.add(`17031${geoid}00`);
+      attempts.add(`170310${geoid}0`);
+    } else if (geoid.length === 6) {
+      attempts.add(`17031${geoid}`);
+    }
+  }
+  
+  return Array.from(attempts);
+}
+
+// Then in your processing code:
+let demographics = null;
+if (censusGeoid) {
+  const geoAttempts = normalizeGeoid(censusGeoid);
+  
+  // Try each normalized attempt
+  for (const attempt of geoAttempts) {
+    if (censusDemographics[attempt]) {
+      demographics = censusDemographics[attempt];
+      console.log(`Matched GEOID ${censusGeoid} -> ${attempt}`);
+      break;
+    }
+  }
+  
+  // If still no match, log for debugging
+  if (!demographics) {
+    console.warn(`No demographic match for GEOID: ${censusGeoid}, tried: ${geoAttempts.join(', ')}`);
+  }
+}
+```
+
+## 3. **Census API Call Structure**
+
+When fetching from the Census API, ensure you're requesting the correct geography level:
+
+```javascript
+async function fetchCensusData() {
+  const API_KEY = "your_census_api_key";
+  const year = "2020";
+  const dataset = "dec/pl"; // Decennial Census Public Law data
+  
+  // Request all census tracts in Cook County, Illinois
+  const url = `https://api.census.gov/data/${year}/${dataset}?get=NAME,P1_001N,P1_003N,P1_004N,P1_005N,P1_006N,P1_007N,P1_008N,P1_009N,P2_001N,P2_002N,P2_003N,H1_001N,H1_002N,H1_003N&for=tract:*&in=state:17&in=county:031&key=${API_KEY}`;
+  
+  const response = await fetch(url);
+  const data = await response.json();
+  
+  // Convert to keyed object by 11-digit GEOID
+  const demographics = {};
+  const headers = data[0];
+  
+  for (let i = 1; i < data.length; i++) {
+    const row = data[i];
+    const state = row[headers.indexOf('state')];
+    const county = row[headers.indexOf('county')];
+    const tract = row[headers.indexOf('tract')];
+    const geoid = `${state}${county}${tract}`; // This creates the 11-digit GEOID
+    
+    demographics[geoid] = {
+      population: {
+        total: parseInt(row[headers.indexOf('P1_001N')]) || 0,
+        adults18Plus: parseInt(row[headers.indexOf('P3_001N')]) || 0 // If you fetch P3 data
+      },
+      race: {
+        white: parseInt(row[headers.indexOf('P1_003N')]) || 0,
+        black: parseInt(row[headers.indexOf('P1_004N')]) || 0,
+        americanIndian: parseInt(row[headers.indexOf('P1_005N')]) || 0,
+        asian: parseInt(row[headers.indexOf('P1_006N')]) || 0,
+        pacificIslander: parseInt(row[headers.indexOf('P1_007N')]) || 0,
+        otherRace: parseInt(row[headers.indexOf('P1_008N')]) || 0,
+        multiRace: parseInt(row[headers.indexOf('P1_009N')]) || 0
+      },
+      ethnicity: {
+        total: parseInt(row[headers.indexOf('P2_001N')]) || 0,
+        hispanic: parseInt(row[headers.indexOf('P2_002N')]) || 0,
+        nonHispanic: parseInt(row[headers.indexOf('P2_003N')]) || 0
+      },
+      housing: {
+        totalUnits: parseInt(row[headers.indexOf('H1_001N')]) || 0,
+        occupied: parseInt(row[headers.indexOf('H1_002N')]) || 0,
+        vacant: parseInt(row[headers.indexOf('H1_003N')]) || 0
+      }
+    };
+  }
+  
+  return demographics;
+}
+```
+
+## 4. **Debugging GEOID Mismatches**
+
+Add logging to understand what GEOIDs you have:
+
+```javascript
+// Log a sample of GEOIDs from your tract data
+console.log('Sample tract GEOIDs:', 
+  combinedFeatures.slice(0, 5).map(f => ({
+    raw: f.properties.GEOID || f.properties.geoid,
+    length: (f.properties.GEOID || f.properties.geoid || '').length
+  }))
+);
+
+// Log a sample of GEOIDs from census demographics
+console.log('Sample demographic GEOIDs:', 
+  Object.keys(censusDemographics).slice(0, 5)
+);
+```
+
+## 5. **Alternative: Pre-process Your GeoJSON**
+
+If the GEOID formats are consistently wrong, you might want to pre-process your census tract GeoJSON to fix the GEOIDs:
+
+```javascript
+// Script to fix GEOIDs in your census tract file
+async function fixCensusTractGeoids() {
+  const tractData = JSON.parse(fs.readFileSync('chicago-census-tracts.json', 'utf8'));
+  
+  // Fetch a mapping of tract names to correct GEOIDs from Census API
+  const censusData = await fetchCensusData();
+  
+  tractData.features = tractData.features.map(feature => {
+    const currentGeoid = feature.properties.GEOID;
+    const attempts = normalizeGeoid(currentGeoid);
+    
+    let correctGeoid = null;
+    for (const attempt of attempts) {
+      if (censusData[attempt]) {
+        correctGeoid = attempt;
+        break;
+      }
+    }
+    
+    if (correctGeoid) {
+      feature.properties.GEOID = correctGeoid;
+      feature.properties.geoid = correctGeoid; // Update all variations
+    } else {
+      console.warn(`Could not fix GEOID for tract: ${currentGeoid}`);
+    }
+    
+    return feature;
+  });
+  
+  fs.writeFileSync('chicago-census-tracts-fixed.json', JSON.stringify(tractData, null, 2));
+}
+```
+
+The core issue is that the Census Bureau uses a strict 11-digit format, but many GeoJSON files have shortened or modified versions. The solution is to either:
+1. Normalize the GEOIDs during runtime (as shown above)
+2. Pre-process your GeoJSON files to have correct 11-digit GEOIDs
+3. Create a lookup table mapping your GeoJSON GEOIDs to Census API GEOIDs
+
+Would you like me to help you implement any of these solutions or debug further by looking at actual GEOID examples from your data?
