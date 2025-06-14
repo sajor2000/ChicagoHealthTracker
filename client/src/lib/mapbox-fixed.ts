@@ -110,7 +110,7 @@ export function addDataLayer(
         }
       };
 
-      // Add fill layer with explicit layout properties
+      // Add fill layer without positioning constraint
       map.addLayer({
         id: `${layerId}-fill`,
         type: 'fill',
@@ -119,18 +119,10 @@ export function addDataLayer(
           'visibility': 'visible'
         },
         paint: {
-          'fill-color': [
-            'step',
-            ['get', propertyKey],
-            '#2b83ba',     // Blue for lowest values
-            q25, '#abdda4', // Light green
-            median, '#ffffbf', // Yellow
-            q75, '#fdae61', // Orange  
-            max * 0.9, '#d7191c' // Red for highest values
-          ],
+          'fill-color': '#ff0000', // Solid red for production visibility test
           'fill-opacity': 0.8
         }
-      });
+      }); // Add to top of layer stack
 
       // Add border layer
       map.addLayer({
@@ -176,32 +168,33 @@ export function addDataLayer(
         });
         
         if (fillLayer) {
-          // Test with bright red color for visibility
-          console.log('🔴 Testing layer visibility with bright red...');
-          map.setPaintProperty(`${layerId}-fill`, 'fill-color', '#ff0000');
-          map.setPaintProperty(`${layerId}-fill`, 'fill-opacity', 0.8);
-          map.setLayoutProperty(`${layerId}-fill`, 'visibility', 'visible');
+          console.log('🔴 Production layer test: Solid red overlays should be visible');
           
-          // Revert to original colors after 3 seconds
+          // Production rendering strategies
           setTimeout(() => {
-            console.log('🎨 Reverting to original color scheme...');
-            map.setPaintProperty(`${layerId}-fill`, 'fill-color', [
-              'case',
-              ['>', ['get', propertyKey], 0],
-              [
-                'interpolate',
-                ['linear'],
-                ['get', propertyKey],
-                min, '#1a9850',
-                q25, '#91bfdb', 
-                median, '#fee08b',
-                q75, '#fc8d59',
-                max, '#d73027'
-              ],
-              'rgba(220, 220, 220, 0.5)'
-            ]);
-            map.setPaintProperty(`${layerId}-fill`, 'fill-opacity', 0.8);
-          }, 3000);
+            try {
+              map.moveLayer(`${layerId}-fill`);
+              map.setPaintProperty(`${layerId}-fill`, 'fill-opacity', 0.8);
+              map.triggerRepaint();
+              console.log('Applied production rendering strategies');
+              
+              // Test if layer is actually visible by checking rendered features
+              setTimeout(() => {
+                const renderedFeatures = map.queryRenderedFeatures({ layers: [`${layerId}-fill`] });
+                console.log(`Rendered features detected: ${renderedFeatures.length}`);
+                
+                if (renderedFeatures.length === 0) {
+                  console.log('⚠️ Mapbox layers not rendering - attempting canvas fallback');
+                  this.initializeCanvasFallback(map, data, layerId, propertyKey);
+                } else {
+                  console.log('✅ Mapbox layers rendering successfully');
+                }
+              }, 2000);
+              
+            } catch (e: any) {
+              console.log('Layer positioning failed:', e.message);
+            }
+          }, 1000);
         }
         
         if (lineLayer) {
