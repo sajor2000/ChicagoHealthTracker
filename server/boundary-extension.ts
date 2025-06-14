@@ -19,16 +19,11 @@ function isCoastalTract(coordinates: number[][][]): boolean {
   const ring = coordinates[0];
   if (!ring || ring.length < 3) return false;
   
-  // Much more aggressive detection - any tract with eastern boundary
+  // Very conservative detection - only tracts that are clearly on the shoreline
   const maxLng = Math.max(...ring.map(([lng]) => lng));
-  const minLat = Math.min(...ring.map(([, lat]) => lat));
-  const maxLat = Math.max(...ring.map(([, lat]) => lat));
   
-  // Tract is coastal if it's on the eastern edge of Chicago and within city bounds
-  return maxLng > -87.65 && 
-         minLat > CHICAGO_SOUTH_LAT && 
-         maxLat < CHICAGO_NORTH_LAT &&
-         maxLng < LAKE_MICHIGAN_LONGITUDE + 0.01; // Not already at shoreline
+  // Only extend tracts that are very close to the lake but not quite at the shoreline
+  return maxLng > -87.535 && maxLng < -87.525;
 }
 
 /**
@@ -40,42 +35,14 @@ function extendToShoreline(coordinates: number[][][]): number[][][] {
   const ring = coordinates[0];
   if (!ring || ring.length < 3) return coordinates;
   
-  const newRing: number[][] = [];
-  let addedShorelinePoints = false;
-  
-  for (let i = 0; i < ring.length; i++) {
-    const [lng, lat] = ring[i];
-    
-    // If this point is east of -87.60 and within Chicago bounds, extend it to shoreline
-    if (lng > -87.60 && lat > CHICAGO_SOUTH_LAT && lat < CHICAGO_NORTH_LAT) {
-      newRing.push([LAKE_MICHIGAN_LONGITUDE, lat]);
-      addedShorelinePoints = true;
-    } else {
-      newRing.push([lng, lat]);
+  // Simple approach: only extend points that are very close to shoreline
+  const newRing = ring.map(([lng, lat]) => {
+    // Only extend points that are within 0.01 degrees of the shoreline
+    if (lng > -87.535 && lng < -87.525) {
+      return [LAKE_MICHIGAN_LONGITUDE, lat];
     }
-  }
-  
-  // If we extended any points, add connecting shoreline segments
-  if (addedShorelinePoints) {
-    const shorelinePoints = newRing.filter(([lng]) => lng === LAKE_MICHIGAN_LONGITUDE);
-    if (shorelinePoints.length >= 2) {
-      const minLat = Math.min(...shorelinePoints.map(([, lat]) => lat));
-      const maxLat = Math.max(...shorelinePoints.map(([, lat]) => lat));
-      
-      // Find where to insert shoreline connector
-      const firstShorelineIndex = newRing.findIndex(([lng]) => lng === LAKE_MICHIGAN_LONGITUDE);
-      const lastShorelineIndex = newRing.findLastIndex(([lng]) => lng === LAKE_MICHIGAN_LONGITUDE);
-      
-      if (firstShorelineIndex !== lastShorelineIndex) {
-        // Insert vertical shoreline connector between first and last shoreline points
-        const connector = [
-          [LAKE_MICHIGAN_LONGITUDE, maxLat],
-          [LAKE_MICHIGAN_LONGITUDE, minLat]
-        ];
-        newRing.splice(lastShorelineIndex + 1, 0, ...connector);
-      }
-    }
-  }
+    return [lng, lat];
+  });
   
   return [newRing];
 }
