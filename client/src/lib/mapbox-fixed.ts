@@ -123,7 +123,7 @@ export function addDataLayer(
             'step',
             ['get', propertyKey],
             '#1a9850',     // Green for lowest values (30)
-            q25, '#91bfdb', // Light blue-green 
+            q25, '#91d15a', // Medium green
             median, '#ffffbf', // Yellow (128)
             q75, '#fc8d59', // Orange (176)
             max * 0.9, '#d73027' // Red for highest values (237+)
