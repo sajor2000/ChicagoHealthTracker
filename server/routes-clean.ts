@@ -313,51 +313,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
           let enhancedCount = 0;
           
           baseData.features.forEach((feature: any) => {
-            const geoid = feature.properties.geoid;
+            const geoid = feature.properties.geoid; // e.g., "17031051100"
             
-            // Try comprehensive GEOID format mappings
-            const tractNum = geoid.slice(-4); // Get last 4 digits (e.g., "1775" from "170311775")
-            const tractInt = parseInt(tractNum);
+            // Extract the 6-digit tract code from the full GEOID
+            const tractCode = geoid.slice(-6); // e.g., "051100" from "17031051100"
             
-            const possibleMappings = [
-              geoid, // Original format (170311775)
-              `17031${(tractInt * 100).toString().padStart(6, '0')}`, // Census API format (17031177500)
-              `17031${tractNum.padStart(6, '0')}`, // Padded format (17031001775)
-              `17031${tractNum}00`, // Alternative census format
-              `17031${tractInt.toString().padStart(6, '0')}`, // Direct integer padding
-              `17031${tractNum}`, // Direct append
-              geoid.slice(-6), // Last 6 digits
-              tractNum, // Just the tract number
-              `${tractInt * 100}`.padStart(6, '0'), // Tract code only with multiplication
-              tractInt.toString().padStart(6, '0') // Tract number padded to 6 digits
-            ];
-            
-            for (const mappedGeoid of possibleMappings) {
-              if (censusData.has(mappedGeoid)) {
-                const censusInfo = censusData.get(mappedGeoid);
-                
-                // Update with authentic population data
-                feature.properties.population = censusInfo.population;
-                
-                // Update demographic data
-                if (feature.properties.demographics) {
-                  feature.properties.demographics.race = {
-                    ...feature.properties.demographics.race,
-                    white: censusInfo.demographics.race.white,
-                    black: censusInfo.demographics.race.black,
-                    asian: censusInfo.demographics.race.asian
-                  };
-                }
-                
-                // Recalculate density with authentic population
-                if (feature.properties.density > 0 && censusInfo.population > 0) {
-                  const currentArea = feature.properties.population / feature.properties.density;
-                  feature.properties.density = Math.round(censusInfo.population / currentArea);
-                }
-                
-                enhancedCount++;
-                break; // Found a match, stop trying other mappings
+            // Look up the tract in Census API data using the 6-digit tract code
+            if (censusData.has(tractCode)) {
+              const censusInfo = censusData.get(tractCode);
+              
+              // Update with authentic population data
+              feature.properties.population = censusInfo.population;
+              
+              // Update demographic data
+              if (feature.properties.demographics) {
+                feature.properties.demographics.race = {
+                  ...feature.properties.demographics.race,
+                  white: censusInfo.demographics.race.white,
+                  black: censusInfo.demographics.race.black,
+                  asian: censusInfo.demographics.race.asian
+                };
               }
+              
+              // Recalculate density with authentic population
+              if (feature.properties.density > 0 && censusInfo.population > 0) {
+                const currentArea = feature.properties.population / feature.properties.density;
+                feature.properties.density = Math.round(censusInfo.population / currentArea);
+              }
+              
+              enhancedCount++;
             }
           });
           
