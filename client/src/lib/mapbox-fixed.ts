@@ -1,17 +1,15 @@
 import mapboxgl from 'mapbox-gl';
 import type { MapFeature, TooltipData } from '@/types';
+import { getMapboxToken } from './deployment-config';
 
-// Configure Mapbox with error checking for deployment
-const mapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || import.meta.env.MAPBOX_ACCESS_TOKEN;
-
-if (!mapboxToken) {
-  console.error('MAPBOX ACCESS TOKEN MISSING - Maps will not load');
-  console.log('Available env vars:', Object.keys(import.meta.env));
+// Configure Mapbox
+const mapboxToken = getMapboxToken();
+if (mapboxToken) {
+  mapboxgl.accessToken = mapboxToken;
+  console.log('Mapbox initialized successfully');
 } else {
-  console.log('Mapbox token found, length:', mapboxToken.length);
+  console.error('Mapbox token missing');
 }
-
-mapboxgl.accessToken = mapboxToken;
 
 export const mapConfig = {
   style: 'mapbox://styles/mapbox/dark-v11',
@@ -35,241 +33,123 @@ export function addDataLayer(
   selectedDisease: string,
   visualizationMode: 'count' | 'rate'
 ) {
-  try {
-    // Remove existing layers if they exist
-    const existingLayers = [`${layerId}-fill`, `${layerId}-border`, `${layerId}-hover`, `${layerId}-labels`, `${layerId}-population`];
-    existingLayers.forEach(layer => {
-      if (map.getLayer(layer)) {
-        map.removeLayer(layer);
-      }
-    });
+  console.log(`🎯 addDataLayer called: ${layerId}, ${selectedDisease}, ${visualizationMode}, features: ${data.features.length}`);
 
-    if (map.getSource(layerId)) {
-      (map.getSource(layerId) as mapboxgl.GeoJSONSource).setData(data);
-    } else {
+  // Wait for map to be ready with polling approach
+  let attempts = 0;
+  const maxAttempts = 50;
+  
+  const tryAddLayer = () => {
+    attempts++;
+    
+    if (!map.loaded() || !map.isStyleLoaded()) {
+      if (attempts < maxAttempts) {
+        setTimeout(tryAddLayer, 100);
+        return;
+      } else {
+        console.error('Map failed to load after maximum attempts');
+        return;
+      }
+    }
+
+    console.log('Map is ready, adding layers...');
+    
+    try {
+      // Remove existing layers
+      cleanupLayers(map, layerId);
+      
+      // Add source
       map.addSource(layerId, {
         type: 'geojson',
-        data,
+        data: data
       });
-    }
+      
+      // Calculate values for color scaling
+      const propertyKey = `${selectedDisease}_${visualizationMode}`;
+      const values = data.features
+        .map(f => f.properties?.[propertyKey])
+        .filter(v => typeof v === 'number' && v > 0)
+        .sort((a, b) => a - b);
 
-    const propertyKey = `${selectedDisease}_${visualizationMode}`;
-    
-    // Verify data has the expected properties
-    if (data.features.length > 0) {
-      const firstFeature = data.features[0];
-      console.log(`Adding layer with property key: ${propertyKey}`);
-      console.log(`First feature properties:`, Object.keys(firstFeature.properties || {}));
-      console.log(`Property value for ${propertyKey}:`, firstFeature.properties?.[propertyKey]);
-    }
+      if (values.length === 0) {
+        console.error('No valid data values found');
+        return;
+      }
 
-    // Add fill layer
-    map.addLayer({
-      id: `${layerId}-fill`,
-      type: 'fill',
-      source: layerId,
-      paint: {
-        'fill-color': [
-          'case',
-          ['>', ['get', `${selectedDisease}_${visualizationMode}`], 0],
-          // Disease-specific color thresholds based on actual data distributions
-          selectedDisease === 'diabetes' ? [
-            'interpolate', ['linear'], ['get', `${selectedDisease}_${visualizationMode}`],
-            19, '#006747',     // Green - lowest (19.6)
-            42, '#4a8c2a',     // Medium green - 25th percentile
-            57, '#a4c441',     // Yellow-green - median
-            66, '#f4e04d',     // Yellow - 75th percentile
-            71, '#ff8c42',     // Orange - 90th percentile
-            78, '#f76c5e',     // Red - high values
-            84, '#d32f2f'      // Dark red - max (83.9)
-          ] : selectedDisease === 'hypertension' ? [
-            'interpolate', ['linear'], ['get', `${selectedDisease}_${visualizationMode}`],
-            74, '#006747',     // Green - lowest (74.5)
-            144, '#4a8c2a',    // Medium green - 25th percentile
-            178, '#a4c441',    // Yellow-green - median
-            204, '#f4e04d',    // Yellow - 75th percentile
-            221, '#ff8c42',    // Orange - 90th percentile
-            237, '#f76c5e',    // Red - high values
-            254, '#d32f2f'     // Dark red - max (253.4)
-          ] : selectedDisease === 'heart' ? [
-            'interpolate', ['linear'], ['get', `${selectedDisease}_${visualizationMode}`],
-            12, '#006747',     // Green - lowest (12.4)
-            27, '#4a8c2a',     // Medium green - 25th percentile
-            37, '#a4c441',     // Yellow-green - median
-            42, '#f4e04d',     // Yellow - 75th percentile
-            45, '#ff8c42',     // Orange - 90th percentile
-            50, '#f76c5e',     // Red - high values
-            54, '#d32f2f'      // Dark red - max (53.8)
-          ] : selectedDisease === 'stroke' ? [
-            'interpolate', ['linear'], ['get', `${selectedDisease}_${visualizationMode}`],
-            7, '#006747',      // Green - lowest (7.6)
-            17, '#4a8c2a',     // Medium green - 25th percentile
-            22, '#a4c441',     // Yellow-green - median
-            25, '#f4e04d',     // Yellow - 75th percentile
-            28, '#ff8c42',     // Orange - 90th percentile
-            32, '#f76c5e',     // Red - high values
-            36, '#d32f2f'      // Dark red - max (35.8)
-          ] : selectedDisease === 'asthma' ? [
-            'interpolate', ['linear'], ['get', `${selectedDisease}_${visualizationMode}`],
-            11, '#006747',     // Green - lowest (11)
-            22, '#4a8c2a',     // Medium green - 25th percentile
-            28, '#a4c441',     // Yellow-green - median
-            32, '#f4e04d',     // Yellow - 75th percentile
-            35, '#ff8c42',     // Orange - 90th percentile
-            38, '#f76c5e',     // Red - high values
-            40, '#d32f2f'      // Dark red - max (40.3)
-          ] : selectedDisease === 'copd' ? [
-            'interpolate', ['linear'], ['get', `${selectedDisease}_${visualizationMode}`],
-            14, '#006747',     // Green - lowest (13.9)
-            31, '#4a8c2a',     // Medium green - 25th percentile
-            41, '#a4c441',     // Yellow-green - median
-            47, '#f4e04d',     // Yellow - 75th percentile
-            52, '#ff8c42',     // Orange - 90th percentile
-            56, '#f76c5e',     // Red - high values
-            60, '#d32f2f'      // Dark red - max (59.7)
-          ] : selectedDisease === 'obesity' ? [
-            'interpolate', ['linear'], ['get', `${selectedDisease}_${visualizationMode}`],
-            42, '#006747',     // Green - lowest (42.2)
-            75, '#4a8c2a',     // Medium green - 25th percentile
-            91, '#a4c441',     // Yellow-green - median
-            102, '#f4e04d',    // Yellow - 75th percentile
-            111, '#ff8c42',    // Orange - 90th percentile
-            120, '#f76c5e',    // Red - high values
-            130, '#d32f2f'     // Dark red - max (130)
-          ] : selectedDisease === 'depression' || selectedDisease === 'mental_health' ? [
-            'interpolate', ['linear'], ['get', `${selectedDisease}_${visualizationMode}`],
-            18, '#006747',     // Green - lowest (18.4)
-            27, '#4a8c2a',     // Medium green - 25th percentile
-            29, '#a4c441',     // Yellow-green - median
-            33, '#f4e04d',     // Yellow - 75th percentile
-            35, '#ff8c42',     // Orange - 90th percentile
-            37, '#f76c5e',     // Red - high values
-            38, '#d32f2f'      // Dark red - max (38.1)
-          ] : [
-            // Default fallback (original diabetes scale)
-            'interpolate', ['linear'], ['get', `${selectedDisease}_${visualizationMode}`],
-            7, '#006747', 25, '#4a8c2a', 37, '#a4c441', 50, '#f4e04d',
-            68, '#ff8c42', 100, '#f76c5e', 138, '#d32f2f', 260, '#8b0000'
+      const min = values[0];
+      const q25 = values[Math.floor(values.length * 0.25)];
+      const median = values[Math.floor(values.length * 0.5)];
+      const q75 = values[Math.floor(values.length * 0.75)];
+      const max = values[values.length - 1];
+
+      console.log(`Color scale: ${min} → ${q25} → ${median} → ${q75} → ${max}`);
+
+      // Add fill layer
+      map.addLayer({
+        id: `${layerId}-fill`,
+        type: 'fill',
+        source: layerId,
+        paint: {
+          'fill-color': [
+            'case',
+            ['>', ['get', propertyKey], 0],
+            [
+              'interpolate',
+              ['linear'],
+              ['get', propertyKey],
+              min, '#006d2c',
+              q25, '#31a354',
+              median, '#74c476',
+              q75, '#fd8d3c',
+              max, '#d94701'
+            ],
+            'rgba(128, 128, 128, 0.3)'
           ],
-          'rgba(107, 114, 128, 0.3)' // Suppressed data color
-        ],
-        'fill-opacity': 0.8
+          'fill-opacity': 0.7
+        }
+      });
+
+      // Add border layer
+      map.addLayer({
+        id: `${layerId}-line`,
+        type: 'line',
+        source: layerId,
+        paint: {
+          'line-color': '#ffffff',
+          'line-width': 0.5,
+          'line-opacity': 0.8
+        }
+      });
+
+      console.log(`✅ Successfully added layers for ${layerId}`);
+
+    } catch (error) {
+      console.error('Error adding layers:', error);
+    }
+  };
+
+  tryAddLayer();
+}
+
+function cleanupLayers(map: mapboxgl.Map, layerId: string) {
+  const layerIds = [`${layerId}-fill`, `${layerId}-line`];
+  
+  layerIds.forEach(id => {
+    if (map.getLayer(id)) {
+      try {
+        map.removeLayer(id);
+      } catch (e) {
+        // Ignore removal errors
       }
-    });
-
-    // Determine border style based on geographic level
-    const getBorderStyle = (layerId: string) => {
-      if (layerId.includes('census')) {
-        return { width: 0.3, color: '#6b7280', opacity: 0.6 }; // Thin gray for census tracts
-      } else if (layerId.includes('community')) {
-        return { width: 1.0, color: '#374151', opacity: 0.8 }; // Medium for community areas
-      } else if (layerId.includes('wards')) {
-        return { width: 2.0, color: '#1f2937', opacity: 1.0 }; // Thick dark for alderman wards
-      }
-      return { width: 0.5, color: '#374151', opacity: 0.8 }; // Default
-    };
-
-    const borderStyle = getBorderStyle(layerId);
-
-    // Add border layer with distinct styling per geographic level
-    map.addLayer({
-      id: `${layerId}-border`,
-      type: 'line',
-      source: layerId,
-      paint: {
-        'line-color': borderStyle.color,
-        'line-width': borderStyle.width,
-        'line-opacity': borderStyle.opacity
-      }
-    });
-
-    // Add hover layer
-    map.addLayer({
-      id: `${layerId}-hover`,
-      type: 'line',
-      source: layerId,
-      paint: {
-        'line-color': '#ffffff',
-        'line-width': 2,
-        'line-opacity': 0
-      },
-      filter: ['==', ['get', 'id'], '']
-    });
-
-    // Determine if this is community view for label sizing
-    const isCommunityView = layerId.includes('community');
-
-    // Add name labels
-    map.addLayer({
-      id: `${layerId}-labels`,
-      type: 'symbol',
-      source: layerId,
-      layout: {
-        'text-field': isCommunityView ? ['get', 'community'] : [
-          'concat',
-          'Tract ',
-          ['get', 'tractce']
-        ],
-        'text-font': ['Open Sans Bold', 'Arial Unicode MS Bold'],
-        'text-size': isCommunityView ? [
-          'interpolate',
-          ['linear'],
-          ['zoom'],
-          8, 9,
-          10, 12,
-          12, 15,
-          16, 20
-        ] : 8,
-        'text-offset': [0, 0],
-        'text-anchor': 'center',
-        'text-allow-overlap': isCommunityView,
-        'text-ignore-placement': isCommunityView,
-        'text-transform': 'uppercase',
-        'text-padding': isCommunityView ? 5 : 2,
-        'text-optional': true
-      },
-      paint: {
-        'text-color': '#ffffff',
-        'text-halo-color': 'rgba(0, 0, 0, 0.9)',
-        'text-halo-width': isCommunityView ? 3 : 2,
-        'text-opacity': [
-          'interpolate',
-          ['linear'],
-          ['zoom'],
-          8, 0.8,
-          10, 1.0
-        ]
-      }
-    });
-
-    // Add population labels
-    map.addLayer({
-      id: `${layerId}-population`,
-      type: 'symbol',
-      source: layerId,
-      layout: {
-        'text-field': [
-          'concat',
-          'Pop: ',
-          ['to-string', ['round', ['/', ['get', 'population'], 1000]]],
-          'k'
-        ],
-        'text-font': ['Open Sans Regular', 'Arial Unicode MS Regular'],
-        'text-size': isCommunityView ? 9 : 7,
-        'text-offset': [0, 0.8],
-        'text-anchor': 'center',
-        'text-allow-overlap': false,
-        'text-ignore-placement': false
-      },
-      paint: {
-        'text-color': '#e5e7eb',
-        'text-halo-color': 'rgba(0, 0, 0, 0.6)',
-        'text-halo-width': 1
-      }
-    });
-    
-  } catch (error) {
-    console.error('Error adding data layer:', error);
+    }
+  });
+  
+  if (map.getSource(layerId)) {
+    try {
+      map.removeSource(layerId);
+    } catch (e) {
+      // Ignore removal errors
+    }
   }
 }
 

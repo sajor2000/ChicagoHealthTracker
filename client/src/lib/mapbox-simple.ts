@@ -36,41 +36,45 @@ export function addDataLayer(
 ) {
   console.log(`🎯 addDataLayer called: ${layerId}, ${selectedDisease}, ${visualizationMode}, features: ${data.features.length}`);
   
-  // Wait for style to be ready - use multiple events to ensure loading
-  if (!map.isStyleLoaded()) {
-    console.log('Style not loaded, waiting...');
-    const tryAddLayer = () => {
-      console.log('Style loaded, attempting to add layer...');
-      addDataLayer(map, data, layerId, selectedDisease, visualizationMode);
-    };
+  // Wait for map to be fully ready
+  const executeWhenReady = () => {
+    if (!map.loaded() || !map.isStyleLoaded()) {
+      console.log('Map not fully ready, scheduling retry...');
+      setTimeout(executeWhenReady, 100);
+      return;
+    }
     
-    // Try multiple events to catch style loading
-    map.once('styledata', tryAddLayer);
-    map.once('idle', tryAddLayer);
-    
-    // Fallback timeout
-    setTimeout(() => {
-      if (map.isStyleLoaded()) {
-        tryAddLayer();
-      }
-    }, 1000);
-    return;
-  }
-
-  try {
+    console.log('Map is ready, proceeding with layer addition...');
+    performLayerAddition();
+  };
+  
+  const performLayerAddition = () => {
+    try {
     console.log(`Adding layer: ${layerId} for ${selectedDisease} (${visualizationMode})`);
     
     // Clean up existing layers first
-    removeExistingLayers(map, layerId);
+    try {
+      removeExistingLayers(map, layerId);
+      console.log(`✓ Cleaned up existing layers for ${layerId}`);
+    } catch (cleanupError) {
+      console.error('Error cleaning up layers:', cleanupError);
+    }
     
     // Add source
-    if (!map.getSource(layerId)) {
-      map.addSource(layerId, {
-        type: 'geojson',
-        data: data
-      });
-    } else {
-      (map.getSource(layerId) as mapboxgl.GeoJSONSource).setData(data);
+    try {
+      if (!map.getSource(layerId)) {
+        map.addSource(layerId, {
+          type: 'geojson',
+          data: data
+        });
+        console.log(`✓ Added source: ${layerId}`);
+      } else {
+        (map.getSource(layerId) as mapboxgl.GeoJSONSource).setData(data);
+        console.log(`✓ Updated source: ${layerId}`);
+      }
+    } catch (sourceError) {
+      console.error('Error adding/updating source:', sourceError);
+      return;
     }
 
     // Calculate color values
@@ -95,48 +99,69 @@ export function addDataLayer(
 
     console.log(`Color scale: ${min} → ${q25} → ${median} → ${q75} → ${max}`);
 
-    // Add fill layer
-    map.addLayer({
-      id: `${layerId}-fill`,
-      type: 'fill',
-      source: layerId,
-      paint: {
-        'fill-color': [
-          'case',
-          ['>', ['get', propertyKey], 0],
-          [
-            'interpolate',
-            ['linear'],
-            ['get', propertyKey],
-            min, '#006d2c',
-            q25, '#31a354', 
-            median, '#74c476',
-            q75, '#fd8d3c',
-            max, '#d94701'
+    // Add fill layer with error handling
+    try {
+      map.addLayer({
+        id: `${layerId}-fill`,
+        type: 'fill',
+        source: layerId,
+        paint: {
+          'fill-color': [
+            'case',
+            ['>', ['get', propertyKey], 0],
+            [
+              'interpolate',
+              ['linear'],
+              ['get', propertyKey],
+              min, '#006d2c',
+              q25, '#31a354', 
+              median, '#74c476',
+              q75, '#fd8d3c',
+              max, '#d94701'
+            ],
+            'rgba(128, 128, 128, 0.3)'
           ],
-          'rgba(128, 128, 128, 0.3)'
-        ],
-        'fill-opacity': 0.7
-      }
-    });
+          'fill-opacity': 0.7
+        }
+      });
+      console.log(`✓ Added fill layer: ${layerId}-fill`);
+    } catch (fillError) {
+      console.error('Error adding fill layer:', fillError);
+    }
 
-    // Add border layer
-    map.addLayer({
-      id: `${layerId}-line`,
-      type: 'line',
-      source: layerId,
-      paint: {
-        'line-color': '#ffffff',
-        'line-width': 0.5,
-        'line-opacity': 0.8
-      }
-    });
+    // Add border layer with error handling
+    try {
+      map.addLayer({
+        id: `${layerId}-line`,
+        type: 'line',
+        source: layerId,
+        paint: {
+          'line-color': '#ffffff',
+          'line-width': 0.5,
+          'line-opacity': 0.8
+        }
+      });
+      console.log(`✓ Added line layer: ${layerId}-line`);
+    } catch (lineError) {
+      console.error('Error adding line layer:', lineError);
+    }
 
     console.log(`✅ Successfully added layers for ${layerId}`);
 
-  } catch (error) {
-    console.error('Error adding layer:', error);
-  }
+    } catch (error) {
+      console.error('Error adding layer:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        layerId,
+        selectedDisease,
+        visualizationMode,
+        dataLength: data.features.length
+      });
+    }
+  };
+
+  // Start the execution
+  executeWhenReady();
 }
 
 function removeExistingLayers(map: mapboxgl.Map, layerId: string) {
