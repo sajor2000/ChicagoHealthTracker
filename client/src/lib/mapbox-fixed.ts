@@ -122,11 +122,11 @@ export function addDataLayer(
           'fill-color': [
             'step',
             ['get', propertyKey],
-            '#2b83ba',     // Blue for lowest values
-            q25, '#abdda4', // Light green
-            median, '#ffffbf', // Yellow
-            q75, '#fdae61', // Orange  
-            max * 0.9, '#d7191c' // Red for highest values
+            '#1a9850',     // Green for lowest values (30)
+            q25, '#91bfdb', // Light blue-green 
+            median, '#ffffbf', // Yellow (128)
+            q75, '#fc8d59', // Orange (176)
+            max * 0.9, '#d73027' // Red for highest values (237+)
           ],
           'fill-opacity': 0.7
         }
