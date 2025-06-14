@@ -84,81 +84,86 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     // Process census tracts with health data (base authentic data layer)
     processedCensusTracts = combinedFeatures.map((feature: any, index: number) => {
-      // Extract and format Census GEOID to match 2020 Census API format (17031XXXXXX)
-      const rawGeoid = feature.properties.GEOID || feature.properties.geoid || feature.properties.id;
-      let censusGeoid = rawGeoid ? rawGeoid.toString() : null;
+      try {
+        // Extract and format Census GEOID to match 2020 Census API format (17031XXXXXX)
+        const rawGeoid = feature.properties.GEOID || feature.properties.geoid || feature.properties.id;
+        let censusGeoid = rawGeoid ? rawGeoid.toString() : null;
+        
+        // Direct lookup using standardized 11-digit GEOID format
+        let demographics = null;
+        if (censusGeoid) {
+          demographics = censusDemographics[censusGeoid];
+        }
+        
+        // Use authentic 2020 Census population data from demographics or fallback to API data
+        const population = demographics ? 
+          demographics.totalPopulation : 
+          (censusGeoid && census2020Data.tracts[censusGeoid] ? census2020Data.tracts[censusGeoid] : 2400);
       
-      // Direct lookup using standardized 11-digit GEOID format
-      let demographics = null;
-      if (censusGeoid) {
-        demographics = censusDemographics[censusGeoid];
-      }
-      
-      // Use authentic 2020 Census population data from demographics or fallback to API data
-      const population = demographics ? 
-        demographics.population.total : 
-        (censusGeoid && census2020Data.tracts[censusGeoid] ? census2020Data.tracts[censusGeoid] : 2400);
-      
-      // Calculate area in square miles from GeoJSON geometry
-      const areaSqMiles = calculatePolygonAreaInSquareMiles(feature.geometry.coordinates);
-      const density = areaSqMiles > 0 ? Math.round(population / areaSqMiles) : Math.round(population / 0.5);
-      
-      const finalTractId = censusGeoid || rawGeoid || `tract_${index}`;
-      
-      // Generate epidemiologically-accurate disease data
-      const tractName = `Census Tract ${feature.properties.TRACTCE || finalTractId.slice(-4)}`;
-      const epidemiologicalDiseases = generateEpidemiologicalDiseaseData(
-        population,
-        tractName,
-        demographics
-      );
-      
-      // Calculate data quality score
-      const dataQuality = calculateDataQuality(population, demographics, 'census');
-      
-      return {
-        ...feature,
-        id: finalTractId,
-        properties: {
-          ...feature.properties,
+        // Calculate area in square miles from GeoJSON geometry
+        const areaSqMiles = calculatePolygonAreaInSquareMiles(feature.geometry.coordinates);
+        const density = areaSqMiles > 0 ? Math.round(population / areaSqMiles) : Math.round(population / 0.5);
+        
+        const finalTractId = censusGeoid || rawGeoid || `tract_${index}`;
+        
+        // Generate epidemiologically-accurate disease data
+        const tractName = `Census Tract ${feature.properties.TRACTCE || finalTractId.slice(-4)}`;
+        const epidemiologicalDiseases = generateEpidemiologicalDiseaseData(
+          population,
+          tractName,
+          demographics
+        );
+        
+        // Calculate data quality score
+        const dataQuality = calculateDataQuality(population, demographics, 'census');
+        
+        return {
+          ...feature,
           id: finalTractId,
-          name: `Census Tract ${feature.properties.TRACTCE || finalTractId.slice(-4)}`,
-          geoid: finalTractId,
-          population: population,
-          density: density,
-          diseases: epidemiologicalDiseases,
-          dataQuality: dataQuality,
-          // Include authentic 2020 Census demographic data
-          demographics: demographics || {
-            population: { total: population, adults18Plus: Math.floor(population * 0.75) },
-            race: { 
-              white: Math.floor(population * 0.32),
-              black: Math.floor(population * 0.30), 
-              americanIndian: Math.floor(population * 0.01),
-              asian: Math.floor(population * 0.07),
-              pacificIslander: Math.floor(population * 0.001),
-              otherRace: Math.floor(population * 0.18),
-              multiRace: Math.floor(population * 0.109)
-            },
-            ethnicity: { 
-              total: population, 
-              hispanic: Math.floor(population * 0.29), 
-              nonHispanic: Math.floor(population * 0.71) 
-            },
-            housing: { 
-              totalUnits: Math.floor(population * 0.4), 
-              occupied: Math.floor(population * 0.35), 
-              vacant: Math.floor(population * 0.05) 
-            },
-            age: {
-              under18: Math.floor(population * 0.25),
-              age18Plus: Math.floor(population * 0.75),
-              age65Plus: Math.floor(population * 0.15)
+          properties: {
+            ...feature.properties,
+            id: finalTractId,
+            name: `Census Tract ${feature.properties.TRACTCE || finalTractId.slice(-4)}`,
+            geoid: finalTractId,
+            population: population,
+            density: density,
+            diseases: epidemiologicalDiseases,
+            dataQuality: dataQuality,
+            // Include authentic 2020 Census demographic data
+            demographics: demographics || {
+              totalPopulation: population,
+              race: { 
+                white: Math.floor(population * 0.32),
+                black: Math.floor(population * 0.30), 
+                americanIndian: Math.floor(population * 0.01),
+                asian: Math.floor(population * 0.07),
+                pacificIslander: Math.floor(population * 0.001),
+                otherRace: Math.floor(population * 0.18),
+                multiRace: Math.floor(population * 0.109)
+              },
+              ethnicity: { 
+                total: population, 
+                hispanic: Math.floor(population * 0.29), 
+                nonHispanic: Math.floor(population * 0.71) 
+              },
+              housing: { 
+                totalUnits: Math.floor(population * 0.4), 
+                occupied: Math.floor(population * 0.35), 
+                vacant: Math.floor(population * 0.05) 
+              },
+              age: {
+                under18: Math.floor(population * 0.25),
+                age18Plus: Math.floor(population * 0.75),
+                age65Plus: Math.floor(population * 0.15)
+              }
             }
           }
-        }
-      };
-    });
+        };
+      } catch (tractError) {
+        console.error(`Error processing tract ${index}:`, tractError);
+        return null;
+      }
+    }).filter(tract => tract !== null);
 
     chicagoCensusTractsData = {
       type: 'FeatureCollection',
