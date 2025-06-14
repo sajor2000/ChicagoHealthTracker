@@ -12,7 +12,7 @@ export default function Home() {
     selectedArea: null,
     activeView: 'census',
     selectedDisease: 'diabetes',
-    visualizationMode: 'count',
+    visualizationMode: 'rate',
     showSuppressed: true,
     isInfoPanelOpen: false,
   });

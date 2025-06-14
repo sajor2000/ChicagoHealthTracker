@@ -1,0 +1,69 @@
+Quick Debugging Steps:
+
+Check if layers exist in the map:
+
+javascript// Add this to your console or after adding layers:
+console.log('All layers:', map.getStyle().layers.map(l => l.id));
+console.log('Diabetes fill layer exists?', map.getLayer('diabetes-tract-fill'));
+console.log('Diabetes line layer exists?', map.getLayer('diabetes-tract-line'));
+
+Check if source data is loaded:
+
+javascript// Add this after setting the source:
+const source = map.getSource('diabetes-tract');
+if (source) {
+  console.log('Source exists');
+  // Check if features are loaded
+  const features = map.querySourceFeatures('diabetes-tract');
+  console.log('Number of features in source:', features.length);
+}
+
+Most Common Fix - Wait for Style Load:
+
+javascript// Make sure layers are added after style loads
+if (!map.isStyleLoaded()) {
+  map.once('style.load', () => {
+    addMapLayer(map, dataType, geoType, geoData);
+  });
+  return;
+}
+
+Check Layer Placement:
+
+javascript// Instead of 'waterway-label', try adding without a before layer
+// or use a different reference layer
+map.addLayer({
+  id: `${dataType}-${geoType}-fill`,
+  type: 'fill',
+  source: `${dataType}-${geoType}`,
+  paint: {
+    'fill-color': '#ff0000', // Use solid red first to test
+    'fill-opacity': 0.7
+  }
+}); // No 'before' parameter - adds on top
+
+Test with Simple Paint:
+
+javascript// Replace complex color expression with simple test
+const simplePaint = {
+  'fill-color': '#ff0000',
+  'fill-opacity': 0.5
+};
+Most Likely Issue:
+The layers are probably being added before the map style is fully loaded. Add this check at the beginning of your addMapLayer function:
+javascriptexport function addMapLayer(map: any, dataType: string, geoType: string, geoData: any) {
+  // Wait for map to be ready
+  if (!map.loaded()) {
+    map.once('load', () => addMapLayer(map, dataType, geoType, geoData));
+    return;
+  }
+  
+  // Your existing code...
+}
+Can you check the browser console and tell me what you see when you:
+
+Click to add an overlay
+Look for any error messages
+Check if the layers show up in the layers list
+
+This will help pinpoint the exact issue.

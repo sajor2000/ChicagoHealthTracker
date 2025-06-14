@@ -64,7 +64,7 @@ export function addDataLayer(
         data: data
       });
       
-      // Calculate values for color scaling
+      // Calculate values for color scaling with improved quartile distribution
       const propertyKey = `${selectedDisease}_${visualizationMode}`;
       const values = data.features
         .map(f => f.properties?.[propertyKey])
@@ -76,11 +76,12 @@ export function addDataLayer(
         return;
       }
 
-      const min = values[0];
+      // Use percentile-based scaling for better color distribution
+      const min = values[Math.floor(values.length * 0.05)]; // Skip bottom 5% outliers
       const q25 = values[Math.floor(values.length * 0.25)];
       const median = values[Math.floor(values.length * 0.5)];
       const q75 = values[Math.floor(values.length * 0.75)];
-      const max = values[values.length - 1];
+      const max = values[Math.floor(values.length * 0.95)]; // Skip top 5% outliers
 
       console.log(`Color scale for ${propertyKey}: ${min} → ${q25} → ${median} → ${q75} → ${max}`);
       console.log(`Sample feature values:`, data.features.slice(0, 3).map(f => ({ 
@@ -117,13 +118,13 @@ export function addDataLayer(
               'interpolate',
               ['linear'],
               ['get', propertyKey],
-              min, '#006d2c',      // Green for lowest values
-              q25, '#74c476',      // Light green
-              median, '#fed976',   // Yellow
-              q75, '#fd8d3c',      // Orange
-              max, '#bd0026'       // Red for highest values
+              min, '#1a9850',      // Dark green for lowest values
+              q25, '#91bfdb',      // Light blue
+              median, '#fee08b',   // Light yellow
+              q75, '#fc8d59',      // Orange
+              max, '#d73027'       // Red for highest values
             ],
-            'rgba(200, 200, 200, 0.3)'  // Light gray for missing data
+            'rgba(220, 220, 220, 0.5)'  // Light gray for missing data
           ],
           'fill-opacity': 0.8
         }
