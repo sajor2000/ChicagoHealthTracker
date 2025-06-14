@@ -123,10 +123,10 @@ export function addDataLayer(
             'interpolate',
             ['linear'],
             ['get', propertyKey],
-            30, '#16a34a',    // Dark green (30 per 1,000)
-            128, '#eab308',   // Yellow (128 per 1,000)
-            176, '#f97316',   // Orange (176 per 1,000)
-            237, '#dc2626'    // Red (237+ per 1,000)
+            visualizationMode === 'count' ? min : 30, '#16a34a',    // Dark green
+            visualizationMode === 'count' ? q25 : 128, '#eab308',   // Yellow 
+            visualizationMode === 'count' ? q75 : 176, '#f97316',   // Orange
+            visualizationMode === 'count' ? max * 0.8 : 237, '#dc2626'  // Red
           ],
           'fill-opacity': 0.8
         }
