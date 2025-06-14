@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import { aggregateTractsToUnits } from './spatial-aggregation.js';
 import { loadAllCensusData, getAllCensusTractData } from "./database-census-loader";
 import { generateEpidemiologicalDiseaseData, calculateDataQuality } from './epidemiological-data-generator';
+import { extendCoastalBoundaries, fixShorelineGaps } from './boundary-extension';
 import { db } from "./db";
 import { chicagoCensusTracts2020 } from "@shared/schema";
 import { eq } from "drizzle-orm";
@@ -79,8 +80,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   try {
     const tractPath = path.join(__dirname, 'data', 'chicago-census-tracts.json');
     const tractData = JSON.parse(fs.readFileSync(tractPath, 'utf8'));
-    const combinedFeatures = tractData.features || [];
+    let combinedFeatures = tractData.features || [];
     console.log(`Loaded authentic Chicago census tracts data: ${combinedFeatures.length} features`);
+    
+    // Fix shoreline gaps by extending coastal boundaries to Lake Michigan
+    console.log('Extending coastal boundaries to fix shoreline gaps...');
+    combinedFeatures = extendCoastalBoundaries(combinedFeatures);
+    combinedFeatures = fixShorelineGaps(combinedFeatures);
+    console.log('Shoreline boundary extension complete');
     
     // Process census tracts with health data (base authentic data layer)
     processedCensusTracts = combinedFeatures.map((feature: any, index: number) => {
