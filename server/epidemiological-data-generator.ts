@@ -246,29 +246,52 @@ function getEnvironmentalRiskFactors(areaName: string): { foodDesert: number; ai
 function getSESMultiplier(areaName: string, demographics: any): number {
   const name = areaName.toLowerCase();
   
-  // Check exact matches first for maximum precision
+  // Enhanced gradients for pronounced geographic visualization
   if (CHICAGO_SES_RISK_AREAS.highRisk.some(area => area.toLowerCase() === name)) {
-    return 2.8; // Highest disparity areas - South/West Side
+    return 3.5; // Red zones - South/West Side high disease burden
   } else if (CHICAGO_SES_RISK_AREAS.moderateHighRisk.some(area => area.toLowerCase() === name)) {
-    return 2.0;
+    return 2.4; // Orange zones - moderate-high burden
   } else if (CHICAGO_SES_RISK_AREAS.moderateRisk.some(area => area.toLowerCase() === name)) {
-    return 1.4;
+    return 1.6; // Yellow zones - transition areas
   } else if (CHICAGO_SES_RISK_AREAS.lowRisk.some(area => area.toLowerCase() === name)) {
-    return 0.6; // Lower risk areas - North Side affluent
+    return 0.4; // Green zones - North Side lower burden
   }
   
-  // Fallback to partial matching with stronger gradients
-  if (CHICAGO_SES_RISK_AREAS.highRisk.some(area => name.includes(area.toLowerCase()))) {
-    return 2.5;
-  } else if (CHICAGO_SES_RISK_AREAS.moderateHighRisk.some(area => name.includes(area.toLowerCase()))) {
-    return 1.8;
-  } else if (CHICAGO_SES_RISK_AREAS.moderateRisk.some(area => name.includes(area.toLowerCase()))) {
-    return 1.2;
-  } else if (CHICAGO_SES_RISK_AREAS.lowRisk.some(area => name.includes(area.toLowerCase()))) {
-    return 0.7;
-  } else {
-    return 1.0; // Default/unknown areas
+  // Geographic pattern recognition for visual health disparities
+  if (name.includes('south') || name.includes('west')) {
+    return 3.0; // South/West Side high burden zones
   }
+  
+  if (name.includes('north') || name.includes('downtown') || name.includes('loop')) {
+    return 0.5; // North Side/Downtown lower burden zones
+  }
+  
+  // Enhanced demographic-based SES calculation
+  if (demographics?.race) {
+    const totalPop = Object.values(demographics.race).reduce((sum: number, val: any) => sum + (val || 0), 0);
+    if (totalPop > 0) {
+      const blackProportion = (demographics.race.black || 0) / totalPop;
+      const hispanicProportion = demographics.ethnicity?.hispanic ? 
+        (demographics.ethnicity.hispanic / (demographics.ethnicity.total || 1)) : 0;
+      
+      // Stronger gradients based on demographic composition
+      if (blackProportion > 0.8 || hispanicProportion > 0.7) {
+        return 3.8; // Highest burden areas - deep red zones
+      } else if (blackProportion > 0.6 || hispanicProportion > 0.5) {
+        return 3.2; // High burden areas - red zones
+      } else if (blackProportion > 0.4 || hispanicProportion > 0.3) {
+        return 2.6; // Moderate-high burden - orange zones
+      } else if (blackProportion > 0.2 || hispanicProportion > 0.2) {
+        return 1.8; // Moderate burden - yellow zones
+      } else if (blackProportion > 0.1 || hispanicProportion > 0.1) {
+        return 1.2; // Lower burden - light zones
+      } else {
+        return 0.6; // Lowest burden - green zones
+      }
+    }
+  }
+  
+  return 1.0; // Default areas
 }
 
 /**
