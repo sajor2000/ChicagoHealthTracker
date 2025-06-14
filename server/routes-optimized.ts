@@ -66,7 +66,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   console.log(`Loaded ${Object.keys(demographicsData).length} demographic records and ${geometryMap.size} geometry features`);
   
   // Process census tracts with authentic demographics
-  const processedCensusTracts = [];
+  const processedCensusTracts: any[] = [];
   let validTracts = 0;
   
   for (const [geoid, demographics] of Object.entries(demographicsData)) {
