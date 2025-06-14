@@ -375,37 +375,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   return httpServer;
 }
-      // High-income areas with better health outcomes
-      'LINCOLN PARK': 0.6, 'LAKE VIEW': 0.7, 'NEAR NORTH SIDE': 0.6, 'NORTH CENTER': 0.6,
-      'LOOP': 0.7, 'HYDE PARK': 0.6, 'BEVERLY': 0.7, 'MOUNT GREENWOOD': 0.7, 'EDISON PARK': 0.6,
-      'NORWOOD PARK': 0.7, 'FOREST GLEN': 0.6,
-      
-      // High-disparity areas with poorer health outcomes
-      'AUSTIN': 1.4, 'WEST GARFIELD PARK': 1.5, 'EAST GARFIELD PARK': 1.4, 'NORTH LAWNDALE': 1.5,
-      'FULLER PARK': 1.6, 'WASHINGTON PARK': 1.5, 'ENGLEWOOD': 1.5, 'WEST ENGLEWOOD': 1.4,
-      'CHATHAM': 1.3, 'GREATER GRAND CROSSING': 1.4, 'SOUTH SHORE': 1.3, 'WOODLAWN': 1.4,
-      'BURNSIDE': 1.5, 'RIVERDALE': 1.6, 'PULLMAN': 1.3, 'ROSELAND': 1.3, 'AUBURN GRESHAM': 1.3,
-      
-      // Moderate disparity areas
-      'HUMBOLDT PARK': 1.2, 'LOGAN SQUARE': 0.9, 'AVONDALE': 1.0, 'BELMONT CRAGIN': 1.1,
-      'HERMOSA': 1.2, 'BRIDGEPORT': 1.0, 'NEW CITY': 1.2, 'BRIGHTON PARK': 1.1, 'MCKINLEY PARK': 1.0,
-      'ARCHER HEIGHTS': 1.0, 'GARFIELD RIDGE': 0.9, 'CLEARING': 0.9, 'WEST LAWN': 1.0,
-      'CHICAGO LAWN': 1.1, 'GAGE PARK': 1.1, 'WEST ELSDON': 1.0, 'ASHBURN': 0.9,
-      
-      // Mixed/transitional areas
-      'PORTAGE PARK': 0.9, 'IRVING PARK': 0.9, 'DUNNING': 0.8, 'MONTCLARE': 0.9,
-      'JEFFERSON PARK': 0.8, 'NORTH PARK': 0.8, 'ALBANY PARK': 1.0, 'LINCOLN SQUARE': 0.7,
-      'UPTOWN': 1.0, 'WEST TOWN': 0.8, 'NEAR WEST SIDE': 0.8, 'SOUTH LAWNDALE': 1.1,
-      'LOWER WEST SIDE': 1.0, 'DOUGLAS': 1.2, 'OAKLAND': 1.3, 'GRAND BOULEVARD': 1.3,
-      'KENWOOD': 0.9, 'CALUMET HEIGHTS': 0.9, 'SOUTH CHICAGO': 1.2, 'EAST SIDE': 1.1,
-      'SOUTH DEERING': 1.2, 'WEST PULLMAN': 1.2, 'HEGEWISCH': 1.0, 'AVALON PARK': 1.1,
-      'MORGAN PARK': 0.8, 'WASHINGTON HEIGHTS': 1.0,
-      
-      // North Side diverse areas
-      'EDGEWATER': 0.8
-    };
-
-    chicagoCommunitiesData = {
       type: 'FeatureCollection',
       features: rawData.features.map((feature: any) => {
         const communityName = feature.properties.community;

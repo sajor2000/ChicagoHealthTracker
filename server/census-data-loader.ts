@@ -1,5 +1,5 @@
 import { db } from './db';
-import { censusTractData } from '@shared/schema';
+import { chicagoCensusTracts2020 } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import fs from 'fs';
 import path from 'path';

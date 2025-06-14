@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 import { aggregateTractsToUnits } from './spatial-aggregation.js';
 import { loadAllCensusData, getAllCensusTractData } from "./database-census-loader";
 import { db } from "./db";
-import { censusTractData } from "@shared/schema";
+import { chicagoCensusTracts2020 } from "@shared/schema";
 import { eq } from "drizzle-orm";
 
 const __filename = fileURLToPath(import.meta.url);
