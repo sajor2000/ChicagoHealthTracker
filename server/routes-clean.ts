@@ -315,12 +315,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
           baseData.features.forEach((feature: any) => {
             const geoid = feature.properties.geoid;
             
-            // Try multiple GEOID format mappings
+            // Try comprehensive GEOID format mappings
+            const tractNum = geoid.slice(-4); // Get last 4 digits (e.g., "1775" from "170311775")
+            const tractInt = parseInt(tractNum);
+            
             const possibleMappings = [
-              geoid, // Original format
-              geoid.replace('17031', ''), // Remove state/county prefix
-              `17031${geoid.slice(-6)}`, // Alternative format
-              `17031${geoid.slice(-4).padStart(6, '0')}` // Padded format
+              geoid, // Original format (170311775)
+              `17031${(tractInt * 100).toString().padStart(6, '0')}`, // Census API format (17031177500)
+              `17031${tractNum.padStart(6, '0')}`, // Padded format (17031001775)
+              `17031${tractNum}00`, // Alternative census format
+              `17031${tractInt.toString().padStart(6, '0')}`, // Direct integer padding
+              `17031${tractNum}`, // Direct append
+              geoid.slice(-6), // Last 6 digits
+              tractNum, // Just the tract number
+              `${tractInt * 100}`.padStart(6, '0'), // Tract code only with multiplication
+              tractInt.toString().padStart(6, '0') // Tract number padded to 6 digits
             ];
             
             for (const mappedGeoid of possibleMappings) {
@@ -354,6 +363,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           if (enhancedCount > 0) {
             console.log(`Enhanced ${enhancedCount} census tracts with authentic Census Bureau data`);
+            console.log(`Coverage: ${enhancedCount}/${baseData.features.length} census tracts (${Math.round(enhancedCount/baseData.features.length*100)}%)`);
           }
         }
       } catch (censusError) {
