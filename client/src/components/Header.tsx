@@ -18,25 +18,14 @@ export default function Header({ className = '' }: HeaderProps) {
         }}
       >
         <div className="max-w-7xl mx-auto w-full h-full flex items-center justify-between px-8">
-          {/* Compact Logo and Title Section */}
-          <div className="flex items-center gap-4">
-            <div 
-              className="w-10 h-10 rounded-lg flex items-center justify-center"
-              style={{ 
-                background: 'linear-gradient(135deg, var(--rush-primary) 0%, var(--rush-secondary) 100%)',
-                boxShadow: '0 4px 16px rgba(0, 103, 71, 0.3)'
-              }}
+          {/* Title Section - Far Left */}
+          <div>
+            <h1 
+              className="text-lg font-bold leading-tight"
+              style={{ color: 'white' }}
             >
-              <span className="text-lg font-bold text-white">CD</span>
-            </div>
-            <div>
-              <h1 
-                className="text-lg font-bold leading-tight"
-                style={{ color: 'white' }}
-              >
-                Chicago Chronic Disease Data Commons
-              </h1>
-            </div>
+              Chicago Chronic Disease Data Commons
+            </h1>
           </div>
           
           {/* Expanded Organization Credits */}
