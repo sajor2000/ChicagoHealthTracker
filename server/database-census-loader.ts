@@ -61,7 +61,7 @@ export async function loadAllCensusData(): Promise<{ loaded: number; existing: n
     const demo = demographics as any;
     
     // Check if already exists
-    const existing = await db.select().from(censusTractData).where(eq(censusTractData.geoid, geoid)).limit(1);
+    const existing = await db.select().from(chicagoCensusTracts2020).where(eq(chicagoCensusTracts2020.geoid, geoid)).limit(1);
     if (existing.length > 0) {
       existingCount++;
       continue;
@@ -100,7 +100,7 @@ export async function loadAllCensusData(): Promise<{ loaded: number; existing: n
     
     // Insert into database
     try {
-      await db.insert(censusTractData).values({
+      await db.insert(chicagoCensusTracts2020).values({
         geoid: geoid,
         tractNumber: geoid.slice(-4),
         name: `Census Tract ${geoid.slice(-4)}`,

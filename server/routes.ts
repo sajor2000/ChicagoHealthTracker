@@ -63,6 +63,11 @@ try {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Declare data variables at function scope
+  var chicagoCensusTractsData: any = null;
+  var chicagoCommunitiesData: any = null;
+  var chicagoWardsData: any = null;
+
   // Initialize database with authentic 2020 Census data
   console.log('Initializing database with authentic 2020 Census data...');
   await loadAllCensusData();
@@ -321,7 +326,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
     });
 
-    var chicagoCensusTractsData = {
+    chicagoCensusTractsData = {
       type: 'FeatureCollection',
       features: processedCensusTracts
     };
@@ -331,7 +336,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   // Load authentic Chicago Community Areas data (boundaries only, data aggregated from tracts)
-  let chicagoCommunitiesData: any = null;
 
   try {
     const dataPath = path.join(__dirname, 'data', 'chicago-community-areas.json');
@@ -375,7 +379,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   // Load authentic Chicago Ward boundaries and aggregate census tract data
-  let chicagoWardsData: any = null;
   
   try {
     // Load authentic ward boundaries from converted GeoJSON
