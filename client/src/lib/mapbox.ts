@@ -100,7 +100,7 @@ export function addDataLayer(
       min, q25, median, q75, q90, q95, max
     });
 
-    // Add fill layer with dynamic color scaling
+    // Add fill layer with enhanced green-to-red color scaling for all diseases
     map.addLayer({
       id: `${layerId}-fill`,
       type: 'fill',
@@ -111,17 +111,22 @@ export function addDataLayer(
           ['>', ['get', propertyKey], 0],
           [
             'interpolate', ['linear'], ['get', propertyKey],
-            min, '#006747',        // Green - lowest values
-            q25, '#4a8c2a',        // Medium green - 25th percentile
-            median, '#a4c441',     // Yellow-green - median
-            q75, '#f4e04d',        // Yellow - 75th percentile
-            q90, '#ff8c42',        // Orange - 90th percentile
-            q95, '#f76c5e',        // Red - 95th percentile
-            max, '#d32f2f'         // Dark red - maximum values
+            min, '#16a34a',        // Dark green - lowest values (healthy areas)
+            q25, '#22c55e',        // Medium green - 25th percentile
+            median, '#eab308',     // Yellow - median (moderate risk)
+            q75, '#f97316',        // Orange - 75th percentile (high risk)
+            q90, '#dc2626',        // Red - 90th percentile (very high risk)
+            q95, '#b91c1c',        // Dark red - 95th percentile
+            max, '#7f1d1d'         // Very dark red - maximum values (highest risk)
           ],
           'rgba(107, 114, 128, 0.3)' // Suppressed data color
         ],
-        'fill-opacity': 0.8
+        'fill-opacity': [
+          'case',
+          ['>', ['get', propertyKey], 0],
+          0.85,  // Higher opacity for valid data
+          0.3    // Lower opacity for suppressed data
+        ]
       }
     });
 
