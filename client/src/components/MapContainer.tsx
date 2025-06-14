@@ -217,8 +217,12 @@ export default function MapContainer({
         const tooltipContent = updateTooltipContent({
           name: properties.name || 'Unknown Area',
           population: properties.population || 0,
+          density: properties.density || 0,
           patientCount: properties[`${selectedDisease}_count`] || 0,
           rate: properties[`${selectedDisease}_rate`] || 0,
+          diseaseName: selectedDisease,
+          diseaseCount: properties[`${selectedDisease}_count`] || 0,
+          diseaseRate: properties[`${selectedDisease}_rate`] || 0,
         });
 
         tooltip.current

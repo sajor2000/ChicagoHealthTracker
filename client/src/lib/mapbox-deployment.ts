@@ -182,9 +182,9 @@ export function updateTooltipContent(data: TooltipData): string {
     <div class="bg-gray-900 text-white p-3 rounded shadow-lg border border-gray-700 min-w-48">
       <div class="font-semibold text-base mb-2">${data.name}</div>
       <div class="text-sm text-gray-300 mb-2">Population: ${data.population.toLocaleString()}</div>
-      <div class="text-sm text-gray-300 mb-2">Density: ${data.density.toFixed(0)}/sq mi</div>
-      <div class="font-medium text-orange-400 mb-1">${data.diseaseName}: ${data.diseaseCount} cases</div>
-      <div class="text-sm text-gray-400">Rate: ${data.diseaseRate} per 100k</div>
+      <div class="text-sm text-gray-300 mb-2">Density: ${(data.density || 0).toFixed(0)}/sq mi</div>
+      <div class="font-medium text-orange-400 mb-1">${data.diseaseName || 'Disease'}: ${data.diseaseCount || data.patientCount} cases</div>
+      <div class="text-sm text-gray-400">Rate: ${(data.diseaseRate || data.rate).toFixed(1)} per 100k</div>
     </div>
   `;
 }
