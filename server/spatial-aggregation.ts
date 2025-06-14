@@ -17,6 +17,32 @@ interface CensusTract {
   diseases: Record<string, any>;
   geometry: Polygon;
   centroid?: Point;
+  demographics?: {
+    race: {
+      white: number;
+      black: number;
+      americanIndian: number;
+      asian: number;
+      pacificIslander: number;
+      otherRace: number;
+      multiRace: number;
+    };
+    ethnicity: {
+      total: number;
+      hispanic: number;
+      nonHispanic: number;
+    };
+    housing: {
+      totalUnits: number;
+      occupied: number;
+      vacant: number;
+    };
+    age: {
+      under18: number;
+      age18Plus: number;
+      age65Plus: number;
+    };
+  };
 }
 
 interface GeographicUnit {
@@ -203,7 +229,33 @@ function aggregateDiseaseData(overlaps: Array<{tract: CensusTract, overlapRatio:
   totalPopulation: number,
   weightedDensity: number,
   dataQuality: number,
-  constituentTracts: string[]
+  constituentTracts: string[],
+  demographics?: {
+    race: {
+      white: number;
+      black: number;
+      americanIndian: number;
+      asian: number;
+      pacificIslander: number;
+      otherRace: number;
+      multiRace: number;
+    };
+    ethnicity: {
+      total: number;
+      hispanic: number;
+      nonHispanic: number;
+    };
+    housing: {
+      totalUnits: number;
+      occupied: number;
+      vacant: number;
+    };
+    age: {
+      under18: number;
+      age18Plus: number;
+      age65Plus: number;
+    };
+  }
 } {
   if (overlaps.length === 0) {
     return {
