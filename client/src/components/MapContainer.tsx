@@ -239,7 +239,7 @@ export default function MapContainer({
       <div 
         id="map"
         ref={mapContainer}
-        className="fixed inset-0 top-24"
+        className="fixed inset-0 top-32"
         style={{ background: 'var(--bg-base)' }}
       >
         <div className="flex items-center justify-center h-full text-center p-8">
@@ -272,7 +272,7 @@ export default function MapContainer({
     <div 
       id="map"
       ref={mapContainer}
-      className={`fixed inset-0 top-24 ${isLoading ? 'loading' : ''}`}
+      className={`fixed inset-0 top-32 ${isLoading ? 'loading' : ''}`}
       style={{ background: 'var(--bg-base)' }}
     />
   );
