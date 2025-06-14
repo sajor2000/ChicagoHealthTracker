@@ -36,12 +36,11 @@ export function addDataLayer(
   visualizationMode: 'count' | 'rate'
 ) {
   try {
-    // Check if map style is loaded
-    if (!map.isStyleLoaded()) {
-      console.warn('Map style not loaded, waiting...');
-      map.once('styledata', () => {
-        addDataLayer(map, data, layerId, selectedDisease, visualizationMode);
-      });
+    console.log('Adding data layer:', { layerId, selectedDisease, visualizationMode, featuresCount: data.features.length });
+    
+    // Validate data before processing
+    if (!data || !data.features || data.features.length === 0) {
+      console.error('Invalid or empty GeoJSON data');
       return;
     }
 
@@ -49,13 +48,17 @@ export function addDataLayer(
     const existingLayers = [`${layerId}-fill`, `${layerId}-border`, `${layerId}-hover`, `${layerId}-labels`, `${layerId}-population`];
     existingLayers.forEach(layer => {
       if (map.getLayer(layer)) {
+        console.log('Removing existing layer:', layer);
         map.removeLayer(layer);
       }
     });
 
+    // Remove existing source if it exists
     if (map.getSource(layerId)) {
+      console.log('Updating existing source:', layerId);
       (map.getSource(layerId) as mapboxgl.GeoJSONSource).setData(data);
     } else {
+      console.log('Adding new source:', layerId);
       map.addSource(layerId, {
         type: 'geojson',
         data,
