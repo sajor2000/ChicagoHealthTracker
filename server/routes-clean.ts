@@ -267,6 +267,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update census tract densities with accurate calculations
+  app.post('/api/update-census-densities', async (req, res) => {
+    try {
+      console.log('Updating census tract densities with improved area calculations...');
+      const result = await updateCensusTractDensities();
+      res.json({ 
+        success: true, 
+        message: `Updated ${result.updated} census tract densities`,
+        updated: result.updated 
+      });
+    } catch (error) {
+      console.error('Error updating census densities:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: 'Failed to update census densities' 
+      });
+    }
+  });
+
+  // Update census tract densities on startup for accuracy
+  try {
+    console.log('Verifying census tract population density accuracy...');
+    const updateResult = await updateCensusTractDensities();
+    console.log(`Updated ${updateResult.updated} census tract densities with improved geographic calculations`);
+  } catch (error) {
+    console.warn('Could not update census densities:', error);
+  }
+
   console.log('Chicago health data API ready with authentic Census demographics');
   const httpServer = createServer(app);
   return httpServer;
