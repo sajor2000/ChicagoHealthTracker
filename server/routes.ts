@@ -95,18 +95,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const geoAttempts = [];
         
         if (censusGeoid.length === 9 && censusGeoid.startsWith('17031')) {
-          // Convert "170311001" -> "17031010100" pattern
-          const tractNumber = censusGeoid.slice(6); // Extract "001" from "170311001"
+          // Convert "170311386" to multiple demographic format attempts
+          const tractNumber = censusGeoid.slice(6); // Extract "386" from "170311386"
           
-          // The pattern is: "17031" + "01" + tract_number + "00"
-          // "170311001" becomes "17031" + "01" + "001" + "00" = "17031010100"
-          const standardGeoid = `1703101${tractNumber}00`;
-          
+          // Multiple pattern attempts for Cook County demographics matching
           geoAttempts.push(
-            standardGeoid, // Primary conversion pattern
-            `17031${tractNumber.padStart(6, '0')}`, // Alternative padding
-            `170310${tractNumber}00`, // Alternative format
-            `17031${tractNumber}000` // Three zeros suffix
+            // Pattern 1: "170311386" -> "17031138600" 
+            `17031${tractNumber}00`,
+            // Pattern 2: "170311386" -> "17031013860"
+            `170310${tractNumber}0`, 
+            // Pattern 3: Standard 11-digit format
+            `1703101${tractNumber}00`,
+            // Pattern 4: Six-digit padding
+            `17031${tractNumber.padStart(6, '0')}`,
+            // Pattern 5: Alternative with middle padding
+            `17031${tractNumber[0]}0${tractNumber.slice(1)}00`
           );
         } else if (censusGeoid.length === 11) {
           // 11-digit format variations
