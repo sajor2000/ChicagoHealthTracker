@@ -119,8 +119,16 @@ export function addDataLayer(
           'visibility': 'visible'
         },
         paint: {
-          'fill-color': '#ff0000', // Solid red for production visibility test
-          'fill-opacity': 0.8
+          'fill-color': [
+            'step',
+            ['get', propertyKey],
+            '#2b83ba',     // Blue for lowest values
+            q25, '#abdda4', // Light green
+            median, '#ffffbf', // Yellow
+            q75, '#fdae61', // Orange  
+            max * 0.9, '#d7191c' // Red for highest values
+          ],
+          'fill-opacity': 0.7
         }
       }); // Add to top of layer stack
 
@@ -168,7 +176,7 @@ export function addDataLayer(
         });
         
         if (fillLayer) {
-          console.log('🔴 Production layer test: Solid red overlays should be visible');
+          console.log('🎨 Health disparity visualization loading...');
           
           // Production rendering strategies
           setTimeout(() => {
@@ -178,18 +186,13 @@ export function addDataLayer(
               map.triggerRepaint();
               console.log('Applied production rendering strategies');
               
-              // Test if layer is actually visible by checking rendered features
+              // Verify layer rendering
               setTimeout(() => {
                 const renderedFeatures = map.queryRenderedFeatures({ layers: [`${layerId}-fill`] });
-                console.log(`Rendered features detected: ${renderedFeatures.length}`);
-                
-                if (renderedFeatures.length === 0) {
-                  console.log('⚠️ Mapbox layers not rendering - attempting canvas fallback');
-                  this.initializeCanvasFallback(map, data, layerId, propertyKey);
-                } else {
-                  console.log('✅ Mapbox layers rendering successfully');
+                if (renderedFeatures.length > 0) {
+                  console.log(`✅ Health disparity visualization active: ${renderedFeatures.length} areas`);
                 }
-              }, 2000);
+              }, 1000);
               
             } catch (e: any) {
               console.log('Layer positioning failed:', e.message);
