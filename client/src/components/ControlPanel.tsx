@@ -1,20 +1,14 @@
 import { ViewMode, DiseaseType, VisualizationMode } from '@/types';
-import { MapPin, Home, Building2, HelpCircle, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
+import { MapPin, Home, Building2, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface ControlPanelProps {
   activeView: ViewMode;
   selectedDisease: DiseaseType;
   visualizationMode: VisualizationMode;
-  showSuppressed: boolean;
   isCollapsed: boolean;
   onViewChange: (view: ViewMode) => void;
   onDiseaseChange: (disease: DiseaseType) => void;
   onVisualizationModeChange: (mode: VisualizationMode) => void;
-  onShowSuppressedChange: (show: boolean) => void;
   onToggleCollapse: () => void;
 }
 
@@ -22,12 +16,10 @@ export default function ControlPanel({
   activeView,
   selectedDisease,
   visualizationMode,
-  showSuppressed,
   isCollapsed,
   onViewChange,
   onDiseaseChange,
   onVisualizationModeChange,
-  onShowSuppressedChange,
   onToggleCollapse,
 }: ControlPanelProps) {
   return (
@@ -115,43 +107,8 @@ export default function ControlPanel({
           </div>
         </div>
       ) : (
-        // Expanded view - display options only
-        <>
-          {/* Display Options */}
-          <div className="mb-6">
-            <label 
-              className="block text-xs uppercase tracking-wider font-medium mb-3"
-              style={{ 
-                color: 'var(--text-tertiary)',
-                letterSpacing: '0.08em'
-              }}
-            >
-              Display Options
-            </label>
-            <div className="flex flex-col gap-3">
-              <div className="flex items-center space-x-3">
-                <Checkbox
-                  id="show-suppressed"
-                  checked={showSuppressed}
-                  onCheckedChange={onShowSuppressedChange}
-                  style={{
-                    borderColor: 'var(--border-default)',
-                    backgroundColor: 'var(--bg-overlay)'
-                  }}
-                />
-                <Label 
-                  htmlFor="show-suppressed" 
-                  className="text-sm cursor-pointer"
-                  style={{ color: 'var(--text-secondary)' }}
-                >
-                  Show Suppressed Data
-                </Label>
-              </div>
-            </div>
-          </div>
-
-
-        </>
+        // Expanded view
+        <></>
       )}
     </div>
   );

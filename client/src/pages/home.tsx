@@ -13,7 +13,6 @@ export default function Home() {
     activeView: 'census',
     selectedDisease: 'diabetes',
     visualizationMode: 'rate',
-    showSuppressed: true,
     isInfoPanelOpen: false,
   });
   
@@ -31,9 +30,7 @@ export default function Home() {
     setAppState(prev => ({ ...prev, visualizationMode: mode }));
   };
 
-  const handleShowSuppressedChange = (show: boolean) => {
-    setAppState(prev => ({ ...prev, showSuppressed: show }));
-  };
+
 
   const handleAreaSelect = (area: AreaData) => {
     setAppState(prev => ({ 
@@ -85,7 +82,6 @@ export default function Home() {
         activeView={appState.activeView}
         selectedDisease={appState.selectedDisease}
         visualizationMode={appState.visualizationMode}
-        showSuppressed={appState.showSuppressed}
         onAreaSelect={handleAreaSelect}
       />
       
@@ -93,12 +89,10 @@ export default function Home() {
         activeView={appState.activeView}
         selectedDisease={appState.selectedDisease}
         visualizationMode={appState.visualizationMode}
-        showSuppressed={appState.showSuppressed}
         isCollapsed={isControlPanelCollapsed}
         onViewChange={handleViewChange}
         onDiseaseChange={handleDiseaseChange}
         onVisualizationModeChange={handleVisualizationModeChange}
-        onShowSuppressedChange={handleShowSuppressedChange}
         onToggleCollapse={handleToggleControlPanelCollapse}
       />
       

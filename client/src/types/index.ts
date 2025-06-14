@@ -69,7 +69,6 @@ export interface AppState {
   activeView: ViewMode;
   selectedDisease: DiseaseType;
   visualizationMode: VisualizationMode;
-  showSuppressed: boolean;
   isInfoPanelOpen: boolean;
 }
 
