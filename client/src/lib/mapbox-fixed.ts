@@ -84,6 +84,19 @@ export function addDataLayer(
 
       console.log(`Color scale: ${min} → ${q25} → ${median} → ${q75} → ${max}`);
 
+      // Set quartile data for Legend component
+      (window as any).__CURRENT_QUARTILES__ = {
+        disease: selectedDisease,
+        mode: visualizationMode,
+        quartiles: {
+          min,
+          q25,
+          median,
+          q75,
+          max
+        }
+      };
+
       // Add fill layer
       map.addLayer({
         id: `${layerId}-fill`,
