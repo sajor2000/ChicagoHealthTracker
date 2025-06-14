@@ -35,7 +35,8 @@ export function addDataLayer(
   selectedDisease: string,
   visualizationMode: 'count' | 'rate'
 ) {
-  console.log('Adding data layer:', { layerId, selectedDisease, visualizationMode, featuresCount: data.features.length });
+  console.log('🗺️ Adding data layer:', { layerId, selectedDisease, visualizationMode, featuresCount: data.features.length });
+  console.log('🗺️ Map status:', { loaded: map.loaded(), styleLoaded: map.isStyleLoaded() });
   
   // Validate data before processing
   if (!data || !data.features || data.features.length === 0) {
@@ -271,7 +272,7 @@ export function addDataLayer(
         }
       });
 
-      console.log('Successfully added map layers for:', layerId);
+      console.log('✅ Successfully added map layers for:', layerId);
       
     } catch (error) {
       console.error('Error adding data layer:', error);
@@ -280,15 +281,22 @@ export function addDataLayer(
 
   // Use timeout to ensure map is fully ready
   if (map.loaded() && map.isStyleLoaded()) {
+    console.log('🗺️ Map ready, adding layers immediately');
     attemptAddLayer();
   } else {
+    console.log('🗺️ Map not ready, waiting...');
     setTimeout(() => {
       if (map.loaded() && map.isStyleLoaded()) {
+        console.log('🗺️ Map ready after timeout, adding layers');
         attemptAddLayer();
       } else {
-        map.once('load', attemptAddLayer);
+        console.log('🗺️ Map still not ready, using load event');
+        map.once('load', () => {
+          console.log('🗺️ Map load event fired, adding layers');
+          attemptAddLayer();
+        });
       }
-    }, 100);
+    }, 500);
   }
 }
 

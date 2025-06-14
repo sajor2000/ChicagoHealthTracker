@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
-import { createMap, addDataLayer, createTooltip, updateTooltipContent, fitBoundsToFeature } from '@/lib/mapbox';
+import { createMap, addDataLayer, createTooltip, updateTooltipContent, fitBoundsToFeature } from '@/lib/mapbox-working';
 import { AreaData, ViewMode, DiseaseType, VisualizationMode } from '@/types';
 import { useChicagoGeoData } from '@/hooks/useMapData';
 import ChicagoDataVisualization from './ChicagoDataVisualization';
