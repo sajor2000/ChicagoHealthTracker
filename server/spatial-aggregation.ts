@@ -473,16 +473,28 @@ export function aggregateTractsToUnits(
       aggregatedData.weightedDensity : 
       Math.floor(2000 + Math.random() * 4000); // Reasonable density estimate
 
+    // Generate flattened disease properties for overlay functionality
+    const diseases = Object.keys(aggregatedData.diseases).length > 0 ? 
+      aggregatedData.diseases : 
+      generateFallbackDiseases(finalPopulation);
+    
+    const flattenedDiseaseProps: Record<string, number> = {};
+    Object.keys(diseases).forEach(diseaseKey => {
+      const disease = diseases[diseaseKey];
+      flattenedDiseaseProps[`${diseaseKey}_count`] = disease.count;
+      flattenedDiseaseProps[`${diseaseKey}_rate`] = disease.rate;
+    });
+
     return {
       ...unit,
       population: finalPopulation,
       density: finalDensity,
-      diseases: Object.keys(aggregatedData.diseases).length > 0 ? 
-        aggregatedData.diseases : 
-        generateFallbackDiseases(finalPopulation),
+      diseases: diseases,
       dataQuality: overlappingTracts.length > 0 ? dataQuality : 75,
       constituentTracts: overlappingTracts.map(o => o.tract.id),
-      demographics: aggregatedData.demographics
+      demographics: aggregatedData.demographics,
+      // Add flattened disease properties for Mapbox overlay functionality
+      ...flattenedDiseaseProps
     };
   });
 }

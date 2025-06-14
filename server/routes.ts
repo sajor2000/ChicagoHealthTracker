@@ -270,16 +270,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     chicagoWardsData = {
       type: 'FeatureCollection',
-      features: aggregatedWards.map(ward => ({
-        type: 'Feature',
-        id: ward.id,
-        properties: {
-          ...ward,
-          geoid: `CHI-WARD-${ward.name.split(' ')[1].padStart(2, '0')}`,
-          geometry: undefined // Remove geometry from properties to avoid duplication
-        },
-        geometry: ward.geometry
-      }))
+      features: aggregatedWards.map(ward => {
+        // Extract flattened disease properties from ward object
+        const { geometry, ...wardProps } = ward;
+        return {
+          type: 'Feature',
+          id: ward.id,
+          properties: {
+            ...wardProps, // This includes the flattened disease properties from spatial aggregation
+            geoid: `CHI-WARD-${ward.name.split(' ')[1].padStart(2, '0')}`
+          },
+          geometry: ward.geometry
+        };
+      })
     };
     console.log(`Generated ${chicagoWardsData.features.length} Chicago alderman wards with aggregated census tract data`);
   } catch (error) {
