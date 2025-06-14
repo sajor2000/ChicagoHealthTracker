@@ -54,6 +54,14 @@ export function addDataLayer(
 
     console.log('Map is ready, adding layers...');
     
+    // Debug: Check map state before adding layers
+    console.log('Pre-layer debug:', {
+      allLayers: map.getStyle().layers.map(l => l.id),
+      existingSource: !!map.getSource(layerId),
+      mapLoaded: map.loaded(),
+      styleLoaded: map.isStyleLoaded()
+    });
+    
     try {
       // Remove existing layers
       cleanupLayers(map, layerId);
@@ -165,11 +173,43 @@ export function addDataLayer(
       setTimeout(() => {
         const fillLayer = map.getLayer(`${layerId}-fill`);
         const lineLayer = map.getLayer(`${layerId}-line`);
-        console.log(`Layer check - Fill layer exists: ${!!fillLayer}, Line layer exists: ${!!lineLayer}`);
+        console.log('Complete layer debug:', {
+          fillLayerExists: !!fillLayer,
+          lineLayerExists: !!lineLayer,
+          allLayers: map.getStyle().layers.map(l => l.id),
+          sourceExists: !!map.getSource(layerId),
+          featureCount: map.querySourceFeatures(layerId).length
+        });
         
         if (fillLayer) {
+          // Test with bright red color for visibility
+          console.log('🔴 Testing layer visibility with bright red...');
+          map.setPaintProperty(`${layerId}-fill`, 'fill-color', '#ff0000');
+          map.setPaintProperty(`${layerId}-fill`, 'fill-opacity', 0.8);
           map.setLayoutProperty(`${layerId}-fill`, 'visibility', 'visible');
+          
+          // Revert to original colors after 3 seconds
+          setTimeout(() => {
+            console.log('🎨 Reverting to original color scheme...');
+            map.setPaintProperty(`${layerId}-fill`, 'fill-color', [
+              'case',
+              ['>', ['get', propertyKey], 0],
+              [
+                'interpolate',
+                ['linear'],
+                ['get', propertyKey],
+                min, '#1a9850',
+                q25, '#91bfdb', 
+                median, '#fee08b',
+                q75, '#fc8d59',
+                max, '#d73027'
+              ],
+              'rgba(220, 220, 220, 0.5)'
+            ]);
+            map.setPaintProperty(`${layerId}-fill`, 'fill-opacity', 0.8);
+          }, 3000);
         }
+        
         if (lineLayer) {
           map.setLayoutProperty(`${layerId}-line`, 'visibility', 'visible');
         }
