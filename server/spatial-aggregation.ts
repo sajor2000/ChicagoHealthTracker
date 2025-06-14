@@ -1,7 +1,7 @@
 // Spatial aggregation utilities for Chicago health data
 // Aggregates census tract data to community areas and wards based on geographic overlap
 
-import { generateFinalDiseases } from './final-disease-grading-system.js';
+import { generateChicagoGeographicDiseases } from './chicago-geographic-health-system.js';
 
 interface Point {
   lng: number;

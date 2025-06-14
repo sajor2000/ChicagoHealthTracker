@@ -124,8 +124,8 @@ async function testGeographicDistribution() {
     const maxRate = Math.max(...rates);
     const range = maxRate - minRate;
     
-    console.log(`\n🎨 COLOR VISUALIZATION:');
-    console.log(`Rate range: ${minRate} to ${maxRate} (${range.toFixed(1)} spread)`);
+    console.log(`\n🎨 COLOR VISUALIZATION:`);
+    console.log('Rate range: ' + minRate + ' to ' + maxRate + ' (' + range.toFixed(1) + ' spread)');
     
     if (range > 40) {
       console.log('✅ GOOD: Wide range for strong green-to-red visualization');
@@ -146,7 +146,7 @@ async function testGeographicDistribution() {
         const diseaseRange = diseaseRates[0] - diseaseRates[diseaseRates.length - 1];
         const diseaseRatio = (diseaseRates[0] / diseaseRates[diseaseRates.length - 1]).toFixed(2);
         
-        console.log(`${diseaseId.padEnd(12)}: ${diseaseRates[diseaseRates.length - 1].toFixed(1)} - ${diseaseRates[0].toFixed(1)} (${diseaseRange.toFixed(1)} range, ${diseaseRatio}x ratio)`);
+        console.log(diseaseId.padEnd(12) + ': ' + diseaseRates[diseaseRates.length - 1].toFixed(1) + ' - ' + diseaseRates[0].toFixed(1) + ' (' + diseaseRange.toFixed(1) + ' range, ' + diseaseRatio + 'x ratio)');
       }
     }
     
