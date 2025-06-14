@@ -19,11 +19,16 @@ function isCoastalTract(coordinates: number[][][]): boolean {
   const ring = coordinates[0];
   if (!ring || ring.length < 3) return false;
   
-  // Very conservative detection - only tracts that are clearly on the shoreline
+  // Detect tracts that are close to the shoreline but not quite reaching it
   const maxLng = Math.max(...ring.map(([lng]) => lng));
+  const minLat = Math.min(...ring.map(([, lat]) => lat));
+  const maxLat = Math.max(...ring.map(([, lat]) => lat));
   
-  // Only extend tracts that are very close to the lake but not quite at the shoreline
-  return maxLng > -87.535 && maxLng < -87.525;
+  // Expand range to catch more coastal tracts - those east of -87.55 and within Chicago bounds
+  return maxLng > -87.55 && 
+         maxLng < -87.52 && // Not already at exact shoreline
+         minLat > CHICAGO_SOUTH_LAT && 
+         maxLat < CHICAGO_NORTH_LAT;
 }
 
 /**
@@ -35,10 +40,10 @@ function extendToShoreline(coordinates: number[][][]): number[][][] {
   const ring = coordinates[0];
   if (!ring || ring.length < 3) return coordinates;
   
-  // Simple approach: only extend points that are very close to shoreline
+  // Extend points that are east of Lake Shore Drive to the actual shoreline
   const newRing = ring.map(([lng, lat]) => {
-    // Only extend points that are within 0.01 degrees of the shoreline
-    if (lng > -87.535 && lng < -87.525) {
+    // Extend any points east of -87.55 (Lake Shore Drive area) to the water
+    if (lng > -87.55 && lat > CHICAGO_SOUTH_LAT && lat < CHICAGO_NORTH_LAT) {
       return [LAKE_MICHIGAN_LONGITUDE, lat];
     }
     return [lng, lat];
