@@ -63,10 +63,6 @@ try {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Initialize database with authentic 2020 Census data
-  console.log('Initializing database with authentic 2020 Census data...');
-  await loadCensusDataToDatabase();
-  
   // Load authentic Chicago Census Tracts data first (base layer for aggregation)
   let chicagoCensusTractsData: any = null;
   let processedCensusTracts: any[] = [];
@@ -83,44 +79,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const rawGeoid = feature.properties.GEOID || feature.properties.geoid || feature.properties.id;
       let censusGeoid = rawGeoid ? rawGeoid.toString() : null;
       
-      // Try multiple GEOID formats to match authentic 2020 Census demographic data
+      // Enhanced GEOID matching for authentic 2020 Census demographic data
       let demographics = null;
       if (censusGeoid) {
-        // Try direct match first
-        demographics = censusDemographics[censusGeoid];
+        // Create comprehensive list of GEOID format attempts
+        const geoAttempts = [];
         
-        // Convert 9-digit GEOID to 11-digit format for Census demographic data matching
-        if (!demographics && censusGeoid.length === 9 && censusGeoid.startsWith('17031')) {
-          // Convert "170311001" to "17031010010" format
+        if (censusGeoid.length === 9 && censusGeoid.startsWith('17031')) {
+          // 9-digit format: "170311001" -> multiple 11-digit attempts
           const prefix = censusGeoid.slice(0, 5); // "17031"
-          const tractPart = censusGeoid.slice(5, 9); // "1001" 
+          const tractCode = censusGeoid.slice(5); // "1001"
           
-          // Add leading zero and trailing zero: "17031010010"
-          const convertedGeoid = prefix + '0' + tractPart + '0';
-          demographics = censusDemographics[convertedGeoid];
-          
-          // Try alternative: "17031100100" (move digits differently)
-          if (!demographics) {
-            const alt2 = prefix + tractPart.padStart(4, '0') + '00';
-            demographics = censusDemographics[alt2];
+          geoAttempts.push(
+            `${prefix}0${tractCode}0`, // "17031010010"
+            `${prefix}${tractCode}00`, // "1703110010"
+            `${prefix}0${tractCode.slice(0, 3)}0${tractCode.slice(3)}`, // "170310100"
+            `${prefix}${tractCode.padStart(6, '0')}`, // "170311001000"
+            `${prefix}${tractCode.slice(0, 2)}0${tractCode.slice(2)}0` // Alternative pattern
+          );
+        } else if (censusGeoid.length === 11) {
+          // 11-digit format variations
+          geoAttempts.push(censusGeoid);
+        } else {
+          // Other lengths - try as-is and with padding
+          geoAttempts.push(
+            censusGeoid,
+            censusGeoid.padEnd(11, '0'),
+            `17031${censusGeoid.slice(5)}`
+          );
+        }
+        
+        // Try each GEOID format attempt
+        for (const attempt of geoAttempts) {
+          if (censusDemographics[attempt]) {
+            demographics = censusDemographics[attempt];
+            break;
           }
         }
         
-        // Handle 11-digit format variations
-        if (!demographics && censusGeoid.length === 11 && censusGeoid.startsWith('17031')) {
-          // Try with different padding patterns
-          const prefix = censusGeoid.slice(0, 5);
-          const tractPart = censusGeoid.slice(5);
-          
-          const variations = [
-            censusGeoid, // original
-            prefix + tractPart.padStart(6, '0'), // pad with zeros
-            prefix + '0' + tractPart.slice(0, 4) + '0' + tractPart.slice(4) // insert zeros
-          ];
-          
-          for (const variation of variations) {
-            if (censusDemographics[variation]) {
-              demographics = censusDemographics[variation];
+        // If still no match, try reverse engineering from available keys
+        if (!demographics && censusGeoid.length >= 7) {
+          const tractNumber = censusGeoid.slice(-4); // Last 4 digits
+          for (const [key, value] of Object.entries(censusDemographics)) {
+            if (key.slice(-4) === tractNumber && key.startsWith('17031')) {
+              demographics = value;
               break;
             }
           }
