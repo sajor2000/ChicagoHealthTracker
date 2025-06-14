@@ -300,7 +300,7 @@ export default function InfoPanel({ selectedArea, isOpen, onClose }: InfoPanelPr
                     className="font-mono font-medium"
                     style={{ color: 'var(--text-primary)' }}
                   >
-                    {formatNumber(selectedArea.demographics.age.under18)} ({selectedArea.population ? ((selectedArea.demographics.age.under18 / selectedArea.population) * 100).toFixed(1) : '0.0'}%)
+                    {formatNumber(selectedArea.demographics?.age?.under18 || 0)} ({selectedArea.population ? ((selectedArea.demographics?.age?.under18 || 0) / selectedArea.population * 100).toFixed(1) : '0.0'}%)
                   </span>
                 </div>
                 <div 
@@ -312,7 +312,7 @@ export default function InfoPanel({ selectedArea, isOpen, onClose }: InfoPanelPr
                     className="font-mono font-medium"
                     style={{ color: 'var(--text-primary)' }}
                   >
-                    {formatNumber(selectedArea.demographics.age.age18Plus)} ({selectedArea.population ? ((selectedArea.demographics.age.age18Plus / selectedArea.population) * 100).toFixed(1) : '0.0'}%)
+                    {formatNumber(selectedArea.demographics?.age?.age18Plus || 0)} ({selectedArea.population ? ((selectedArea.demographics?.age?.age18Plus || 0) / selectedArea.population * 100).toFixed(1) : '0.0'}%)
                   </span>
                 </div>
               </div>
