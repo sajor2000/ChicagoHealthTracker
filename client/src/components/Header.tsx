@@ -8,118 +8,95 @@ interface HeaderProps {
 
 export default function Header({ className = '' }: HeaderProps) {
   return (
-    <header className={`fixed top-0 left-0 right-0 h-20 z-50 ${className}`}>
+    <header className={`fixed top-0 left-0 right-0 h-24 z-50 ${className}`}>
       <div 
-        className="h-full backdrop-blur-[12px] border-b-2"
+        className="h-full backdrop-blur-[16px] border-b"
         style={{ 
-          backgroundColor: 'var(--bg-elevated)',
-          borderBottomColor: 'var(--rush-primary)'
+          background: 'linear-gradient(135deg, rgba(0, 103, 71, 0.95) 0%, rgba(20, 20, 20, 0.95) 100%)',
+          borderBottomColor: 'rgba(0, 103, 71, 0.3)',
+          boxShadow: '0 4px 24px rgba(0, 0, 0, 0.15)'
         }}
       >
-        <div className="max-w-7xl mx-auto w-full h-full flex justify-between items-center px-6">
-          <div className="branding flex items-center gap-6">
-            <div>
-              <h1 
-                className="text-2xl font-bold"
-                style={{ color: 'var(--text-primary)' }}
+        <div className="max-w-7xl mx-auto w-full h-full flex items-center justify-between px-8">
+          {/* Logo and Title Section */}
+          <div className="flex items-center gap-8">
+            <div className="flex items-center gap-4">
+              <div 
+                className="w-12 h-12 rounded-lg flex items-center justify-center"
+                style={{ 
+                  background: 'linear-gradient(135deg, var(--rush-primary) 0%, var(--rush-secondary) 100%)',
+                  boxShadow: '0 4px 16px rgba(0, 103, 71, 0.3)'
+                }}
               >
-                Chicago Chronic Disease Data Commons
-              </h1>
+                <span className="text-xl font-bold text-white">CD</span>
+              </div>
+              <div>
+                <h1 
+                  className="text-2xl font-bold leading-tight"
+                  style={{ color: 'white' }}
+                >
+                  Chicago Chronic Disease
+                </h1>
+                <p 
+                  className="text-base font-medium -mt-1"
+                  style={{ color: 'rgba(255, 255, 255, 0.9)' }}
+                >
+                  Data Commons
+                </p>
+              </div>
             </div>
             
-            <div className="flex items-center gap-4 text-xs" style={{ color: 'var(--text-tertiary)' }}>
-              <div className="flex items-center gap-2">
-                <span>Built by</span>
+            {/* Organization Credits */}
+            <div className="hidden lg:flex items-center gap-6 pl-6 border-l border-white/20">
+              <div className="flex items-center gap-3">
                 <img 
                   src={rushLogo} 
                   alt="Rush Logo" 
-                  className="h-4 w-auto"
+                  className="h-5 w-auto opacity-90"
                 />
-                <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>
-                  Rush Health Equity Data Analytics Studio
-                </span>
+                <div className="text-xs">
+                  <div className="text-white/70 font-medium">Built by</div>
+                  <div className="text-white font-semibold">Rush Health Equity Data Studio</div>
+                </div>
               </div>
               
-              <div className="w-px h-4 bg-[var(--border-subtle)]"></div>
-              
-              <div className="flex items-center gap-2">
-                <span>Data by</span>
+              <div className="flex items-center gap-3">
                 <img 
                   src={capricornLogo} 
                   alt="CAPriCORN Logo" 
-                  className="h-4 w-auto"
+                  className="h-5 w-auto opacity-90"
                 />
-                <span className="font-medium" style={{ color: 'var(--text-secondary)' }}>
-                  CAPriCORN
-                </span>
+                <div className="text-xs">
+                  <div className="text-white/70 font-medium">Data by</div>
+                  <div className="text-white font-semibold">CAPriCORN</div>
+                </div>
               </div>
             </div>
           </div>
           
-          <nav className="header-nav hidden md:flex gap-8">
+          {/* Navigation */}
+          <nav className="hidden md:flex">
             <a 
               href="#about"
-              className="text-sm uppercase tracking-wider transition-colors duration-200 hover:no-underline"
+              className="px-6 py-3 text-sm font-medium rounded-lg transition-all duration-200 hover:no-underline"
               style={{ 
-                color: 'var(--text-tertiary)',
-                letterSpacing: '0.05em'
+                color: 'rgba(255, 255, 255, 0.9)',
+                background: 'rgba(255, 255, 255, 0.1)',
+                backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(255, 255, 255, 0.2)'
               }}
               onMouseEnter={(e) => {
-                e.currentTarget.style.color = 'var(--rush-primary-light)';
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.15)';
+                e.currentTarget.style.color = 'white';
+                e.currentTarget.style.transform = 'translateY(-1px)';
               }}
               onMouseLeave={(e) => {
-                e.currentTarget.style.color = 'var(--text-tertiary)';
+                e.currentTarget.style.background = 'rgba(255, 255, 255, 0.1)';
+                e.currentTarget.style.color = 'rgba(255, 255, 255, 0.9)';
+                e.currentTarget.style.transform = 'translateY(0)';
               }}
             >
               About
-            </a>
-            <a 
-              href="#methodology"
-              className="text-sm uppercase tracking-wider transition-colors duration-200 hover:no-underline"
-              style={{ 
-                color: 'var(--text-tertiary)',
-                letterSpacing: '0.05em'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = 'var(--rush-primary-light)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = 'var(--text-tertiary)';
-              }}
-            >
-              Methodology
-            </a>
-            <a 
-              href="#download"
-              className="text-sm uppercase tracking-wider transition-colors duration-200 hover:no-underline"
-              style={{ 
-                color: 'var(--text-tertiary)',
-                letterSpacing: '0.05em'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = 'var(--rush-primary-light)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = 'var(--text-tertiary)';
-              }}
-            >
-              Download Data
-            </a>
-            <a 
-              href="#api"
-              className="text-sm uppercase tracking-wider transition-colors duration-200 hover:no-underline"
-              style={{ 
-                color: 'var(--text-tertiary)',
-                letterSpacing: '0.05em'
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.color = 'var(--rush-primary-light)';
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.color = 'var(--text-tertiary)';
-              }}
-            >
-              API Access
             </a>
           </nav>
         </div>
