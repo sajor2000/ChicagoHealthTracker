@@ -19,11 +19,17 @@ function isCoastalTract(coordinates: number[][][]): boolean {
   const ring = coordinates[0];
   if (!ring || ring.length < 3) return false;
   
-  // Check if any coordinate is close to the lake (within 0.02 degrees of shoreline)
-  return ring.some(([lng, lat]) => 
-    lng > -87.54 && lng < -87.50 && 
+  // Check if any coordinate is east of -87.55 (close to lake)
+  const hasEasternBoundary = ring.some(([lng, lat]) => 
+    lng > -87.55 && 
     lat > CHICAGO_SOUTH_LAT && lat < CHICAGO_NORTH_LAT
   );
+  
+  // Check if tract has eastern boundary but doesn't reach actual shoreline
+  const maxLng = Math.max(...ring.map(([lng]) => lng));
+  const needsExtension = maxLng > -87.55 && maxLng < -87.52;
+  
+  return hasEasternBoundary && needsExtension;
 }
 
 /**
@@ -35,33 +41,46 @@ function extendToShoreline(coordinates: number[][][]): number[][][] {
   const ring = coordinates[0];
   if (!ring || ring.length < 3) return coordinates;
   
-  const extendedRing = ring.map(([lng, lat]) => {
-    // If coordinate is very close to lake but not at shoreline, extend it
-    if (lng > -87.54 && lng < -87.50 && lat > CHICAGO_SOUTH_LAT && lat < CHICAGO_NORTH_LAT) {
-      return [LAKE_MICHIGAN_LONGITUDE, lat];
+  // Find easternmost points that need extension
+  const easternPoints: Array<{index: number, lng: number, lat: number}> = [];
+  
+  ring.forEach(([lng, lat], index) => {
+    if (lng > -87.55 && lng < -87.52 && lat > CHICAGO_SOUTH_LAT && lat < CHICAGO_NORTH_LAT) {
+      easternPoints.push({index, lng, lat});
     }
-    return [lng, lat];
   });
   
-  // Add shoreline boundary points for better coverage
-  const northPoint = extendedRing.find(([lng, lat]) => lat > 41.95);
-  const southPoint = extendedRing.find(([lng, lat]) => lat < 41.70);
+  if (easternPoints.length === 0) return coordinates;
   
-  if (northPoint && southPoint) {
-    // Insert shoreline points to create clean water boundary
-    const shorelinePoints = [
-      [LAKE_MICHIGAN_LONGITUDE, northPoint[1]],
-      [LAKE_MICHIGAN_LONGITUDE, southPoint[1]]
+  // Create new ring with extended boundaries
+  const newRing = [...ring];
+  
+  // Extend all eastern points to shoreline
+  easternPoints.forEach(point => {
+    newRing[point.index] = [LAKE_MICHIGAN_LONGITUDE, point.lat];
+  });
+  
+  // Find northernmost and southernmost extended points
+  const extendedLats = easternPoints.map(p => p.lat).sort((a, b) => a - b);
+  if (extendedLats.length >= 2) {
+    const minLat = extendedLats[0];
+    const maxLat = extendedLats[extendedLats.length - 1];
+    
+    // Insert additional shoreline points to ensure complete coverage
+    const firstEasternIndex = easternPoints[0].index;
+    const lastEasternIndex = easternPoints[easternPoints.length - 1].index;
+    
+    // Add shoreline segment between extended points
+    const shorelineSegment = [
+      [LAKE_MICHIGAN_LONGITUDE, maxLat],
+      [LAKE_MICHIGAN_LONGITUDE, minLat]
     ];
     
-    // Find insertion points in the ring
-    const insertIndex = extendedRing.findIndex(([lng, lat]) => lng > -87.53);
-    if (insertIndex !== -1) {
-      extendedRing.splice(insertIndex, 0, ...shorelinePoints);
-    }
+    // Insert shoreline segment
+    newRing.splice(Math.max(firstEasternIndex, lastEasternIndex) + 1, 0, ...shorelineSegment);
   }
   
-  return [extendedRing];
+  return [newRing];
 }
 
 /**
