@@ -375,9 +375,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   const httpServer = createServer(app);
   return httpServer;
 }
-      type: 'FeatureCollection',
-      features: rawData.features.map((feature: any) => {
-        const communityName = feature.properties.community;
         const actualPopulation = census2020Population[communityName] || 25000;
         const areaKm2 = parseFloat(feature.properties.shape_area) / 1000000;
         const density = Math.floor(actualPopulation / areaKm2);
