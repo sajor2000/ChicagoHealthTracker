@@ -207,29 +207,37 @@ export function addDataLayer(
       const borderStyle = getBorderStyle(layerId);
 
       // Add border layer with distinct styling per geographic level
-      map.addLayer({
-        id: `${layerId}-border`,
-        type: 'line',
-        source: layerId,
-        paint: {
-          'line-color': borderStyle.color,
-          'line-width': borderStyle.width,
-          'line-opacity': borderStyle.opacity
-        }
-      });
+      try {
+        map.addLayer({
+          id: `${layerId}-border`,
+          type: 'line',
+          source: layerId,
+          paint: {
+            'line-color': borderStyle.color,
+            'line-width': borderStyle.width,
+            'line-opacity': borderStyle.opacity
+          }
+        });
+      } catch (borderLayerError) {
+        console.error('Border layer creation error:', borderLayerError);
+      }
 
       // Add hover layer
-      map.addLayer({
-        id: `${layerId}-hover`,
-        type: 'line',
-        source: layerId,
-        paint: {
-          'line-color': '#ffffff',
-          'line-width': 2,
-          'line-opacity': 0
-        },
-        filter: ['==', ['get', 'id'], '']
-      });
+      try {
+        map.addLayer({
+          id: `${layerId}-hover`,
+          type: 'line',
+          source: layerId,
+          paint: {
+            'line-color': '#ffffff',
+            'line-width': 2,
+            'line-opacity': 0
+          },
+          filter: ['==', ['get', 'id'], '']
+        });
+      } catch (hoverLayerError) {
+        console.error('Hover layer creation error:', hoverLayerError);
+      }
 
       // Determine if this is community view for label sizing
       const isCommunityView = layerId.includes('community');

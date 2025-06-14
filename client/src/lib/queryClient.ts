@@ -1,4 +1,5 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
+import { getApiUrl } from "./deployment-config";
 
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {

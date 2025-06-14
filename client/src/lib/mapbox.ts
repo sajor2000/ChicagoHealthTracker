@@ -1,17 +1,19 @@
 import mapboxgl from 'mapbox-gl';
 import type { MapFeature, TooltipData } from '@/types';
 
-// Configure Mapbox with error checking for deployment
-const mapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || import.meta.env.MAPBOX_ACCESS_TOKEN;
+// Configure Mapbox with deployment-ready token access
+const mapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || 
+                   import.meta.env.MAPBOX_ACCESS_TOKEN ||
+                   (window as any).__MAPBOX_TOKEN__;
 
 if (!mapboxToken) {
   console.error('MAPBOX ACCESS TOKEN MISSING - Maps will not load');
   console.log('Available env vars:', Object.keys(import.meta.env));
+  console.log('Deployment environment:', window.location.hostname);
 } else {
   console.log('Mapbox token found, length:', mapboxToken.length);
+  mapboxgl.accessToken = mapboxToken;
 }
-
-mapboxgl.accessToken = mapboxToken;
 
 export const mapConfig = {
   style: 'mapbox://styles/mapbox/dark-v11',
