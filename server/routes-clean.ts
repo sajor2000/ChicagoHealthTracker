@@ -156,9 +156,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log('Aggregating census tract data to community areas...');
     const aggregatedFeatures = aggregateTractsToUnits(tractFeatures, rawData.features);
     
+    // Transform aggregated data to match expected GeoJSON feature format
+    const transformedFeatures = aggregatedFeatures.map((feature: any) => ({
+      type: 'Feature',
+      properties: {
+        id: feature.id || feature.name,
+        name: feature.name,
+        population: feature.population,
+        density: feature.density,
+        diseases: feature.diseases,
+        dataQuality: feature.dataQuality,
+        constituentTracts: feature.constituentTracts
+      },
+      geometry: feature.geometry
+    }));
+    
     chicagoCommunitiesData = {
       type: 'FeatureCollection',
-      features: aggregatedFeatures
+      features: transformedFeatures
     };
     
     console.log(`Generated ${chicagoCommunitiesData.features.length} Chicago community areas`);
@@ -186,9 +201,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.log('Aggregating census tract data to alderman wards...');
     const aggregatedFeatures = aggregateTractsToUnits(tractFeatures, rawData.features);
     
+    // Transform aggregated data to match expected GeoJSON feature format
+    const transformedFeatures = aggregatedFeatures.map((feature: any) => ({
+      type: 'Feature',
+      properties: {
+        id: feature.id || feature.name,
+        name: feature.name,
+        population: feature.population,
+        density: feature.density,
+        diseases: feature.diseases,
+        dataQuality: feature.dataQuality,
+        constituentTracts: feature.constituentTracts
+      },
+      geometry: feature.geometry
+    }));
+    
     chicagoWardsData = {
       type: 'FeatureCollection',
-      features: aggregatedFeatures
+      features: transformedFeatures
     };
     
     console.log(`Generated ${chicagoWardsData.features.length} Chicago alderman wards`);
