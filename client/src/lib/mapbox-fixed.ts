@@ -132,15 +132,15 @@ export function addDataLayer(
         }
       }); // Add to top of layer stack
 
-      // Add border layer with white borders
+      // Add border layer with prominent white borders
       map.addLayer({
         id: `${layerId}-line`,
         type: 'line',
         source: layerId,
         paint: {
           'line-color': '#ffffff',
-          'line-width': 1.5,
-          'line-opacity': 0.8
+          'line-width': 2.5,
+          'line-opacity': 1.0
         }
       });
 
