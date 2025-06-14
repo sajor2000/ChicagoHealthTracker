@@ -102,7 +102,7 @@ export default function MapContainer({
       isLoading,
       activeView,
       selectedDisease,
-      featuresCount: geoData?.features?.length
+      featuresCount: (geoData as any)?.features?.length
     });
 
     if (!map.current || !geoData || isLoading) return;
@@ -114,16 +114,17 @@ export default function MapContainer({
       clearAllGeographicLayers();
 
       // Process data for visualization
+      const geoDataTyped = geoData as any;
       console.log('Raw geoData sample:', {
-        type: geoData.type,
-        featuresCount: geoData.features?.length,
-        firstFeatureProps: geoData.features?.[0]?.properties ? Object.keys(geoData.features[0].properties) : 'none',
-        firstFeatureDiseases: geoData.features?.[0]?.properties?.diseases ? Object.keys(geoData.features[0].properties.diseases) : 'none'
+        type: geoDataTyped.type,
+        featuresCount: geoDataTyped.features?.length,
+        firstFeatureProps: geoDataTyped.features?.[0]?.properties ? Object.keys(geoDataTyped.features[0].properties) : 'none',
+        firstFeatureDiseases: geoDataTyped.features?.[0]?.properties?.diseases ? Object.keys(geoDataTyped.features[0].properties.diseases) : 'none'
       });
 
       const processedData: GeoJSON.FeatureCollection = {
         type: 'FeatureCollection',
-        features: geoData.features.map(feature => {
+        features: geoDataTyped.features.map((feature: any) => {
           const diseaseData = feature.properties?.diseases?.[selectedDisease];
           const count = diseaseData?.count || 0;
           const rate = diseaseData?.rate || 0;
@@ -153,7 +154,9 @@ export default function MapContainer({
         );
       }
 
-      addDataLayer(map.current, processedData, layerId, selectedDisease, visualizationMode);
+      // Convert visualization mode to count/rate for Mapbox compatibility
+      const mapboxMode = visualizationMode === 'age_adjusted' ? 'rate' : visualizationMode as 'count' | 'rate';
+      addDataLayer(map.current, processedData, layerId, selectedDisease, mapboxMode);
       setupMapInteractions(layerId);
 
     } catch (error) {
