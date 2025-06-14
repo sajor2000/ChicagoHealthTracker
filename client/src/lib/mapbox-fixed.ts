@@ -120,19 +120,13 @@ export function addDataLayer(
         },
         paint: {
           'fill-color': [
-            'case',
-            ['>', ['get', propertyKey], 0],
-            [
-              'interpolate',
-              ['linear'],
-              ['get', propertyKey],
-              min, '#1a9850',      // Dark green for lowest values
-              q25, '#91bfdb',      // Light blue
-              median, '#fee08b',   // Light yellow
-              q75, '#fc8d59',      // Orange
-              max, '#d73027'       // Red for highest values
-            ],
-            'rgba(220, 220, 220, 0.5)'  // Light gray for missing data
+            'step',
+            ['get', propertyKey],
+            '#2b83ba',     // Blue for lowest values
+            q25, '#abdda4', // Light green
+            median, '#ffffbf', // Yellow
+            q75, '#fdae61', // Orange  
+            max * 0.9, '#d7191c' // Red for highest values
           ],
           'fill-opacity': 0.8
         }
