@@ -1,6 +1,7 @@
 import mapboxgl from 'mapbox-gl';
 import type { MapFeature, TooltipData } from '@/types';
 import { getMapboxToken, isDeploymentEnvironment } from './deployment-config';
+import { calculateQuartiles, createDynamicColorExpression } from './dynamic-color-scaling';
 
 // Configure Mapbox with deployment-ready token access
 const mapboxToken = getMapboxToken();
@@ -89,31 +90,26 @@ export function addDataLayer(
 
       const propertyKey = `${selectedDisease}_${visualizationMode}`;
 
-      // Add fill layer with deployment error handling
+      // Calculate dynamic quartiles for this specific dataset and disease
+      const quartiles = calculateQuartiles(data, selectedDisease, visualizationMode);
+      console.log(`Dynamic color scaling for ${selectedDisease} (${visualizationMode}):`, quartiles);
+
+      // Store quartiles globally for legend access
+      (window as any).__CURRENT_QUARTILES__ = {
+        quartiles,
+        disease: selectedDisease,
+        mode: visualizationMode,
+        layerId
+      };
+
+      // Add fill layer with dynamic quartile-based coloring
       try {
         map.addLayer({
           id: `${layerId}-fill`,
           type: 'fill',
           source: layerId,
           paint: {
-            'fill-color': [
-              'case',
-              ['>', ['get', propertyKey], 0],
-              selectedDisease === 'diabetes' ? [
-                'interpolate', ['linear'], ['get', propertyKey],
-                19, '#006747', 42, '#4a8c2a', 57, '#a4c441', 66, '#f4e04d',
-                71, '#ff8c42', 78, '#f76c5e', 84, '#d32f2f'
-              ] : selectedDisease === 'hypertension' ? [
-                'interpolate', ['linear'], ['get', propertyKey],
-                74, '#006747', 144, '#4a8c2a', 171, '#a4c441', 195, '#f4e04d',
-                210, '#ff8c42', 230, '#f76c5e', 260, '#d32f2f'
-              ] : [
-                'interpolate', ['linear'], ['get', propertyKey],
-                7, '#006747', 25, '#4a8c2a', 37, '#a4c441', 50, '#f4e04d',
-                68, '#ff8c42', 100, '#f76c5e', 138, '#d32f2f', 260, '#8b0000'
-              ],
-              'rgba(107, 114, 128, 0.3)'
-            ],
+            'fill-color': createDynamicColorExpression(quartiles, propertyKey) as any,
             'fill-opacity': 0.8
           }
         });

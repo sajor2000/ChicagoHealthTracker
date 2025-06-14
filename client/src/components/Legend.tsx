@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { VisualizationMode, DiseaseType } from '@/types';
+import { ColorScale } from '@/lib/dynamic-color-scaling';
 
 interface LegendProps {
   visualizationMode: VisualizationMode;
@@ -9,34 +10,43 @@ interface LegendProps {
 
 export default function Legend({ visualizationMode, selectedDisease }: LegendProps) {
   const [isExpanded, setIsExpanded] = useState(true);
+  const [currentQuartiles, setCurrentQuartiles] = useState<ColorScale | null>(null);
+  
   const legendNote = visualizationMode === 'count' ? 'Total patient counts' : 'Per 1,000 residents';
 
-  // Disease-specific legend ranges based on actual data distributions
-  const getLegendRanges = (disease: DiseaseType) => {
-    switch (disease) {
-      case 'diabetes':
-        return { min: '20', low: '42', med: '57', high: '71', max: '84+' };
-      case 'hypertension':
-        return { min: '74', low: '144', med: '178', high: '221', max: '254+' };
-      case 'heart':
-        return { min: '12', low: '27', med: '37', high: '45', max: '54+' };
-      case 'stroke':
-        return { min: '8', low: '17', med: '22', high: '28', max: '36+' };
-      case 'asthma':
-        return { min: '11', low: '22', med: '28', high: '35', max: '40+' };
-      case 'copd':
-        return { min: '14', low: '31', med: '41', high: '52', max: '60+' };
-      case 'obesity':
-        return { min: '42', low: '75', med: '91', high: '111', max: '130+' };
-      case 'depression':
-      case 'mental_health':
-        return { min: '18', low: '27', med: '29', high: '35', max: '38+' };
-      default:
-        return { min: '7', low: '25', med: '37', high: '68', max: '138+' };
+  // Check for dynamic quartile data from the map
+  useEffect(() => {
+    const checkQuartiles = () => {
+      const quartileData = (window as any).__CURRENT_QUARTILES__;
+      if (quartileData && 
+          quartileData.disease === selectedDisease && 
+          quartileData.mode === visualizationMode) {
+        setCurrentQuartiles(quartileData.quartiles);
+      }
+    };
+
+    checkQuartiles();
+    const interval = setInterval(checkQuartiles, 500);
+    return () => clearInterval(interval);
+  }, [selectedDisease, visualizationMode]);
+
+  // Get dynamic ranges from quartiles or fallback to static ranges
+  const getRanges = () => {
+    if (currentQuartiles) {
+      return {
+        min: Math.round(currentQuartiles.min).toLocaleString(),
+        low: Math.round(currentQuartiles.q25).toLocaleString(),
+        med: Math.round(currentQuartiles.median).toLocaleString(), 
+        high: Math.round(currentQuartiles.q75).toLocaleString(),
+        max: Math.round(currentQuartiles.max).toLocaleString() + '+'
+      };
     }
+    
+    // Fallback static ranges (should rarely be used)
+    return { min: '0', low: '25', med: '50', high: '75', max: '100+' };
   };
 
-  const ranges = getLegendRanges(selectedDisease);
+  const ranges = getRanges();
 
   return (
     <div 
