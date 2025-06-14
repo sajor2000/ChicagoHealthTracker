@@ -77,65 +77,48 @@ export async function loadCensusDataToDatabase(): Promise<{ loaded: number; exis
     
     try {
       // Insert main tract record
-      await db.query(`
-        INSERT INTO chicago_census_tracts_2020 
-        (geoid, state_fips, county_fips, tract_code, tract_name, total_population, 
-         population_density, land_area_sq_mi, latitude, longitude, geometry)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-      `, [
-        geoid,
-        '17',
-        '031', 
-        tractCode,
-        `Census Tract ${tractCode}`,
-        demo.population.total,
-        density,
-        areaSqMiles,
-        centroid.lat,
-        centroid.lng,
-        JSON.stringify(geometry)
-      ]);
+      await db.insert(chicagoCensusTracts2020).values({
+        geoid: geoid,
+        stateFips: '17',
+        countyFips: '031',
+        tractCode: tractCode,
+        tractName: `Census Tract ${tractCode}`,
+        totalPopulation: demo.population.total,
+        populationDensity: density,
+        landAreaSqMi: areaSqMiles,
+        latitude: centroid.lat,
+        longitude: centroid.lng,
+        geometry: geometry
+      });
       
       // Insert race data
-      await db.query(`
-        INSERT INTO tract_race_2020 
-        (geoid, p1_001n, p1_003n, p1_004n, p1_005n, p1_006n, p1_007n, p1_008n, p1_009n)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-      `, [
-        geoid,
-        demo.population.total,
-        demo.race.white,
-        demo.race.black,
-        demo.race.americanIndian,
-        demo.race.asian,
-        demo.race.pacificIslander,
-        demo.race.otherRace,
-        demo.race.multiRace
-      ]);
+      await db.insert(tractRace2020).values({
+        geoid: geoid,
+        p1001n: demo.population.total,
+        p1003n: demo.race.white,
+        p1004n: demo.race.black,
+        p1005n: demo.race.americanIndian,
+        p1006n: demo.race.asian,
+        p1007n: demo.race.pacificIslander,
+        p1008n: demo.race.otherRace,
+        p1009n: demo.race.multiRace
+      });
       
       // Insert ethnicity data
-      await db.query(`
-        INSERT INTO tract_ethnicity_2020 
-        (geoid, p2_001n, p2_002n, p2_003n)
-        VALUES ($1, $2, $3, $4)
-      `, [
-        geoid,
-        demo.ethnicity.total,
-        demo.ethnicity.hispanic,
-        demo.ethnicity.nonHispanic
-      ]);
+      await db.insert(tractEthnicity2020).values({
+        geoid: geoid,
+        p2001n: demo.ethnicity.total,
+        p2002n: demo.ethnicity.hispanic,
+        p2003n: demo.ethnicity.nonHispanic
+      });
       
       // Insert housing data
-      await db.query(`
-        INSERT INTO tract_housing_2020 
-        (geoid, h1_001n, h1_002n, h1_003n)
-        VALUES ($1, $2, $3, $4)
-      `, [
-        geoid,
-        demo.housing.totalUnits,
-        demo.housing.occupied,
-        demo.housing.vacant
-      ]);
+      await db.insert(tractHousing2020).values({
+        geoid: geoid,
+        h1001n: demo.housing.totalUnits,
+        h1002n: demo.housing.occupied,
+        h1003n: demo.housing.vacant
+      });
       
       // Calculate age demographics (approximate from adults18Plus)
       const ageUnder18 = demo.population.total - demo.population.adults18Plus;
@@ -143,17 +126,13 @@ export async function loadCensusDataToDatabase(): Promise<{ loaded: number; exis
       const age65Plus = demo.population.adults18Plus - age18To64;
       
       // Insert age data
-      await db.query(`
-        INSERT INTO tract_age_2020 
-        (geoid, p13_001n, age_under_18, age_18_plus, age_65_plus)
-        VALUES ($1, $2, $3, $4, $5)
-      `, [
-        geoid,
-        demo.population.total,
-        ageUnder18,
-        demo.population.adults18Plus,
-        age65Plus
-      ]);
+      await db.insert(tractAge2020).values({
+        geoid: geoid,
+        p13001n: demo.population.total,
+        ageUnder18: ageUnder18,
+        age18Plus: demo.population.adults18Plus,
+        age65Plus: age65Plus
+      });
       
       loadedCount++;
       
