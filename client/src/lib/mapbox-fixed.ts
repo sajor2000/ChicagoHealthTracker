@@ -54,6 +54,14 @@ export function addDataLayer(
     }
 
     const propertyKey = `${selectedDisease}_${visualizationMode}`;
+    
+    // Verify data has the expected properties
+    if (data.features.length > 0) {
+      const firstFeature = data.features[0];
+      console.log(`Adding layer with property key: ${propertyKey}`);
+      console.log(`First feature properties:`, Object.keys(firstFeature.properties || {}));
+      console.log(`Property value for ${propertyKey}:`, firstFeature.properties?.[propertyKey]);
+    }
 
     // Add fill layer
     map.addLayer({
@@ -83,7 +91,7 @@ export function addDataLayer(
             221, '#ff8c42',    // Orange - 90th percentile
             237, '#f76c5e',    // Red - high values
             254, '#d32f2f'     // Dark red - max (253.4)
-          ] : selectedDisease === 'heart_disease' ? [
+          ] : selectedDisease === 'heart' ? [
             'interpolate', ['linear'], ['get', `${selectedDisease}_${visualizationMode}`],
             12, '#006747',     // Green - lowest (12.4)
             27, '#4a8c2a',     // Medium green - 25th percentile
@@ -138,7 +146,7 @@ export function addDataLayer(
             37, '#f76c5e',     // Red - high values
             38, '#d32f2f'      // Dark red - max (38.1)
           ] : [
-            // Default fallback scale
+            // Default fallback (original diabetes scale)
             'interpolate', ['linear'], ['get', `${selectedDisease}_${visualizationMode}`],
             7, '#006747', 25, '#4a8c2a', 37, '#a4c441', 50, '#f4e04d',
             68, '#ff8c42', 100, '#f76c5e', 138, '#d32f2f', 260, '#8b0000'
