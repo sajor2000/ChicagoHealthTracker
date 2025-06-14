@@ -15,32 +15,45 @@ export const chicagoAreas = pgTable("chicago_areas", {
 export const censusTractData = pgTable("census_tract_data", {
   id: serial("id").primaryKey(),
   geoid: text("geoid").notNull().unique(),
+  tractNumber: text("tract_number").notNull(),
   name: text("name").notNull(),
-  population: integer("population").notNull(),
+  
+  // Population metrics
+  totalPopulation: integer("total_population").notNull(),
   adults18Plus: integer("adults_18_plus").notNull(),
   
-  // Race demographics
+  // Race demographics (absolute counts)
   raceWhite: integer("race_white").notNull(),
   raceBlack: integer("race_black").notNull(),
   raceAmericanIndian: integer("race_american_indian").notNull(),
   raceAsian: integer("race_asian").notNull(),
   racePacificIslander: integer("race_pacific_islander").notNull(),
   raceOther: integer("race_other").notNull(),
-  raceMultiple: integer("race_multiple").notNull(),
+  raceTwoOrMore: integer("race_two_or_more").notNull(),
   
-  // Ethnicity
+  // Ethnicity demographics
+  ethnicityTotal: integer("ethnicity_total").notNull(),
   ethnicityHispanic: integer("ethnicity_hispanic").notNull(),
   ethnicityNonHispanic: integer("ethnicity_non_hispanic").notNull(),
   
-  // Housing
+  // Housing characteristics
   housingTotalUnits: integer("housing_total_units").notNull(),
   housingOccupied: integer("housing_occupied").notNull(),
   housingVacant: integer("housing_vacant").notNull(),
   
-  // Geographic data
+  // Age demographics (basic categories)
+  ageUnder18: integer("age_under_18").notNull(),
+  age18To64: integer("age_18_to_64").notNull(),
+  age65Plus: integer("age_65_plus").notNull(),
+  
+  // Geographic and calculated fields
   geometry: jsonb("geometry").notNull(),
   areaSqMiles: real("area_sq_miles").notNull(),
-  density: real("density").notNull(),
+  densityPerSqMile: real("density_per_sq_mile").notNull(),
+  
+  // Data quality and source tracking
+  dataSource: text("data_source").notNull().default("2020_census_api"),
+  lastUpdated: text("last_updated").notNull(),
 });
 
 export const diseaseData = pgTable("disease_data", {
