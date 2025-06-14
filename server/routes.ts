@@ -4,6 +4,10 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { aggregateTractsToUnits } from './spatial-aggregation.js';
+import { loadCensusDataToDatabase, getCensusTractFromDatabase } from "./census-data-loader";
+import { db } from "./db";
+import { censusTractData } from "@shared/schema";
+import { eq } from "drizzle-orm";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -59,6 +63,10 @@ try {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Initialize database with authentic 2020 Census data
+  console.log('Initializing database with authentic 2020 Census data...');
+  await loadCensusDataToDatabase();
+  
   // Load authentic Chicago Census Tracts data first (base layer for aggregation)
   let chicagoCensusTractsData: any = null;
   let processedCensusTracts: any[] = [];
