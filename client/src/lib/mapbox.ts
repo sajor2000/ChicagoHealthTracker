@@ -1,15 +1,15 @@
 import mapboxgl from 'mapbox-gl';
 import type { MapFeature, TooltipData } from '@/types';
+import { getMapboxToken, isDeploymentEnvironment } from './deployment-config';
 
 // Configure Mapbox with deployment-ready token access
-const mapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || 
-                   import.meta.env.MAPBOX_ACCESS_TOKEN ||
-                   (window as any).__MAPBOX_TOKEN__;
+const mapboxToken = getMapboxToken();
 
 if (!mapboxToken) {
   console.error('MAPBOX ACCESS TOKEN MISSING - Maps will not load');
   console.log('Available env vars:', Object.keys(import.meta.env));
   console.log('Deployment environment:', window.location.hostname);
+  console.log('Is deployment:', isDeploymentEnvironment());
 } else {
   console.log('Mapbox token found, length:', mapboxToken.length);
   mapboxgl.accessToken = mapboxToken;
@@ -37,14 +37,22 @@ export function addDataLayer(
   selectedDisease: string,
   visualizationMode: 'count' | 'rate'
 ) {
-  try {
-    console.log('Adding data layer:', { layerId, selectedDisease, visualizationMode, featuresCount: data.features.length });
-    
-    // Validate data before processing
-    if (!data || !data.features || data.features.length === 0) {
-      console.error('Invalid or empty GeoJSON data');
-      return;
-    }
+  const attemptAddLayer = () => {
+    try {
+      console.log('Adding data layer:', { layerId, selectedDisease, visualizationMode, featuresCount: data.features.length });
+      
+      // Validate data before processing
+      if (!data || !data.features || data.features.length === 0) {
+        console.error('Invalid or empty GeoJSON data');
+        return;
+      }
+
+      // Critical deployment fix: Ensure map style is fully loaded
+      if (!map.loaded() || !map.isStyleLoaded()) {
+        console.log('Deployment fix: Map style not ready, waiting...');
+        setTimeout(attemptAddLayer, isDeploymentEnvironment() ? 800 : 200);
+        return;
+      }
 
     // Remove existing layers if they exist
     const existingLayers = [`${layerId}-fill`, `${layerId}-border`, `${layerId}-hover`, `${layerId}-labels`, `${layerId}-population`];
@@ -285,7 +293,17 @@ export function addDataLayer(
       dataValid: !!data && !!data.features,
       featuresCount: data?.features?.length
     });
-  }
+    } catch (error) {
+      console.error('Error adding data layer:', error);
+      console.error('Error details:', { 
+        message: error.message, 
+        stack: error.stack 
+      });
+    }
+  };
+
+  // Start the layer addition process
+  attemptAddLayer();
 }
 
 export function createTooltip(): mapboxgl.Popup {
