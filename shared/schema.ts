@@ -12,48 +12,76 @@ export const chicagoAreas = pgTable("chicago_areas", {
   geometry: jsonb("geometry").notNull(),
 });
 
-export const censusTractData = pgTable("census_tract_data", {
+// Main census tract table
+export const chicagoCensusTracts2020 = pgTable("chicago_census_tracts_2020", {
   id: serial("id").primaryKey(),
   geoid: text("geoid").notNull().unique(),
-  tractNumber: text("tract_number").notNull(),
-  name: text("name").notNull(),
-  
-  // Population metrics
-  totalPopulation: integer("total_population").notNull(),
-  adults18Plus: integer("adults_18_plus").notNull(),
-  
-  // Race demographics (absolute counts)
-  raceWhite: integer("race_white").notNull(),
-  raceBlack: integer("race_black").notNull(),
-  raceAmericanIndian: integer("race_american_indian").notNull(),
-  raceAsian: integer("race_asian").notNull(),
-  racePacificIslander: integer("race_pacific_islander").notNull(),
-  raceOther: integer("race_other").notNull(),
-  raceTwoOrMore: integer("race_two_or_more").notNull(),
-  
-  // Ethnicity demographics
-  ethnicityTotal: integer("ethnicity_total").notNull(),
-  ethnicityHispanic: integer("ethnicity_hispanic").notNull(),
-  ethnicityNonHispanic: integer("ethnicity_non_hispanic").notNull(),
-  
-  // Housing characteristics
-  housingTotalUnits: integer("housing_total_units").notNull(),
-  housingOccupied: integer("housing_occupied").notNull(),
-  housingVacant: integer("housing_vacant").notNull(),
-  
-  // Age demographics (basic categories)
-  ageUnder18: integer("age_under_18").notNull(),
-  age18To64: integer("age_18_to_64").notNull(),
-  age65Plus: integer("age_65_plus").notNull(),
-  
-  // Geographic and calculated fields
-  geometry: jsonb("geometry").notNull(),
-  areaSqMiles: real("area_sq_miles").notNull(),
-  densityPerSqMile: real("density_per_sq_mile").notNull(),
-  
-  // Data quality and source tracking
-  dataSource: text("data_source").notNull().default("2020_census_api"),
-  lastUpdated: text("last_updated").notNull(),
+  stateFips: text("state_fips").notNull().default("17"),
+  countyFips: text("county_fips").notNull().default("031"),
+  tractCode: text("tract_code").notNull(),
+  tractName: text("tract_name"),
+  totalPopulation: integer("total_population"),
+  populationDensity: real("population_density"),
+  landAreaSqMi: real("land_area_sq_mi"),
+  waterAreaSqMi: real("water_area_sq_mi"),
+  latitude: real("latitude"),
+  longitude: real("longitude"),
+  geometry: jsonb("geometry"),
+  apiLastUpdated: text("api_last_updated").notNull().default('now()'),
+});
+
+// Race distribution - matches Census API variables
+export const tractRace2020 = pgTable("tract_race_2020", {
+  id: serial("id").primaryKey(),
+  geoid: text("geoid").notNull().references(() => chicagoCensusTracts2020.geoid, { onDelete: "cascade" }),
+  p1001n: integer("p1_001n"), // Total population
+  p1003n: integer("p1_003n"), // White alone
+  p1004n: integer("p1_004n"), // Black or African American alone
+  p1005n: integer("p1_005n"), // American Indian and Alaska Native alone
+  p1006n: integer("p1_006n"), // Asian alone
+  p1007n: integer("p1_007n"), // Native Hawaiian and Other Pacific Islander alone
+  p1008n: integer("p1_008n"), // Some Other Race alone
+  p1009n: integer("p1_009n"), // Two or More Races
+});
+
+// Hispanic/Latino ethnicity - Census separates this from race
+export const tractEthnicity2020 = pgTable("tract_ethnicity_2020", {
+  id: serial("id").primaryKey(),
+  geoid: text("geoid").notNull().references(() => chicagoCensusTracts2020.geoid, { onDelete: "cascade" }),
+  p2001n: integer("p2_001n"), // Total population
+  p2002n: integer("p2_002n"), // Hispanic or Latino
+  p2003n: integer("p2_003n"), // Not Hispanic or Latino
+});
+
+// Housing characteristics
+export const tractHousing2020 = pgTable("tract_housing_2020", {
+  id: serial("id").primaryKey(),
+  geoid: text("geoid").notNull().references(() => chicagoCensusTracts2020.geoid, { onDelete: "cascade" }),
+  h1001n: integer("h1_001n"), // Total housing units
+  h1002n: integer("h1_002n"), // Occupied housing units
+  h1003n: integer("h1_003n"), // Vacant housing units
+});
+
+// Age demographics - key age groups
+export const tractAge2020 = pgTable("tract_age_2020", {
+  id: serial("id").primaryKey(),
+  geoid: text("geoid").notNull().references(() => chicagoCensusTracts2020.geoid, { onDelete: "cascade" }),
+  p13001n: integer("p13_001n"), // Total population
+  ageUnder5: integer("age_under_5"),
+  age5To9: integer("age_5_to_9"),
+  age10To14: integer("age_10_to_14"),
+  age15To19: integer("age_15_to_19"),
+  age20To24: integer("age_20_to_24"),
+  age25To34: integer("age_25_to_34"),
+  age35To44: integer("age_35_to_44"),
+  age45To54: integer("age_45_to_54"),
+  age55To64: integer("age_55_to_64"),
+  age65To74: integer("age_65_to_74"),
+  age75To84: integer("age_75_to_84"),
+  age85Plus: integer("age_85_plus"),
+  ageUnder18: integer("age_under_18"),
+  age18Plus: integer("age_18_plus"),
+  age65Plus: integer("age_65_plus"),
 });
 
 export const diseaseData = pgTable("disease_data", {
@@ -70,7 +98,23 @@ export const insertChicagoAreaSchema = createInsertSchema(chicagoAreas).omit({
   id: true,
 });
 
-export const insertCensusTractDataSchema = createInsertSchema(censusTractData).omit({
+export const insertChicagoCensusTractsSchema = createInsertSchema(chicagoCensusTracts2020).omit({
+  id: true,
+});
+
+export const insertTractRaceSchema = createInsertSchema(tractRace2020).omit({
+  id: true,
+});
+
+export const insertTractEthnicitySchema = createInsertSchema(tractEthnicity2020).omit({
+  id: true,
+});
+
+export const insertTractHousingSchema = createInsertSchema(tractHousing2020).omit({
+  id: true,
+});
+
+export const insertTractAgeSchema = createInsertSchema(tractAge2020).omit({
   id: true,
 });
 
@@ -79,8 +123,16 @@ export const insertDiseaseDataSchema = createInsertSchema(diseaseData).omit({
 });
 
 export type InsertChicagoArea = z.infer<typeof insertChicagoAreaSchema>;
-export type InsertCensusTractData = z.infer<typeof insertCensusTractDataSchema>;
+export type InsertChicagoCensusTract = z.infer<typeof insertChicagoCensusTractsSchema>;
+export type InsertTractRace = z.infer<typeof insertTractRaceSchema>;
+export type InsertTractEthnicity = z.infer<typeof insertTractEthnicitySchema>;
+export type InsertTractHousing = z.infer<typeof insertTractHousingSchema>;
+export type InsertTractAge = z.infer<typeof insertTractAgeSchema>;
 export type InsertDiseaseData = z.infer<typeof insertDiseaseDataSchema>;
 export type ChicagoArea = typeof chicagoAreas.$inferSelect;
-export type CensusTractData = typeof censusTractData.$inferSelect;
+export type ChicagoCensusTract = typeof chicagoCensusTracts2020.$inferSelect;
+export type TractRace = typeof tractRace2020.$inferSelect;
+export type TractEthnicity = typeof tractEthnicity2020.$inferSelect;
+export type TractHousing = typeof tractHousing2020.$inferSelect;
+export type TractAge = typeof tractAge2020.$inferSelect;
 export type DiseaseData = typeof diseaseData.$inferSelect;
