@@ -5,6 +5,8 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { aggregateTractsToUnits } from './spatial-aggregation.js';
 import { updateCensusTractDensities, getCompleteCensusTractData } from './census-api-loader';
+import { formatCensusDataForFrontend, updateFromCensusApi } from './census-formatter';
+import { createCensusDataForFrontend, testCensusApiConnection } from './census-lookup';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -282,6 +284,63 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ 
         success: false, 
         error: 'Failed to update census densities' 
+      });
+    }
+  });
+
+  // Update from Census Bureau API
+  app.post('/api/update-from-census-api', async (req, res) => {
+    try {
+      console.log('Updating data from Census Bureau API...');
+      const result = await updateFromCensusApi();
+      res.json(result);
+    } catch (error) {
+      console.error('Error updating from Census API:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Failed to update from Census API',
+        tractsUpdated: 0
+      });
+    }
+  });
+
+  // Get Census data formatted for frontend
+  app.get('/api/chicago-areas/census-api', async (req, res) => {
+    try {
+      const formattedData = await formatCensusDataForFrontend();
+      res.json(formattedData);
+    } catch (error) {
+      console.error('Error serving Census API data:', error);
+      res.status(500).json({ error: 'Failed to load Census API data' });
+    }
+  });
+
+  // Get authentic Census Bureau data (direct API lookup)
+  app.get('/api/chicago-areas/census-direct', async (req, res) => {
+    try {
+      console.log('Serving authentic Census Bureau API data...');
+      const censusData = await createCensusDataForFrontend();
+      res.json(censusData);
+    } catch (error) {
+      console.error('Error fetching Census Bureau data:', error);
+      res.status(500).json({ 
+        error: 'Failed to fetch authentic Census data',
+        message: 'Could not connect to Census Bureau API'
+      });
+    }
+  });
+
+  // Test Census Bureau API connection
+  app.get('/api/test-census-api', async (req, res) => {
+    try {
+      const testResult = await testCensusApiConnection();
+      res.json(testResult);
+    } catch (error) {
+      console.error('Error testing Census API:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: 'Census API test failed',
+        sampleTracts: 0
       });
     }
   });
