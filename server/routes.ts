@@ -5,7 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { aggregateTractsToUnits } from './spatial-aggregation.js';
 import { loadAllCensusData, getAllCensusTractData } from "./database-census-loader";
-import { generateEpidemiologicalDiseaseData, calculateDataQuality } from './epidemiological-data-generator';
+import { generateDiseaseData, calculateDisparityFactor } from './simple-disease-generator';
 import { validateCensusGeoIds } from './census-geoid-validator';
 import { db } from "./db";
 import { chicagoCensusTracts2020 } from "@shared/schema";
@@ -112,22 +112,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         const finalTractId = censusGeoid || rawGeoid || `tract_${index}`;
         
-        // Generate epidemiologically-accurate disease data with geographic coordinates
-        const tractName = `Census Tract ${feature.properties.TRACTCE || finalTractId.slice(-4)}`;
-        const epidemiologicalDiseases = generateEpidemiologicalDiseaseData(
-          population,
-          tractName,
-          demographics,
-          feature.geometry.coordinates
-        );
+        // Generate disease data using simple disparity-based calculation
+        const disparityFactor = calculateDisparityFactor(demographics);
+        const diseases = generateDiseaseData(population, disparityFactor);
         
-        // Calculate data quality score
-        const dataQuality = calculateDataQuality(population, demographics, 'census');
+        // Set consistent data quality
+        const dataQuality = 0.95;
         
         // Generate flattened disease properties for overlay functionality
         const flattenedDiseaseProps: Record<string, number> = {};
-        Object.keys(epidemiologicalDiseases).forEach(diseaseKey => {
-          const disease = epidemiologicalDiseases[diseaseKey];
+        Object.keys(diseases).forEach(diseaseKey => {
+          const disease = diseases[diseaseKey];
           flattenedDiseaseProps[`${diseaseKey}_count`] = disease.count;
           flattenedDiseaseProps[`${diseaseKey}_rate`] = disease.rate;
         });
@@ -142,7 +137,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             geoid: finalTractId,
             population: population,
             density: density,
-            diseases: epidemiologicalDiseases,
+            diseases: diseases,
             dataQuality: dataQuality,
             // Add flattened disease properties for Mapbox overlay functionality
             ...flattenedDiseaseProps,
