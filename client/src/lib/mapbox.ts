@@ -100,16 +100,17 @@ export function addDataLayer(
       min, q25, median, q75, q90, q95, max
     });
 
-    // Use disease-specific color scaling for better visualization
+    // Use enhanced color scaling for high-prevalence diseases
     const isHighPrevalenceDisease = ['hypertension', 'obesity'].includes(selectedDisease);
     const range = max - min;
     
-    // For high-prevalence diseases, use the full data range for color scaling
-    // For low-prevalence diseases, use standard quartile scaling
+    console.log(`Disease: ${selectedDisease}, IsHighPrevalence: ${isHighPrevalenceDisease}, Range: ${range}`);
+    
+    // Always use enhanced scaling for hypertension and obesity to show geographic disparities
     let colorStops;
     
-    if (isHighPrevalenceDisease && range > 200) {
-      // Enhanced scaling for high-prevalence diseases to show geographic disparities
+    if (isHighPrevalenceDisease) {
+      // Enhanced scaling using full data range to maximize color contrast
       const step = range / 6;
       colorStops = [
         min, '#16a34a',                    // Green - lowest actual values
@@ -120,6 +121,7 @@ export function addDataLayer(
         min + step * 5, '#dc2626',        // Red
         max, '#7f1d1d'                    // Dark red - highest values
       ];
+      console.log(`Enhanced color stops for ${selectedDisease}:`, colorStops);
     } else {
       // Standard quartile-based scaling for other diseases
       colorStops = [
@@ -131,6 +133,7 @@ export function addDataLayer(
         q95, '#b91c1c',        // Dark red - 95th percentile
         max, '#7f1d1d'         // Very dark red - maximum values
       ];
+      console.log(`Standard color stops for ${selectedDisease}:`, colorStops);
     }
 
     // Add fill layer with adaptive color scaling
@@ -153,6 +156,8 @@ export function addDataLayer(
         ]
       }
     });
+    
+    console.log(`✅ Added ${layerId}-fill layer with ${isHighPrevalenceDisease ? 'enhanced' : 'standard'} color scaling`);
 
     // Determine border style based on geographic level
     const getBorderStyle = (layerId: string) => {
