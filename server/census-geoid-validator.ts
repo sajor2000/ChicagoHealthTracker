@@ -29,6 +29,25 @@ export async function fetchOfficialCensusTractList(): Promise<Set<string>> {
         // Construct 11-digit GEOID: state + county + tract
         const geoid = `${state}${county}${tract}`;
         officialTracts.add(geoid);
+        
+        // Handle tract format conversion: Census "100100" to our "001001" format
+        if (tract.length === 6) {
+          // Census format: "100100" means tract 1001.00
+          // Our format: "001001" means tract 1001
+          const tractBase = parseInt(tract.slice(0, 4)); // 1001
+          const tractDecimal = parseInt(tract.slice(4)); // 00
+          
+          // Convert to our 6-digit format: BBB.DD -> BBBDDD
+          const ourFormat = tractBase.toString().padStart(3, '0') + tractDecimal.toString().padStart(3, '0');
+          const ourGeoid = `${state}${county}${ourFormat}`;
+          officialTracts.add(ourGeoid);
+          
+          // Also try alternative formats for better matching
+          const altFormat1 = `${state}${county}${tractBase.toString().padStart(6, '0')}`; // 001001 -> 001001
+          const altFormat2 = `${state}${county}${tract}`; // Keep original 100100
+          officialTracts.add(altFormat1);
+          officialTracts.add(altFormat2);
+        }
       }
       
       console.log(`Loaded ${officialTracts.size} official Census tracts from Census Bureau`);

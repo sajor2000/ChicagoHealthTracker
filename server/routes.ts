@@ -6,7 +6,7 @@ import { fileURLToPath } from 'url';
 import { aggregateTractsToUnits } from './spatial-aggregation.js';
 import { loadAllCensusData, getAllCensusTractData } from "./database-census-loader";
 import { generateEpidemiologicalDiseaseData, calculateDataQuality } from './epidemiological-data-generator';
-import { updateWithAuthenticBoundaries } from './census-boundary-fetcher';
+import { validateCensusGeoIds } from './census-geoid-validator';
 import { db } from "./db";
 import { chicagoCensusTracts2020 } from "@shared/schema";
 import { eq } from "drizzle-orm";
@@ -83,10 +83,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     let combinedFeatures = tractData.features || [];
     console.log(`Loaded authentic Chicago census tracts data: ${combinedFeatures.length} features`);
     
-    // Update with authentic Census Bureau boundaries using exact GEOID matching
-    console.log('Fetching authentic Census Bureau boundaries with exact GEOID matching...');
-    combinedFeatures = await updateWithAuthenticBoundaries(combinedFeatures);
-    console.log('Authentic Census Bureau boundary update complete');
+    // Validate that our census tract GEOIDs match authentic Census Bureau data
+    console.log('Validating census tract GEOIDs against Census Bureau official data...');
+    const validation = await validateCensusGeoIds(combinedFeatures);
+    console.log(`Census GEOID validation complete - ${validation.authenticity * 100}% authentic`);
     
     // Process census tracts with health data (base authentic data layer)
     processedCensusTracts = combinedFeatures.map((feature: any, index: number) => {
