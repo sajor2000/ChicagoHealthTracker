@@ -315,7 +315,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       switch (viewMode) {
         case 'census':
-          responseData = chicagoCensusTracts2020;
+          responseData = chicagoCensusTractsData;
           break;
         case 'community':
           responseData = chicagoCommunitiesData;
