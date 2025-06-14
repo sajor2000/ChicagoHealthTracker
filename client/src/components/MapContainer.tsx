@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
-import { createMap, addDataLayer, createTooltip, updateTooltipContent, fitBoundsToFeature } from '@/lib/mapbox-deployment';
+import { createMap, addDataLayer, createTooltip, updateTooltipContent, fitBoundsToFeature } from '@/lib/mapbox-simple';
 import { AreaData, ViewMode, DiseaseType, VisualizationMode } from '@/types';
 import { useChicagoGeoData } from '@/hooks/useMapData';
 import ChicagoDataVisualization from './ChicagoDataVisualization';
@@ -159,6 +159,7 @@ export default function MapContainer({
 
       // Convert visualization mode to count/rate for Mapbox compatibility
       const mapboxMode = visualizationMode === 'age_adjusted' ? 'rate' : visualizationMode as 'count' | 'rate';
+      console.log('About to call addDataLayer:', { layerId, selectedDisease, mapboxMode, features: processedData.features.length });
       addDataLayer(map.current, processedData, layerId, selectedDisease, mapboxMode);
       setupMapInteractions(layerId);
 
