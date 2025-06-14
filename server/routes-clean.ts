@@ -8,6 +8,64 @@ import { updateCensusTractDensities, getCompleteCensusTractData } from './census
 import { formatCensusDataForFrontend, updateFromCensusApi } from './census-formatter';
 import { createCensusDataForFrontend, testCensusApiConnection } from './census-lookup';
 
+// Cache for Census Bureau API data
+let censusBureauDataCache: Map<string, any> | null = null;
+
+async function fetchAuthenticCensusData(): Promise<Map<string, any>> {
+  if (censusBureauDataCache) {
+    return censusBureauDataCache;
+  }
+  
+  const tractData = new Map<string, any>();
+  
+  try {
+    // Fetch total population data from Census Bureau API
+    const populationUrl = 'https://api.census.gov/data/2020/dec/pl?get=P1_001N,P1_003N,P1_004N,P1_006N&for=tract:*&in=state:17&in=county:031';
+    
+    const response = await fetch(populationUrl);
+    if (!response.ok) {
+      throw new Error(`Census API returned ${response.status}`);
+    }
+    
+    const data = await response.json();
+    const [headers, ...rows] = data;
+    
+    for (const row of rows) {
+      const state = row[headers.indexOf('state')];
+      const county = row[headers.indexOf('county')];
+      const tract = row[headers.indexOf('tract')];
+      const geoid = `${state}${county}${tract}`;
+      
+      const totalPop = parseInt(row[headers.indexOf('P1_001N')]) || 0;
+      const whitePop = parseInt(row[headers.indexOf('P1_003N')]) || 0;
+      const blackPop = parseInt(row[headers.indexOf('P1_004N')]) || 0;
+      const asianPop = parseInt(row[headers.indexOf('P1_006N')]) || 0;
+      
+      tractData.set(geoid, {
+        population: totalPop,
+        demographics: {
+          race: {
+            white: whitePop,
+            black: blackPop,
+            asian: asianPop,
+            hispanic: 0
+          }
+        }
+      });
+    }
+    
+    // Cache the results
+    censusBureauDataCache = tractData;
+    console.log(`Cached authentic Census data for ${tractData.size} tracts`);
+    
+    return tractData;
+    
+  } catch (error) {
+    console.warn('Could not fetch Census Bureau API data:', error);
+    return new Map();
+  }
+}
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
@@ -242,9 +300,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   // API Routes
-  app.get("/api/chicago-areas/census", (req, res) => {
+  app.get("/api/chicago-areas/census", async (req, res) => {
     try {
-      res.json(chicagoCensusTractsData);
+      // Start with existing census tract data
+      const baseData = JSON.parse(JSON.stringify(chicagoCensusTractsData));
+      
+      // Enhance with authentic Census Bureau API data
+      try {
+        const censusData = await fetchAuthenticCensusData();
+        
+        if (censusData.size > 0) {
+          let enhancedCount = 0;
+          
+          baseData.features.forEach((feature: any) => {
+            const geoid = feature.properties.geoid;
+            
+            // Try multiple GEOID format mappings
+            const possibleMappings = [
+              geoid, // Original format
+              geoid.replace('17031', ''), // Remove state/county prefix
+              `17031${geoid.slice(-6)}`, // Alternative format
+              `17031${geoid.slice(-4).padStart(6, '0')}` // Padded format
+            ];
+            
+            for (const mappedGeoid of possibleMappings) {
+              if (censusData.has(mappedGeoid)) {
+                const censusInfo = censusData.get(mappedGeoid);
+                
+                // Update with authentic population data
+                feature.properties.population = censusInfo.population;
+                
+                // Update demographic data
+                if (feature.properties.demographics) {
+                  feature.properties.demographics.race = {
+                    ...feature.properties.demographics.race,
+                    white: censusInfo.demographics.race.white,
+                    black: censusInfo.demographics.race.black,
+                    asian: censusInfo.demographics.race.asian
+                  };
+                }
+                
+                // Recalculate density with authentic population
+                if (feature.properties.density > 0 && censusInfo.population > 0) {
+                  const currentArea = feature.properties.population / feature.properties.density;
+                  feature.properties.density = Math.round(censusInfo.population / currentArea);
+                }
+                
+                enhancedCount++;
+                break; // Found a match, stop trying other mappings
+              }
+            }
+          });
+          
+          if (enhancedCount > 0) {
+            console.log(`Enhanced ${enhancedCount} census tracts with authentic Census Bureau data`);
+          }
+        }
+      } catch (censusError) {
+        console.warn('Could not enhance with Census API data:', censusError);
+      }
+      
+      res.json(baseData);
     } catch (error) {
       console.error('Error serving census data:', error);
       res.status(500).json({ error: 'Internal server error' });

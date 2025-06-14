@@ -170,15 +170,20 @@ function loadTractGeometry(): Map<string, any> {
         if (geoidStr.length === 9 && geoidStr.startsWith('17031')) {
           // Convert geometry format (170311001) to Census API format (17031010100)
           const tractNum = geoidStr.slice(5); // "1001"
-          // Census tract 1001 corresponds to API tract 010100
           const tractInt = parseInt(tractNum);
+          
+          // Census API format: tract 1001 becomes 010100 (tract * 100)
           const apiTractCode = (tractInt * 100).toString().padStart(6, '0');
           const apiGeoid = '17031' + apiTractCode;
           geometryMap.set(apiGeoid, feature.geometry);
           
-          // Also try alternative mapping where tract number is used directly
-          const directMapping = '17031' + tractNum.padStart(6, '0');
-          geometryMap.set(directMapping, feature.geometry);
+          // Also store reverse mapping: API 010100 should map to geometry 1001
+          const reverseMapping = '17031' + tractNum.padStart(6, '0');
+          geometryMap.set(reverseMapping, feature.geometry);
+          
+          // Store with leading zeros pattern
+          const zeroPattern = '17031' + tractNum.padStart(6, '0');
+          geometryMap.set(zeroPattern, feature.geometry);
         }
       }
     }
