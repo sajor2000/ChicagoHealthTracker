@@ -132,17 +132,43 @@ export function addDataLayer(
         }
       }); // Add to top of layer stack
 
-      // Add border layer with prominent white borders
+      // Add border layer with prominent white borders - ensure it's on top
       map.addLayer({
         id: `${layerId}-line`,
         type: 'line',
         source: layerId,
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round'
+        },
         paint: {
           'line-color': '#ffffff',
-          'line-width': 2.5,
+          'line-width': 3.0,
           'line-opacity': 1.0
         }
       });
+
+      // Add border layer after fill layer - no positioning conflicts
+      setTimeout(() => {
+        if (!map.getLayer(`${layerId}-line`)) {
+          map.addLayer({
+            id: `${layerId}-line`,
+            type: 'line',
+            source: layerId,
+            layout: {
+              'line-join': 'round',
+              'line-cap': 'round'
+            },
+            paint: {
+              'line-color': '#ffffff',
+              'line-width': 3.0,
+              'line-opacity': 1.0
+            }
+          });
+          
+          console.log(`✅ Border layer added: ${layerId}-line`);
+        }
+      }, 50);
 
       // Force enable all map interaction controls after adding layers
       setTimeout(() => {
