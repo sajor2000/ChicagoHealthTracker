@@ -95,16 +95,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const geoAttempts = [];
         
         if (censusGeoid.length === 9 && censusGeoid.startsWith('17031')) {
-          // 9-digit format: "170311001" -> multiple 11-digit attempts
-          const prefix = censusGeoid.slice(0, 5); // "17031"
-          const tractCode = censusGeoid.slice(5); // "1001"
+          // Convert "170311001" -> "17031010100" pattern
+          const tractNumber = censusGeoid.slice(6); // Extract "001" from "170311001"
+          
+          // The pattern is: "17031" + "01" + tract_number + "00"
+          // "170311001" becomes "17031" + "01" + "001" + "00" = "17031010100"
+          const standardGeoid = `1703101${tractNumber}00`;
           
           geoAttempts.push(
-            `${prefix}0${tractCode}0`, // "17031010010"
-            `${prefix}${tractCode}00`, // "1703110010"
-            `${prefix}0${tractCode.slice(0, 3)}0${tractCode.slice(3)}`, // "170310100"
-            `${prefix}${tractCode.padStart(6, '0')}`, // "170311001000"
-            `${prefix}${tractCode.slice(0, 2)}0${tractCode.slice(2)}0` // Alternative pattern
+            standardGeoid, // Primary conversion pattern
+            `17031${tractNumber.padStart(6, '0')}`, // Alternative padding
+            `170310${tractNumber}00`, // Alternative format
+            `17031${tractNumber}000` // Three zeros suffix
           );
         } else if (censusGeoid.length === 11) {
           // 11-digit format variations
