@@ -9,7 +9,6 @@ interface MapContainerProps {
   activeView: ViewMode;
   selectedDisease: DiseaseType;
   visualizationMode: VisualizationMode;
-  showSuppressed: boolean;
   onAreaSelect: (area: AreaData) => void;
 }
 
@@ -17,7 +16,6 @@ export default function MapContainer({
   activeView,
   selectedDisease,
   visualizationMode,
-  showSuppressed,
   onAreaSelect,
 }: MapContainerProps) {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -175,12 +173,7 @@ export default function MapContainer({
         hasGeometry: !!processedData.features[0]?.geometry
       });
 
-      // Filter suppressed data if needed
-      if (!showSuppressed) {
-        processedData.features = processedData.features.filter(feature => 
-          feature.properties && feature.properties[`${selectedDisease}_count`] >= 11
-        );
-      }
+
 
       // Convert visualization mode to count/rate for Mapbox compatibility
       const mapboxMode = visualizationMode === 'age_adjusted' ? 'rate' : visualizationMode as 'count' | 'rate';
@@ -191,7 +184,7 @@ export default function MapContainer({
     } catch (error) {
       console.error('Error updating map data:', error);
     }
-  }, [geoData, activeView, selectedDisease, visualizationMode, showSuppressed, isLoading, mapStyleLoaded]);
+  }, [geoData, activeView, selectedDisease, visualizationMode, isLoading, mapStyleLoaded]);
 
   // Setup map interactions
   const setupMapInteractions = (layerId: string) => {
@@ -315,7 +308,6 @@ export default function MapContainer({
         activeView={activeView}
         selectedDisease={selectedDisease}
         visualizationMode={visualizationMode}
-        showSuppressed={showSuppressed}
         onAreaSelect={onAreaSelect}
       />
     );

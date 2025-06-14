@@ -7,7 +7,6 @@ interface ChicagoDataVisualizationProps {
   activeView: ViewMode;
   selectedDisease: DiseaseType;
   visualizationMode: VisualizationMode;
-  showSuppressed: boolean;
   onAreaSelect: (area: AreaData) => void;
 }
 
@@ -15,7 +14,6 @@ export default function ChicagoDataVisualization({
   activeView,
   selectedDisease,
   visualizationMode,
-  showSuppressed,
   onAreaSelect,
 }: ChicagoDataVisualizationProps) {
   const { data: geoData, isLoading, error } = useChicagoGeoData(activeView);
