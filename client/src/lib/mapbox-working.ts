@@ -1,17 +1,19 @@
 import mapboxgl from 'mapbox-gl';
 import type { MapFeature, TooltipData } from '@/types';
 
-// Configure Mapbox with error checking for deployment
-const mapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || import.meta.env.MAPBOX_ACCESS_TOKEN;
+// Configure Mapbox with deployment-ready token access
+const mapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || 
+                   import.meta.env.MAPBOX_ACCESS_TOKEN ||
+                   (window as any).__MAPBOX_TOKEN__;
 
 if (!mapboxToken) {
   console.error('MAPBOX ACCESS TOKEN MISSING - Maps will not load');
   console.log('Available env vars:', Object.keys(import.meta.env));
+  console.log('Deployment environment:', window.location.hostname);
 } else {
   console.log('Mapbox token found, length:', mapboxToken.length);
+  mapboxgl.accessToken = mapboxToken;
 }
-
-mapboxgl.accessToken = mapboxToken;
 
 export const mapConfig = {
   style: 'mapbox://styles/mapbox/dark-v11',
@@ -47,33 +49,59 @@ export function addDataLayer(
   // Wait for map to be ready - use timeout to ensure style is loaded
   const attemptAddLayer = () => {
     try {
-      // Remove existing layers if they exist
+      // Deployment-specific: Ensure map is fully initialized
+      if (!map.loaded() || !map.isStyleLoaded()) {
+        console.log('🗺️ Deployment fix: Map not fully loaded, retrying...');
+        setTimeout(attemptAddLayer, 300);
+        return;
+      }
+
+      // Remove existing layers if they exist - with error handling for deployment
       const existingLayers = [`${layerId}-fill`, `${layerId}-border`, `${layerId}-hover`, `${layerId}-labels`, `${layerId}-population`];
       existingLayers.forEach(layer => {
-        if (map.getLayer(layer)) {
-          map.removeLayer(layer);
+        try {
+          if (map.getLayer(layer)) {
+            map.removeLayer(layer);
+          }
+        } catch (e) {
+          console.log(`Layer cleanup note: ${layer} not found (normal)`);
         }
       });
 
-      // Remove existing source if it exists
-      if (map.getSource(layerId)) {
-        (map.getSource(layerId) as mapboxgl.GeoJSONSource).setData(data);
-      } else {
+      // Remove existing source if it exists - with deployment error handling
+      try {
+        if (map.getSource(layerId)) {
+          (map.getSource(layerId) as mapboxgl.GeoJSONSource).setData(data);
+        } else {
+          map.addSource(layerId, {
+            type: 'geojson',
+            data,
+            promoteId: 'id'
+          });
+        }
+      } catch (sourceError) {
+        console.error('Source management error:', sourceError);
+        // Force remove and re-add source for deployment environments
+        try {
+          map.removeSource(layerId);
+        } catch (e) {}
         map.addSource(layerId, {
           type: 'geojson',
           data,
+          promoteId: 'id'
         });
       }
 
       const propertyKey = `${selectedDisease}_${visualizationMode}`;
 
-      // Add fill layer
-      map.addLayer({
-        id: `${layerId}-fill`,
-        type: 'fill',
-        source: layerId,
-        paint: {
-          'fill-color': [
+      // Add fill layer with deployment error handling
+      try {
+        map.addLayer({
+          id: `${layerId}-fill`,
+          type: 'fill',
+          source: layerId,
+          paint: {
+            'fill-color': [
             'case',
             ['>', ['get', propertyKey], 0],
             // Disease-specific color thresholds based on actual data distributions
@@ -158,8 +186,11 @@ export function addDataLayer(
             'rgba(107, 114, 128, 0.3)' // Suppressed data color
           ],
           'fill-opacity': 0.8
-        }
-      });
+          }
+        });
+      } catch (fillLayerError) {
+        console.error('Fill layer creation error:', fillLayerError);
+      }
 
       // Determine border style based on geographic level
       const getBorderStyle = (layerId: string) => {

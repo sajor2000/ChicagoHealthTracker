@@ -29,7 +29,13 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const url = queryKey[0] as string;
+    let url = queryKey[0] as string;
+    
+    // Handle deployment environment URL resolution
+    if (url.startsWith('/api/') && window.location.hostname.includes('.replit.app')) {
+      url = `${window.location.origin}${url}`;
+    }
+    
     console.log(`🔄 API Request: ${url}`);
     
     const res = await fetch(url, {
