@@ -120,13 +120,13 @@ export function addDataLayer(
         },
         paint: {
           'fill-color': [
-            'step',
+            'interpolate',
+            ['linear'],
             ['get', propertyKey],
-            '#2b83ba',     // Blue for lowest values
-            q25, '#abdda4', // Light green
-            median, '#ffffbf', // Yellow
-            q75, '#fdae61', // Orange  
-            max * 0.9, '#d7191c' // Red for highest values
+            30, '#22c55e',    // Green (30 per 1,000)
+            128, '#eab308',   // Yellow (128 per 1,000)
+            176, '#f97316',   // Orange (176 per 1,000)
+            237, '#dc2626'    // Red (237+ per 1,000)
           ],
           'fill-opacity': 0.8
         }
