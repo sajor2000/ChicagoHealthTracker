@@ -84,16 +84,26 @@ export function calculateDisparityFactor(demographics: any): number {
     const blackPct = (demographics.race.black || 0) / totalPop;
     const hispanicPct = (demographics.ethnicity?.hispanic || 0) / totalPop;
     
-    // Apply realistic health disparity multipliers
-    // South/west Chicago areas get significantly higher disease rates
-    factor += (blackPct * 0.8) + (hispanicPct * 0.5);
+    // Apply stronger health disparity multipliers for more pronounced red zones
+    // South/west Chicago areas get much higher disease rates
+    factor += (blackPct * 1.4) + (hispanicPct * 0.9);
     
-    // Additional disparity for areas with very high minority populations
+    // Additional strong disparity for areas with very high minority populations
     if (blackPct > 0.7 || hispanicPct > 0.6) {
+      factor += 0.6;
+    }
+    
+    // Extra boost for predominantly Black areas (south side patterns)
+    if (blackPct > 0.5) {
+      factor += 0.4;
+    }
+    
+    // Extra boost for high Hispanic areas (west side patterns)
+    if (hispanicPct > 0.4) {
       factor += 0.3;
     }
   }
   
-  // Allow for realistic disparity range (0.6x to 2.2x baseline)
-  return Math.max(0.6, Math.min(factor, 2.2));
+  // Allow for stronger disparity range (0.5x to 3.2x baseline) for more red zones
+  return Math.max(0.5, Math.min(factor, 3.2));
 }
