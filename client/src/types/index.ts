@@ -76,8 +76,12 @@ export interface AppState {
 export interface TooltipData {
   name: string;
   population: number;
+  density: number;
   patientCount: number;
   rate: number;
+  diseaseName: string;
+  diseaseCount: number;
+  diseaseRate: number;
 }
 
 export interface CensusData {

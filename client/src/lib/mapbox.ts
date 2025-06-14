@@ -293,11 +293,17 @@ export function addDataLayer(
       dataValid: !!data && !!data.features,
       featuresCount: data?.features?.length
     });
+    
     } catch (error) {
       console.error('Error adding data layer:', error);
-      console.error('Error details:', { 
-        message: error.message, 
-        stack: error.stack 
+      console.error('Error details:', {
+        message: error instanceof Error ? error.message : 'Unknown error',
+        stack: error instanceof Error ? error.stack : undefined,
+        layerId,
+        selectedDisease,
+        visualizationMode,
+        dataValid: !!data && !!data.features,
+        featuresCount: data?.features?.length
       });
     }
   };
