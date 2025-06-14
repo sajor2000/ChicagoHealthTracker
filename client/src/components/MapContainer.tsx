@@ -78,22 +78,47 @@ export default function MapContainer({
     if (!map.current) return;
     
     const allViewTypes = ['census', 'community', 'wards'];
-    const layerSuffixes = ['-data-fill', '-data-border', '-data-hover', '-data-labels', '-data-population'];
+    const layerSuffixes = ['-data-fill', '-data-border', '-data-hover', '-data-labels', '-data-population', '-data-line'];
     
     allViewTypes.forEach(viewType => {
       layerSuffixes.forEach(suffix => {
         const layerName = `${viewType}${suffix}`;
         if (map.current!.getLayer(layerName)) {
-          map.current!.removeLayer(layerName);
+          try {
+            map.current!.removeLayer(layerName);
+          } catch (e) {
+            // Ignore removal errors
+          }
         }
       });
       
       // Remove the source as well
       const sourceName = `${viewType}-data`;
       if (map.current!.getSource(sourceName)) {
-        map.current!.removeSource(sourceName);
+        try {
+          map.current!.removeSource(sourceName);
+        } catch (e) {
+          // Ignore removal errors
+        }
       }
     });
+
+    // Ensure map controls remain enabled after layer cleanup
+    map.current.dragPan.enable();
+    map.current.scrollZoom.enable();
+    map.current.boxZoom.enable();
+    map.current.doubleClickZoom.enable();
+    map.current.touchZoomRotate.enable();
+    
+    // Clear tooltip
+    if (tooltip.current) {
+      tooltip.current.remove();
+    }
+    
+    // Reset hover state
+    if (hoveredFeatureId !== null) {
+      setHoveredFeatureId(null);
+    }
   };
 
   // Update map data when props change
@@ -174,21 +199,16 @@ export default function MapContainer({
 
     const fillLayerId = `${layerId}-fill`;
     
-    // Remove existing event listeners for old layers
-    const allPossibleLayers = ['community-data-fill', 'census-data-fill'];
-    allPossibleLayers.forEach(layer => {
-      if (map.current && map.current.getLayer(layer)) {
-        try {
-          // Remove all event listeners for this layer - use proper method signature
-          const mapInstance = map.current as any;
-          mapInstance.off('mouseenter', layer, undefined);
-          mapInstance.off('mouseleave', layer, undefined);
-          mapInstance.off('click', layer, undefined);
-        } catch (e) {
-          // Ignore errors when removing non-existent listeners
-        }
-      }
-    });
+    // Clear any existing hover states
+    if (hoveredFeatureId !== null) {
+      setHoveredFeatureId(null);
+    }
+
+    // Ensure map controls remain interactive
+    map.current.dragPan.enable();
+    map.current.scrollZoom.enable();
+    map.current.boxZoom.enable();
+    map.current.doubleClickZoom.enable();
 
     // Mouse enter event
     map.current.on('mouseenter', fillLayerId, (e) => {

@@ -121,6 +121,23 @@ export function addDataLayer(
         }
       });
 
+      // Force enable all map interaction controls after adding layers
+      setTimeout(() => {
+        map.dragPan.enable();
+        map.scrollZoom.enable();
+        map.boxZoom.enable();
+        map.doubleClickZoom.enable();
+        map.touchZoomRotate.enable();
+        map.keyboard.enable();
+        
+        // Ensure the map canvas is properly interactive
+        const canvas = map.getCanvas();
+        canvas.style.pointerEvents = 'auto';
+        canvas.style.touchAction = 'none';
+        
+        console.log(`🎮 Map controls reactivated for ${layerId}`);
+      }, 50);
+      
       console.log(`✅ Successfully added layers for ${layerId}`);
 
     } catch (error) {
@@ -132,25 +149,31 @@ export function addDataLayer(
 }
 
 function cleanupLayers(map: mapboxgl.Map, layerId: string) {
-  const layerIds = [`${layerId}-fill`, `${layerId}-line`];
+  // Clean up ALL existing layers from all views to prevent interference
+  const allViewTypes = ['census-data', 'community-data', 'wards-data'];
+  const layerSuffixes = ['-fill', '-line'];
   
-  layerIds.forEach(id => {
-    if (map.getLayer(id)) {
+  allViewTypes.forEach(viewType => {
+    layerSuffixes.forEach(suffix => {
+      const fullLayerId = `${viewType}${suffix}`;
+      if (map.getLayer(fullLayerId)) {
+        try {
+          map.removeLayer(fullLayerId);
+        } catch (e) {
+          // Ignore removal errors
+        }
+      }
+    });
+    
+    // Remove sources
+    if (map.getSource(viewType)) {
       try {
-        map.removeLayer(id);
+        map.removeSource(viewType);
       } catch (e) {
         // Ignore removal errors
       }
     }
   });
-  
-  if (map.getSource(layerId)) {
-    try {
-      map.removeSource(layerId);
-    } catch (e) {
-      // Ignore removal errors
-    }
-  }
 }
 
 export function createTooltip(): mapboxgl.Popup {
