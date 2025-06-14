@@ -315,12 +315,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           baseData.features.forEach((feature: any) => {
             const geoid = feature.properties.geoid; // e.g., "17031051100"
             
-            // Extract the 6-digit tract code from the full GEOID
-            const tractCode = geoid.slice(-6); // e.g., "051100" from "17031051100"
-            
-            // Look up the tract in Census API data using the 6-digit tract code
-            if (censusData.has(tractCode)) {
-              const censusInfo = censusData.get(tractCode);
+            // Direct lookup using the complete FIPS code
+            if (censusData.has(geoid)) {
+              const censusInfo = censusData.get(geoid);
               
               // Update with authentic population data
               feature.properties.population = censusInfo.population;
