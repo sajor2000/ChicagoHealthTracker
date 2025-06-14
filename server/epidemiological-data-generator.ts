@@ -215,23 +215,26 @@ const CHICAGO_SES_RISK_AREAS = {
 function getEnvironmentalRiskFactors(areaName: string): { foodDesert: number; airQuality: number; walkability: number } {
   const name = areaName.toLowerCase();
   
-  // Food desert risk (limited access to healthy food)
+  // Enhanced food desert risk for visual contrast
   const foodDesertRisk = CHICAGO_SES_RISK_AREAS.highRisk.some(area => 
-    name.includes(area.toLowerCase())) ? 1.8 :
+    name.includes(area.toLowerCase())) ? 2.4 : // Red zones - severe food access issues
     CHICAGO_SES_RISK_AREAS.moderateHighRisk.some(area => 
-    name.includes(area.toLowerCase())) ? 1.4 :
+    name.includes(area.toLowerCase())) ? 1.8 : // Orange zones - moderate food access
     CHICAGO_SES_RISK_AREAS.moderateRisk.some(area => 
-    name.includes(area.toLowerCase())) ? 1.1 : 1.0;
+    name.includes(area.toLowerCase())) ? 1.3 : // Yellow zones - some limitations
+    0.6; // Green zones - good food access
 
-  // Air quality risk (industrial areas, highways)
+  // Enhanced air quality risk patterns
   const airQualityRisk = name.includes('south') || name.includes('west') || 
-    name.includes('industrial') ? 1.6 :
-    name.includes('north') || name.includes('lake') ? 0.9 : 1.2;
+    name.includes('industrial') ? 2.2 : // High pollution burden - red zones
+    name.includes('north') || name.includes('lake') ? 0.5 : // Clean air areas - green zones
+    1.5; // Moderate pollution - yellow zones
 
-  // Walkability (built environment)
+  // Enhanced walkability disparities
   const walkabilityRisk = name.includes('downtown') || name.includes('loop') ||
-    name.includes('north') ? 0.8 :
-    name.includes('south') || name.includes('west') ? 1.4 : 1.2;
+    name.includes('north') ? 0.4 : // Highly walkable areas - green zones
+    name.includes('south') || name.includes('west') ? 2.0 : // Poor walkability - red zones
+    1.6; // Moderate walkability - yellow zones
 
   return {
     foodDesert: foodDesertRisk,
