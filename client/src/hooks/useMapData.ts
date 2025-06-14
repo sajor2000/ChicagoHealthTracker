@@ -12,6 +12,17 @@ export function useChicagoGeoData(viewMode: ViewMode) {
   return useQuery<ChicagoGeoData>({
     queryKey: [`/api/chicago-areas/${viewMode}`, viewMode],
     enabled: true,
+    retry: 3,
+    onError: (error) => {
+      console.error(`❌ API Error for ${viewMode}:`, error);
+    },
+    onSuccess: (data) => {
+      console.log(`✅ API Success for ${viewMode}:`, {
+        type: data?.type,
+        features: data?.features?.length,
+        firstFeature: data?.features?.[0]?.properties ? Object.keys(data.features[0].properties) : 'no properties'
+      });
+    }
   });
 }
 
