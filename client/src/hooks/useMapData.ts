@@ -9,8 +9,13 @@ interface PopulationData {
 }
 
 export function useChicagoGeoData(viewMode: ViewMode) {
+  // Use authentic Census Bureau API data for census tracts
+  const endpoint = viewMode === 'census' 
+    ? '/api/chicago-areas/census-direct' 
+    : `/api/chicago-areas/${viewMode}`;
+    
   return useQuery<ChicagoGeoData>({
-    queryKey: [`/api/chicago-areas/${viewMode}`, viewMode],
+    queryKey: [endpoint, viewMode],
     enabled: true,
   });
 }
