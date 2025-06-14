@@ -5,6 +5,7 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { aggregateTractsToUnits } from './spatial-aggregation.js';
 import { loadAllCensusData, getAllCensusTractData } from "./database-census-loader";
+import { generateEpidemiologicalDiseaseData, calculateDataQuality } from './epidemiological-data-generator';
 import { db } from "./db";
 import { chicagoCensusTracts2020 } from "@shared/schema";
 import { eq } from "drizzle-orm";
@@ -148,38 +149,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const finalTractId = censusGeoid || rawGeoid || `tract_${index}`;
       
-      // Calculate health disparity factor based on geographic location and density
-      // Higher density areas (downtown/north) = lower disease burden
-      // South and west areas = higher disease burden (known health disparities)
-      const centroid = feature.geometry.coordinates[0][0]; // Get first coordinate as approximation
-      const lng = Array.isArray(centroid[0]) ? centroid[0][0] : centroid[0];
-      const lat = Array.isArray(centroid[0]) ? centroid[0][1] : centroid[1];
+      // Generate epidemiologically-accurate disease data
+      const tractName = `Census Tract ${feature.properties.TRACTCE || finalTractId.slice(-4)}`;
+      const epidemiologicalDiseases = generateEpidemiologicalDiseaseData(
+        population,
+        tractName,
+        demographics
+      );
       
-      // Chicago rough boundaries: West (-87.94), East (-87.52), South (41.64), North (42.02)
-      let healthDisparityFactor = 1.0;
-      
-      // South side disparity (higher disease burden)
-      if (lat < 41.85) {
-        healthDisparityFactor += 0.3 + (41.85 - lat) * 0.8; // Stronger south
-      }
-      
-      // West side disparity (higher disease burden)
-      if (lng < -87.75) {
-        healthDisparityFactor += 0.2 + (Math.abs(lng + 87.75)) * 0.6; // Stronger west
-      }
-      
-      // High density areas (lower disease burden) - Loop, Near North, Lincoln Park
-      if (density > 8000 && lat > 41.85 && lng > -87.75) {
-        healthDisparityFactor *= 0.6; // Significantly lower rates in dense downtown/north areas
-      }
-      
-      // Moderate density affluent areas (lower disease burden)
-      if (density > 4000 && density < 8000 && lat > 41.90) {
-        healthDisparityFactor *= 0.75; // Moderately lower rates in north side
-      }
-      
-      // Cap the factor to reasonable bounds
-      healthDisparityFactor = Math.max(0.4, Math.min(2.5, healthDisparityFactor));
+      // Calculate data quality score
+      const dataQuality = calculateDataQuality(population, demographics, 'census');
       
       return {
         ...feature,
@@ -191,114 +170,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           geoid: finalTractId,
           population: population,
           density: density,
-          diseases: {
-            diabetes: (() => {
-              const baseRate = 0.06;
-              const prevalenceRate = baseRate * healthDisparityFactor + Math.random() * 0.02;
-              const count = Math.floor(population * prevalenceRate);
-              const rate = parseFloat(((count / population) * 1000).toFixed(1));
-              return { id: 'diabetes', name: 'Diabetes', icdCodes: 'E10-E14', count, rate };
-            })(),
-            hypertension: (() => {
-              const baseRate = 0.25;
-              const prevalenceRate = baseRate * healthDisparityFactor + Math.random() * 0.05;
-              const count = Math.floor(population * prevalenceRate);
-              const rate = parseFloat(((count / population) * 1000).toFixed(1));
-              return { id: 'hypertension', name: 'Hypertension', icdCodes: 'I10-I15', count, rate };
-            })(),
-            heart: (() => {
-              const baseRate = 0.05;
-              const prevalenceRate = baseRate * healthDisparityFactor + Math.random() * 0.015;
-              const count = Math.floor(population * prevalenceRate);
-              const rate = parseFloat(((count / population) * 1000).toFixed(1));
-              return { id: 'heart', name: 'Heart Disease', icdCodes: 'I20-I25', count, rate };
-            })(),
-            copd: (() => {
-              const baseRate = 0.035;
-              const prevalenceRate = baseRate * healthDisparityFactor + Math.random() * 0.015;
-              const count = Math.floor(population * prevalenceRate);
-              const rate = parseFloat(((count / population) * 1000).toFixed(1));
-              return { id: 'copd', name: 'COPD', icdCodes: 'J40-J44', count, rate };
-            })(),
-            asthma: (() => {
-              const baseRate = 0.07;
-              const prevalenceRate = baseRate * healthDisparityFactor + Math.random() * 0.02;
-              const count = Math.floor(population * prevalenceRate);
-              const rate = parseFloat(((count / population) * 1000).toFixed(1));
-              return { id: 'asthma', name: 'Asthma', icdCodes: 'J45-J46', count, rate };
-            })(),
-            stroke: (() => {
-              const baseRate = 0.022;
-              const prevalenceRate = baseRate * healthDisparityFactor + Math.random() * 0.008;
-              const count = Math.floor(population * prevalenceRate);
-              const rate = parseFloat(((count / population) * 1000).toFixed(1));
-              return { id: 'stroke', name: 'Stroke', icdCodes: 'I60-I69', count, rate };
-            })(),
-            ckd: (() => {
-              const baseRate = 0.035;
-              const prevalenceRate = baseRate * healthDisparityFactor + Math.random() * 0.015;
-              const count = Math.floor(population * prevalenceRate);
-              const rate = parseFloat(((count / population) * 1000).toFixed(1));
-              return { id: 'ckd', name: 'Chronic Kidney Disease', icdCodes: 'N18', count, rate };
-            })(),
-            depression: (() => {
-              const baseRate = 0.08;
-              const prevalenceRate = baseRate * healthDisparityFactor + Math.random() * 0.03;
-              const count = Math.floor(population * prevalenceRate);
-              const rate = parseFloat(((count / population) * 1000).toFixed(1));
-              return { id: 'depression', name: 'Depression', icdCodes: 'F32-F33', count, rate };
-            })(),
-            anxiety: (() => {
-              const baseRate = 0.10;
-              const prevalenceRate = baseRate * healthDisparityFactor + Math.random() * 0.04;
-              const count = Math.floor(population * prevalenceRate);
-              const rate = parseFloat(((count / population) * 1000).toFixed(1));
-              return { id: 'anxiety', name: 'Anxiety Disorders', icdCodes: 'F40-F41', count, rate };
-            })(),
-            obesity: (() => {
-              const baseRate = 0.22;
-              const prevalenceRate = baseRate * healthDisparityFactor + Math.random() * 0.06;
-              const count = Math.floor(population * prevalenceRate);
-              const rate = parseFloat(((count / population) * 1000).toFixed(1));
-              return { id: 'obesity', name: 'Obesity', icdCodes: 'E66', count, rate };
-            })(),
-            cancer: (() => {
-              const baseRate = 0.045;
-              const prevalenceRate = baseRate * healthDisparityFactor + Math.random() * 0.015;
-              const count = Math.floor(population * prevalenceRate);
-              const rate = parseFloat(((count / population) * 1000).toFixed(1));
-              return { id: 'cancer', name: 'Cancer (All Types)', icdCodes: 'C00-C97', count, rate };
-            })(),
-            arthritis: (() => {
-              const baseRate = 0.15;
-              const prevalenceRate = baseRate * healthDisparityFactor + Math.random() * 0.05;
-              const count = Math.floor(population * prevalenceRate);
-              const rate = parseFloat(((count / population) * 1000).toFixed(1));
-              return { id: 'arthritis', name: 'Arthritis', icdCodes: 'M05-M19', count, rate };
-            })(),
-            osteoporosis: (() => {
-              const baseRate = 0.028;
-              const prevalenceRate = baseRate * healthDisparityFactor + Math.random() * 0.012;
-              const count = Math.floor(population * prevalenceRate);
-              const rate = parseFloat(((count / population) * 1000).toFixed(1));
-              return { id: 'osteoporosis', name: 'Osteoporosis', icdCodes: 'M80-M85', count, rate };
-            })(),
-            liver: (() => {
-              const baseRate = 0.012;
-              const prevalenceRate = baseRate * healthDisparityFactor + Math.random() * 0.008;
-              const count = Math.floor(population * prevalenceRate);
-              const rate = parseFloat(((count / population) * 1000).toFixed(1));
-              return { id: 'liver', name: 'Liver Disease', icdCodes: 'K70-K77', count, rate };
-            })(),
-            substance: (() => {
-              const baseRate = 0.05;
-              const prevalenceRate = baseRate * healthDisparityFactor + Math.random() * 0.02;
-              const count = Math.floor(population * prevalenceRate);
-              const rate = parseFloat(((count / population) * 1000).toFixed(1));
-              return { id: 'substance', name: 'Substance Use Disorder', icdCodes: 'F10-F19', count, rate };
-            })()
-          },
-          dataQuality: demographics ? 95 + Math.floor(Math.random() * 5) : 75 + Math.floor(Math.random() * 10),
+          diseases: epidemiologicalDiseases,
+          dataQuality: dataQuality,
           // Include authentic 2020 Census demographic data
           demographics: demographics || {
             population: { total: population, adults18Plus: Math.floor(population * 0.75) },
@@ -320,6 +193,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
               totalUnits: Math.floor(population * 0.4), 
               occupied: Math.floor(population * 0.35), 
               vacant: Math.floor(population * 0.05) 
+            },
+            age: {
+              under18: Math.floor(population * 0.25),
+              age18Plus: Math.floor(population * 0.75),
+              age65Plus: Math.floor(population * 0.15)
             }
           }
         }
