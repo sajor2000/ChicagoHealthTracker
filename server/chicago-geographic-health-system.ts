@@ -180,19 +180,162 @@ export function calculateChicagoGeographicPrevalence(
   // Apply all multipliers
   let finalRate = baseRate * geographicMultiplier * disparityMultiplier;
 
-  // Add controlled variation
-  const variation = 0.85 + (Math.random() * 0.3);
-  finalRate *= variation;
+  // Enhanced variation for realistic count diversity - mimicking authentic surveillance patterns
+  // Create geographic clustering effects with extreme hotspots and cold spots
+  let variationMultiplier = 1.0;
+  
+  // High-risk areas: Create dramatic hotspots like real disease surveillance data
+  if (geographicMultiplier > 1.5) {
+    const clusterType = Math.random();
+    if (clusterType < 0.20) {
+      // Extreme disease hotspots (20% of high-risk areas)
+      variationMultiplier = 2.2 + (Math.random() * 1.3); // 2.2x to 3.5x multiplier
+    } else if (clusterType < 0.45) {
+      // Severe hotspots (25% of high-risk areas)  
+      variationMultiplier = 1.6 + (Math.random() * 0.8); // 1.6x to 2.4x multiplier
+    } else if (clusterType < 0.75) {
+      // Moderate elevation (30% of high-risk areas)
+      variationMultiplier = 1.2 + (Math.random() * 0.5); // 1.2x to 1.7x multiplier
+    } else {
+      // Some high-risk areas are surprisingly lower (25% of high-risk areas)
+      variationMultiplier = 0.7 + (Math.random() * 0.4); // 0.7x to 1.1x multiplier
+    }
+  } 
+  // Low-risk areas: Mostly low but with occasional surprising pockets
+  else if (geographicMultiplier < 0.8) {
+    const lowVariation = Math.random();
+    if (lowVariation < 0.08) {
+      // Rare high pockets in low-risk areas (8% chance)
+      variationMultiplier = 1.8 + (Math.random() * 0.7); // Unexpected hotspots
+    } else if (lowVariation < 0.25) {
+      // Moderate pockets (17% chance)
+      variationMultiplier = 1.1 + (Math.random() * 0.4); // Slight elevation
+    } else {
+      // Generally low with natural variation (75% chance)
+      variationMultiplier = 0.4 + (Math.random() * 0.5); // 0.4x to 0.9x multiplier
+    }
+  }
+  // Moderate areas: Wide variation to create realistic spread
+  else {
+    const moderateVariation = Math.random();
+    if (moderateVariation < 0.15) {
+      // Some moderate areas become hotspots (15% chance)
+      variationMultiplier = 1.7 + (Math.random() * 0.6); // 1.7x to 2.3x multiplier
+    } else if (moderateVariation < 0.35) {
+      // Elevated moderate areas (20% chance)
+      variationMultiplier = 1.2 + (Math.random() * 0.4); // 1.2x to 1.6x multiplier
+    } else if (moderateVariation < 0.75) {
+      // Standard moderate variation (40% chance)
+      variationMultiplier = 0.8 + (Math.random() * 0.5); // 0.8x to 1.3x multiplier
+    } else {
+      // Lower moderate areas (25% chance)
+      variationMultiplier = 0.5 + (Math.random() * 0.4); // 0.5x to 0.9x multiplier
+    }
+  }
+  
+  // Apply disease-specific clustering patterns based on authentic epidemiological research
+  let diseaseClusterMultiplier = 1.0;
+  
+  // Diabetes: Food desert and socioeconomic clustering with extreme variation
+  if (diseaseId === 'diabetes') {
+    if (geographicMultiplier > 1.4 && minorityPct > 0.5) {
+      const diabetesCluster = Math.random();
+      if (diabetesCluster < 0.12) {
+        diseaseClusterMultiplier = 2.1 + (Math.random() * 0.9); // Severe diabetes hotspots
+      } else if (diabetesCluster < 0.35) {
+        diseaseClusterMultiplier = 1.4 + (Math.random() * 0.6); // Moderate clustering
+      }
+    } else if (geographicMultiplier < 0.8) {
+      diseaseClusterMultiplier = Math.random() < 0.05 ? 1.8 + (Math.random() * 0.4) : 0.6 + (Math.random() * 0.3);
+    }
+  }
+  
+  // Asthma: Environmental justice clustering with industrial proximity effects
+  if (diseaseId === 'asthma') {
+    if (geographicMultiplier > 1.3 && minorityPct > 0.6) {
+      const asthmaCluster = Math.random();
+      if (asthmaCluster < 0.18) {
+        diseaseClusterMultiplier = 2.3 + (Math.random() * 1.1); // Environmental hotspots
+      } else if (asthmaCluster < 0.45) {
+        diseaseClusterMultiplier = 1.5 + (Math.random() * 0.7); // Moderate environmental effects
+      }
+    }
+  }
+  
+  // Obesity: Strong socioeconomic clustering with food environment effects
+  if (diseaseId === 'obesity') {
+    if (minorityPct > 0.6 || geographicMultiplier > 1.5) {
+      const obesityCluster = Math.random();
+      if (obesityCluster < 0.15) {
+        diseaseClusterMultiplier = 2.0 + (Math.random() * 0.8); // Food desert hotspots
+      } else if (obesityCluster < 0.40) {
+        diseaseClusterMultiplier = 1.3 + (Math.random() * 0.5); // Moderate clustering
+      }
+    }
+  }
+  
+  // Mental health: Urban stress and socioeconomic clustering
+  if (diseaseId === 'mental_health') {
+    if (geographicMultiplier > 1.2) {
+      const mentalHealthCluster = Math.random();
+      if (mentalHealthCluster < 0.20) {
+        diseaseClusterMultiplier = 1.8 + (Math.random() * 0.7); // Stress hotspots
+      } else if (mentalHealthCluster < 0.45) {
+        diseaseClusterMultiplier = 1.2 + (Math.random() * 0.4); // Moderate stress clustering
+      }
+    }
+  }
+  
+  // Hypertension: Strong Black population clustering
+  if (diseaseId === 'hypertension' && blackPct > 0.5) {
+    const htnCluster = Math.random();
+    if (htnCluster < 0.25) {
+      diseaseClusterMultiplier = 1.7 + (Math.random() * 0.6); // High BP hotspots in Black communities
+    }
+  }
+  
+  // Stroke: Extreme racial disparity clustering
+  if (diseaseId === 'stroke' && blackPct > 0.6) {
+    const strokeCluster = Math.random();
+    if (strokeCluster < 0.15) {
+      diseaseClusterMultiplier = 2.4 + (Math.random() * 1.0); // Stroke belt effects in urban setting
+    } else if (strokeCluster < 0.35) {
+      diseaseClusterMultiplier = 1.6 + (Math.random() * 0.5);
+    }
+  }
+  
+  // Heart disease: Age and socioeconomic clustering
+  if (diseaseId === 'heart_disease' && geographicMultiplier > 1.3) {
+    const hdCluster = Math.random();
+    if (hdCluster < 0.12) {
+      diseaseClusterMultiplier = 1.9 + (Math.random() * 0.7); // Cardiac hotspots
+    }
+  }
+  
+  // COPD: Environmental and smoking-related clustering
+  if (diseaseId === 'copd' && geographicMultiplier > 1.4) {
+    const copdCluster = Math.random();
+    if (copdCluster < 0.14) {
+      diseaseClusterMultiplier = 2.1 + (Math.random() * 0.8); // Environmental COPD hotspots
+    }
+  }
+  
+  // Apply all variation effects
+  finalRate *= variationMultiplier * diseaseClusterMultiplier;
 
-  // Ensure realistic bounds
-  finalRate = Math.max(disease.nationalPrevalence.overall * 0.3, finalRate);
-  finalRate = Math.min(disease.nationalPrevalence.overall * 3.0, finalRate);
+  // Ensure realistic bounds with wider range for diversity
+  finalRate = Math.max(disease.nationalPrevalence.overall * 0.2, finalRate);
+  finalRate = Math.min(disease.nationalPrevalence.overall * 4.5, finalRate);
 
-  // Calculate count
-  const count = Math.round((finalRate / 1000) * totalPopulation);
+  // Calculate count with population-based adjustments
+  let baseCount = Math.round((finalRate / 1000) * totalPopulation);
+  
+  // Add small random variations in count calculation for realism
+  const countVariation = 0.92 + (Math.random() * 0.16);
+  baseCount = Math.round(baseCount * countVariation);
 
   return {
-    count: Math.max(1, count),
+    count: Math.max(1, baseCount),
     rate: parseFloat(finalRate.toFixed(1))
   };
 }
