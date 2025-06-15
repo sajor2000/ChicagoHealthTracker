@@ -35,133 +35,102 @@ async function fetchData(path) {
  * Test color visualization ranges for a specific disease and mode
  */
 async function testDiseaseColorVisualization(disease, mode) {
-  console.log(`\n--- ${disease.toUpperCase()} ${mode.toUpperCase()} MODE ---`);
+  const data = await fetchData('/api/chicago-areas/census');
   
-  try {
-    const data = await fetchData('/api/chicago-areas/census');
-    
-    if (!data.features || data.features.length === 0) {
-      console.log('❌ No census tract data available');
-      return;
-    }
-
-    const propertyKey = `${disease}_${mode}`;
-    const values = data.features
-      .map(f => f.properties?.[propertyKey])
-      .filter(v => typeof v === 'number' && v > 0)
-      .sort((a, b) => a - b);
-
-    if (values.length === 0) {
-      console.log(`❌ No valid ${propertyKey} data found`);
-      return;
-    }
-
-    const min = values[0];
-    const max = values[values.length - 1];
-    const range = max - min;
-    const median = values[Math.floor(values.length * 0.5)];
-    
-    // Calculate expected color gradient based on disease
-    let expectedColorScheme = '';
-    let colorDescription = '';
-    
-    switch (disease) {
-      case 'diabetes':
-        expectedColorScheme = 'Blue → Cyan → Yellow → Orange → Red';
-        colorDescription = 'Blue indicates good diabetic control, red shows poor control';
-        break;
-      case 'hypertension':
-        expectedColorScheme = 'Green → Yellow-Green → Yellow → Orange → Red';
-        colorDescription = 'Green shows normal blood pressure, red indicates hypertensive ranges';
-        break;
-      case 'heart_disease':
-        expectedColorScheme = 'Purple → Pink → Orange → Red';
-        colorDescription = 'Purple indicates low cardiac risk, red shows high cardiovascular risk';
-        break;
-      case 'stroke':
-        expectedColorScheme = 'Teal → Cyan → Amber → Orange → Red';
-        colorDescription = 'Teal indicates low stroke risk, red shows extreme stroke risk';
-        break;
-      case 'asthma':
-        expectedColorScheme = 'Sky Blue → Light Blue → Yellow → Orange → Red';
-        colorDescription = 'Blue shows clear breathing, red indicates severe respiratory symptoms';
-        break;
-      case 'copd':
-        expectedColorScheme = 'Gray → Light Gray → Amber → Orange → Red';
-        colorDescription = 'Gray shows mild limitation, red indicates severe lung function decline';
-        break;
-      case 'obesity':
-        expectedColorScheme = 'Green → Yellow-Green → Yellow → Orange → Red';
-        colorDescription = 'Green shows normal weight, red indicates severe obesity categories';
-        break;
-      case 'mental_health':
-        expectedColorScheme = 'Indigo → Purple → Pink → Orange → Red';
-        colorDescription = 'Indigo shows good mental health, red indicates psychological crisis';
-        break;
-      default:
-        expectedColorScheme = 'Standard Green → Red';
-        colorDescription = 'Standard gradient';
-    }
-
-    console.log(`  Data Range: ${min.toFixed(1)} - ${max.toFixed(1)} (median: ${median.toFixed(1)})`);
-    console.log(`  Range Span: ${range.toFixed(1)} ${mode === 'count' ? 'cases' : 'per 1,000'}`);
-    console.log(`  Expected Colors: ${expectedColorScheme}`);
-    console.log(`  Color Meaning: ${colorDescription}`);
-    
-    // Assess visualization effectiveness
-    const rangeRatio = max / min;
-    if (rangeRatio > 5.0) {
-      console.log(`  ✅ EXCELLENT color discrimination (${rangeRatio.toFixed(1)}:1 ratio)`);
-    } else if (rangeRatio > 3.0) {
-      console.log(`  ✓ GOOD color discrimination (${rangeRatio.toFixed(1)}:1 ratio)`);
-    } else if (rangeRatio > 2.0) {
-      console.log(`  ~ MODERATE color discrimination (${rangeRatio.toFixed(1)}:1 ratio)`);
-    } else {
-      console.log(`  ⚠️  LIMITED color discrimination (${rangeRatio.toFixed(1)}:1 ratio)`);
-    }
-    
-    // Sample specific tract values for verification
-    const sampleTracts = data.features.slice(0, 3);
-    console.log(`  Sample Values:`);
-    sampleTracts.forEach((tract, index) => {
-      const value = tract.properties[propertyKey];
-      const tractName = tract.properties.name || `Tract ${index + 1}`;
-      console.log(`    ${tractName}: ${value.toFixed(1)} ${mode === 'count' ? 'cases' : 'per 1,000'}`);
-    });
-    
-  } catch (error) {
-    console.log(`❌ Error testing ${disease} ${mode}: ${error.message}`);
+  if (!data.features || data.features.length === 0) {
+    console.log(`❌ No data for ${disease}`);
+    return;
   }
+
+  const values = [];
+  data.features.forEach(feature => {
+    const value = feature.properties[`${disease}_${mode}`];
+    if (value && typeof value === 'number') {
+      values.push(value);
+    }
+  });
+
+  if (values.length === 0) {
+    console.log(`❌ No ${mode} data for ${disease}`);
+    return;
+  }
+
+  values.sort((a, b) => a - b);
+  
+  const min = values[0];
+  const max = values[values.length - 1];
+  const median = values[Math.floor(values.length * 0.5)];
+  const q1 = values[Math.floor(values.length * 0.25)];
+  const q3 = values[Math.floor(values.length * 0.75)];
+  const p90 = values[Math.floor(values.length * 0.9)];
+  
+  const range = max - min;
+  const diversity = max / min;
+  
+  // Count unique values to assess color distribution
+  const uniqueValues = [...new Set(values)].length;
+  const duplicateRate = 1 - (uniqueValues / values.length);
+  
+  console.log(`--- ${disease.toUpperCase()} ${mode.toUpperCase()} ---`);
+  console.log(`  Range: ${min.toFixed(1)} → ${max.toFixed(1)} (${range.toFixed(1)} spread)`);
+  console.log(`  Quartiles: Q1=${q1.toFixed(1)}, Median=${median.toFixed(1)}, Q3=${q3.toFixed(1)}`);
+  console.log(`  90th percentile: ${p90.toFixed(1)}`);
+  console.log(`  Diversity ratio: ${diversity.toFixed(2)}:1`);
+  console.log(`  Unique values: ${uniqueValues}/${values.length} (${(duplicateRate*100).toFixed(1)}% clustering)`);
+  
+  // Color scaling assessment
+  if (diversity < 1.5) {
+    console.log(`  🔴 POOR color scaling - values too similar`);
+  } else if (diversity < 2.5) {
+    console.log(`  🟡 LIMITED color scaling - moderate variation`);
+  } else if (diversity < 4.0) {
+    console.log(`  🟢 GOOD color scaling - solid variation`);
+  } else {
+    console.log(`  ✅ EXCELLENT color scaling - high variation`);
+  }
+  
+  // Clustering assessment
+  if (duplicateRate > 0.5) {
+    console.log(`  🔴 HIGH clustering - many identical values`);
+  } else if (duplicateRate > 0.2) {
+    console.log(`  🟡 MODERATE clustering - some repeated values`);
+  } else {
+    console.log(`  🟢 LOW clustering - good value distribution`);
+  }
+  
+  console.log('');
 }
 
 /**
  * Test all diseases in both count and rate modes
  */
 async function testAllDiseaseColorVisualization() {
-  console.log('=== DISEASE-SPECIFIC COLOR VISUALIZATION TEST ===');
-  console.log('Testing unique color gradients for each disease category\n');
-
-  const diseases = ['diabetes', 'hypertension', 'heart_disease', 'stroke', 'asthma', 'copd', 'obesity', 'mental_health'];
+  console.log('=== COMPREHENSIVE COLOR VISUALIZATION TEST ===\n');
+  
+  const diseases = [
+    'diabetes', 'hypertension', 'heart_disease', 'stroke', 
+    'asthma', 'copd', 'obesity', 'mental_health'
+  ];
+  
   const modes = ['count', 'rate'];
   
-  for (const disease of diseases) {
-    console.log(`\n🎨 TESTING ${disease.toUpperCase()} COLOR GRADIENTS`);
-    
-    for (const mode of modes) {
-      await testDiseaseColorVisualization(disease, mode);
+  try {
+    for (const disease of diseases) {
+      for (const mode of modes) {
+        await testDiseaseColorVisualization(disease, mode);
+      }
     }
+    
+    console.log('=== COLOR VISUALIZATION SUMMARY ===');
+    console.log('For optimal map visualization:');
+    console.log('• Diversity ratio should be >2.5:1 (preferably >4:1)');
+    console.log('• Clustering should be <20% (preferably <10%)');
+    console.log('• Values should span the full epidemiological range');
+    console.log('• Each disease should show distinct geographic patterns');
+    
+  } catch (error) {
+    console.log(`❌ Error: ${error.message}`);
   }
-  
-  console.log('\n=== COLOR VISUALIZATION TEST COMPLETE ===');
-  console.log('Each disease now has its own unique color scheme:');
-  console.log('• Diabetes: Blue-to-red (metabolic control)');
-  console.log('• Hypertension: Green-to-red (blood pressure ranges)');
-  console.log('• Heart Disease: Purple-to-red (cardiac risk)');
-  console.log('• Stroke: Teal-to-red (stroke risk)');
-  console.log('• Asthma: Sky blue-to-red (respiratory health)');
-  console.log('• COPD: Gray-to-red (lung function)');
-  console.log('• Obesity: Green-to-red (BMI categories)');
-  console.log('• Mental Health: Indigo-to-red (psychological distress)');
 }
 
 testAllDiseaseColorVisualization().catch(console.error);

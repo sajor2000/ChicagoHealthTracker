@@ -262,15 +262,25 @@ export function calculateChicagoGeographicPrevalence(
     }
   }
   
-  // Obesity: Strong socioeconomic clustering with food environment effects
+  // Obesity: Balanced distribution across full epidemiological range
   if (diseaseId === 'obesity') {
-    if (minorityPct > 0.6 || geographicMultiplier > 1.5) {
-      const obesityCluster = Math.random();
-      if (obesityCluster < 0.15) {
-        diseaseClusterMultiplier = 2.0 + (Math.random() * 0.8); // Food desert hotspots
-      } else if (obesityCluster < 0.40) {
-        diseaseClusterMultiplier = 1.3 + (Math.random() * 0.5); // Moderate clustering
-      }
+    // Create distinct geographic tiers for better color distribution
+    if (geographicMultiplier > 1.5 && minorityPct > 0.65) {
+      // High-risk areas: 45-65% prevalence (450-650 per 1,000)
+      const highRiskVariation = 0.85 + (Math.random() * 0.25); // 0.85x to 1.1x
+      diseaseClusterMultiplier = highRiskVariation;
+    } else if (geographicMultiplier > 1.1 && minorityPct > 0.4) {
+      // Moderate-risk areas: 35-50% prevalence (350-500 per 1,000)
+      const moderateRiskVariation = 0.65 + (Math.random() * 0.25); // 0.65x to 0.9x
+      diseaseClusterMultiplier = moderateRiskVariation;
+    } else if (geographicMultiplier < 0.9) {
+      // Low-risk areas: 20-35% prevalence (200-350 per 1,000)
+      const lowRiskVariation = 0.35 + (Math.random() * 0.25); // 0.35x to 0.6x
+      diseaseClusterMultiplier = lowRiskVariation;
+    } else {
+      // Transitional areas: balanced variation
+      const transitionalVariation = 0.55 + (Math.random() * 0.3); // 0.55x to 0.85x
+      diseaseClusterMultiplier = transitionalVariation;
     }
   }
   
@@ -358,9 +368,9 @@ export function calculateChicagoGeographicPrevalence(
       maxBound = Math.min(180, disease.nationalPrevalence.overall * 2.7);
       break;
     case 'obesity':
-      // Obesity: 15-65% prevalence range (150-650 per 1,000) - CRITICAL FIX
-      minBound = Math.max(150, disease.nationalPrevalence.overall * 0.29);
-      maxBound = Math.min(650, disease.nationalPrevalence.overall * 1.25);
+      // Obesity: 15-65% prevalence range (150-650 per 1,000) with better distribution
+      minBound = Math.max(150, disease.nationalPrevalence.overall * 0.32);
+      maxBound = Math.min(650, disease.nationalPrevalence.overall * 1.85);
       break;
     case 'mental_health':
       // Mental health: 8-40% prevalence range (80-400 per 1,000)
