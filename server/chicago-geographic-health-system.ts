@@ -323,9 +323,58 @@ export function calculateChicagoGeographicPrevalence(
   // Apply all variation effects
   finalRate *= variationMultiplier * diseaseClusterMultiplier;
 
-  // Ensure realistic bounds with wider range for diversity
-  finalRate = Math.max(disease.nationalPrevalence.overall * 0.2, finalRate);
-  finalRate = Math.min(disease.nationalPrevalence.overall * 4.5, finalRate);
+  // Apply disease-specific realistic bounds to prevent impossible prevalence rates
+  let minBound, maxBound;
+  
+  switch (diseaseId) {
+    case 'diabetes':
+      // Diabetes: 5-35% prevalence range (50-350 per 1,000)
+      minBound = Math.max(50, disease.nationalPrevalence.overall * 0.45);
+      maxBound = Math.min(350, disease.nationalPrevalence.overall * 3.2);
+      break;
+    case 'hypertension':
+      // Hypertension: 20-75% prevalence range (200-750 per 1,000)
+      minBound = Math.max(200, disease.nationalPrevalence.overall * 0.43);
+      maxBound = Math.min(750, disease.nationalPrevalence.overall * 1.6);
+      break;
+    case 'heart_disease':
+      // Heart disease: 2-15% prevalence range (20-150 per 1,000)
+      minBound = Math.max(20, disease.nationalPrevalence.overall * 0.31);
+      maxBound = Math.min(150, disease.nationalPrevalence.overall * 2.3);
+      break;
+    case 'stroke':
+      // Stroke: 1-8% prevalence range (10-80 per 1,000)
+      minBound = Math.max(10, disease.nationalPrevalence.overall * 0.36);
+      maxBound = Math.min(80, disease.nationalPrevalence.overall * 2.9);
+      break;
+    case 'asthma':
+      // Asthma: 5-25% prevalence range (50-250 per 1,000)
+      minBound = Math.max(50, disease.nationalPrevalence.overall * 0.46);
+      maxBound = Math.min(250, disease.nationalPrevalence.overall * 2.3);
+      break;
+    case 'copd':
+      // COPD: 3-18% prevalence range (30-180 per 1,000)
+      minBound = Math.max(30, disease.nationalPrevalence.overall * 0.45);
+      maxBound = Math.min(180, disease.nationalPrevalence.overall * 2.7);
+      break;
+    case 'obesity':
+      // Obesity: 15-65% prevalence range (150-650 per 1,000) - CRITICAL FIX
+      minBound = Math.max(150, disease.nationalPrevalence.overall * 0.29);
+      maxBound = Math.min(650, disease.nationalPrevalence.overall * 1.25);
+      break;
+    case 'mental_health':
+      // Mental health: 8-40% prevalence range (80-400 per 1,000)
+      minBound = Math.max(80, disease.nationalPrevalence.overall * 0.34);
+      maxBound = Math.min(400, disease.nationalPrevalence.overall * 1.7);
+      break;
+    default:
+      // Default bounds for any other diseases
+      minBound = disease.nationalPrevalence.overall * 0.3;
+      maxBound = disease.nationalPrevalence.overall * 3.0;
+  }
+  
+  finalRate = Math.max(minBound, finalRate);
+  finalRate = Math.min(maxBound, finalRate);
 
   // Calculate count with population-based adjustments
   let baseCount = Math.round((finalRate / 1000) * totalPopulation);
