@@ -192,17 +192,16 @@ export function addDataLayer(
         break;
         
       case 'obesity':
-        // Obesity: Orange-to-red gradient reflecting BMI categories
-        const obesityStep = range / 6;
+        // Obesity: Enhanced green-to-red gradient with proper quartile distribution
         colorStops = [
-          min, '#22c55e',                     // Green - normal weight
-          min + obesityStep, '#84cc16',      // Yellow-green - overweight
-          min + obesityStep * 2, '#eab308',  // Yellow - obese class I
-          min + obesityStep * 3, '#f97316',  // Orange - obese class II
-          min + obesityStep * 4, '#dc2626',  // Red - obese class III
-          min + obesityStep * 5, '#b91c1c',  // Dark red - morbidly obese
-          max, '#7f1d1d'                     // Very dark red - super obese
+          min, '#10b981',        // Emerald green - lowest obesity (15-20%)
+          q25, '#84cc16',        // Lime green - low obesity (20-30%)
+          median, '#eab308',     // Yellow - moderate obesity (30-40%)
+          q75, '#f97316',        // Orange - high obesity (40-55%)
+          q90, '#dc2626',        // Red - very high obesity (55-60%)
+          max, '#991b1b'         // Dark red - maximum obesity (60-65%)
         ];
+        console.log(`Obesity color mapping: ${min}(green) → ${q25}(lime) → ${median}(yellow) → ${q75}(orange) → ${q90}(red) → ${max}(dark red)`);
         break;
         
       case 'mental_health':
