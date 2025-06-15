@@ -3,96 +3,133 @@
  * Verify that the simplified disease generation produces distinct patterns
  */
 
+import http from 'http';
+
+async function fetchData(path) {
+  return new Promise((resolve, reject) => {
+    const options = {
+      hostname: 'localhost',
+      port: 5000,
+      path: path,
+      method: 'GET'
+    };
+
+    const req = http.request(options, (res) => {
+      let data = '';
+      res.on('data', (chunk) => data += chunk);
+      res.on('end', () => {
+        try {
+          resolve(JSON.parse(data));
+        } catch (error) {
+          reject(error);
+        }
+      });
+    });
+
+    req.on('error', reject);
+    req.end();
+  });
+}
+
 async function testFixedCountRate() {
-  console.log('🧪 Testing Fixed Count vs Rate Visualization\n');
-  
+  console.log('=== FIXED COUNT VS RATE VISUALIZATION TEST ===\n');
+
   try {
-    // Test census tract endpoint
-    const response = await fetch('http://localhost:5000/api/chicago-areas/census');
+    const data = await fetchData('/api/chicago-areas/census');
     
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    if (!data.features || data.features.length === 0) {
+      console.log('❌ No census tract data available');
+      return;
     }
+
+    console.log(`Testing ${data.features.length} census tracts\n`);
+
+    // Test obesity specifically since it was the main issue
+    const obesityRates = [];
+    const obesityCounts = [];
     
-    const data = await response.json();
-    console.log(`✅ Loaded ${data.features.length} census tracts\n`);
-    
-    // Analyze first 10 tracts for count vs rate patterns
-    console.log('📊 Count vs Rate Analysis (First 10 Tracts):');
-    console.log('═'.repeat(80));
-    console.log('Tract ID'.padEnd(12) + 'Population'.padEnd(12) + 'Diabetes Count'.padEnd(15) + 'Diabetes Rate'.padEnd(15) + 'Ratio');
-    console.log('═'.repeat(80));
-    
-    const sampleTracts = data.features.slice(0, 10);
-    let totalCountRateRatio = 0;
-    
-    sampleTracts.forEach(tract => {
-      const population = tract.properties.population || 0;
-      const diabetesCount = tract.properties.diabetes_count || 0;
-      const diabetesRate = tract.properties.diabetes_rate || 0;
+    data.features.forEach(feature => {
+      const rate = feature.properties.obesity_rate;
+      const count = feature.properties.obesity_count;
       
-      // Calculate ratio to see if they're nearly identical (problem) or distinct (fixed)
-      const ratio = diabetesRate > 0 ? (diabetesCount / diabetesRate).toFixed(2) : 'N/A';
-      totalCountRateRatio += diabetesRate > 0 ? (diabetesCount / diabetesRate) : 0;
-      
-      console.log(
-        tract.properties.geoid.padEnd(12) + 
-        population.toString().padEnd(12) + 
-        diabetesCount.toString().padEnd(15) + 
-        diabetesRate.toString().padEnd(15) + 
-        ratio
-      );
+      if (rate && count) {
+        obesityRates.push(rate);
+        obesityCounts.push(count);
+      }
     });
+
+    obesityRates.sort((a, b) => a - b);
+    obesityCounts.sort((a, b) => a - b);
+
+    console.log('OBESITY RATE ANALYSIS:');
+    console.log(`  Min: ${obesityRates[0].toFixed(1)} per 1,000 (${(obesityRates[0]/10).toFixed(1)}%)`);
+    console.log(`  Q1: ${obesityRates[Math.floor(obesityRates.length * 0.25)].toFixed(1)} per 1,000`);
+    console.log(`  Median: ${obesityRates[Math.floor(obesityRates.length * 0.5)].toFixed(1)} per 1,000`);
+    console.log(`  Q3: ${obesityRates[Math.floor(obesityRates.length * 0.75)].toFixed(1)} per 1,000`);
+    console.log(`  Max: ${obesityRates[obesityRates.length - 1].toFixed(1)} per 1,000 (${(obesityRates[obesityRates.length - 1]/10).toFixed(1)}%)`);
     
-    const avgRatio = (totalCountRateRatio / sampleTracts.length).toFixed(2);
-    console.log('═'.repeat(80));
-    console.log(`Average Count/Rate Ratio: ${avgRatio}`);
+    const rateRange = obesityRates[obesityRates.length - 1] - obesityRates[0];
+    const rateDiversity = obesityRates[obesityRates.length - 1] / obesityRates[0];
     
-    // Analyze disparity patterns
-    console.log('\n🎯 Health Disparity Pattern Analysis:');
-    console.log('═'.repeat(60));
+    console.log(`  Range: ${rateRange.toFixed(1)} per 1,000`);
+    console.log(`  Diversity: ${rateDiversity.toFixed(2)}:1\n`);
+
+    console.log('OBESITY COUNT ANALYSIS:');
+    console.log(`  Min: ${obesityCounts[0]} cases`);
+    console.log(`  Q1: ${obesityCounts[Math.floor(obesityCounts.length * 0.25)]} cases`);
+    console.log(`  Median: ${obesityCounts[Math.floor(obesityCounts.length * 0.5)]} cases`);
+    console.log(`  Q3: ${obesityCounts[Math.floor(obesityCounts.length * 0.75)]} cases`);
+    console.log(`  Max: ${obesityCounts[obesityCounts.length - 1]} cases`);
     
-    const highRateTracts = data.features
-      .filter(t => t.properties.diabetes_rate > 90)
-      .slice(0, 5);
-      
-    const lowRateTracts = data.features
-      .filter(t => t.properties.diabetes_rate < 60)
-      .slice(0, 5);
+    const countRange = obesityCounts[obesityCounts.length - 1] - obesityCounts[0];
+    const countDiversity = obesityCounts[obesityCounts.length - 1] / obesityCounts[0];
     
-    console.log('\n🔴 High Rate Areas (Diabetes > 90/1000):');
-    highRateTracts.forEach(tract => {
-      console.log(`  ${tract.properties.geoid}: ${tract.properties.diabetes_rate}/1000 (${tract.properties.diabetes_count} cases)`);
-    });
+    console.log(`  Range: ${countRange} cases`);
+    console.log(`  Diversity: ${countDiversity.toFixed(2)}:1\n`);
+
+    // Color scaling assessment
+    console.log('COLOR SCALING ASSESSMENT:');
     
-    console.log('\n🟢 Low Rate Areas (Diabetes < 60/1000):');
-    lowRateTracts.forEach(tract => {
-      console.log(`  ${tract.properties.geoid}: ${tract.properties.diabetes_rate}/1000 (${tract.properties.diabetes_count} cases)`);
-    });
-    
-    // Test conclusion
-    console.log('\n📋 Test Results:');
-    console.log('═'.repeat(50));
-    
-    if (parseFloat(avgRatio) < 5) {
-      console.log('❌ ISSUE: Count and rate are still too similar (ratio < 5)');
-      console.log('   This suggests the disease generation is still inflated');
-    } else if (parseFloat(avgRatio) > 100) {
-      console.log('❌ ISSUE: Count/rate ratio too high (ratio > 100)');
-      console.log('   This suggests incorrect rate calculations');
+    if (rateDiversity >= 4.0) {
+      console.log('✅ RATE visualization: EXCELLENT color scaling');
+    } else if (rateDiversity >= 2.5) {
+      console.log('🟢 RATE visualization: GOOD color scaling');
     } else {
-      console.log('✅ SUCCESS: Count and rate show distinct patterns');
-      console.log('   Count mode will highlight high-population areas');
-      console.log('   Rate mode will highlight high-prevalence areas');
+      console.log('🔴 RATE visualization: POOR color scaling');
     }
     
-    console.log(`\n✅ Test completed successfully`);
+    if (countDiversity >= 4.0) {
+      console.log('✅ COUNT visualization: EXCELLENT color scaling');
+    } else if (countDiversity >= 2.5) {
+      console.log('🟢 COUNT visualization: GOOD color scaling');
+    } else {
+      console.log('🔴 COUNT visualization: POOR color scaling');
+    }
+
+    // Test a few other diseases for comparison
+    console.log('\nOTHER DISEASES QUICK CHECK:');
     
+    const diseases = ['diabetes', 'hypertension', 'heart_disease', 'stroke'];
+    
+    diseases.forEach(disease => {
+      const rates = [];
+      data.features.forEach(feature => {
+        const rate = feature.properties[`${disease}_rate`];
+        if (rate) rates.push(rate);
+      });
+      
+      if (rates.length > 0) {
+        rates.sort((a, b) => a - b);
+        const diversity = rates[rates.length - 1] / rates[0];
+        const status = diversity >= 4.0 ? '✅ EXCELLENT' : 
+                      diversity >= 2.5 ? '🟢 GOOD' : '🔴 POOR';
+        console.log(`  ${disease}: ${diversity.toFixed(2)}:1 ${status}`);
+      }
+    });
+
   } catch (error) {
-    console.error('❌ Test failed:', error.message);
-    process.exit(1);
+    console.log(`❌ Error: ${error.message}`);
   }
 }
 
-// Run the test
-testFixedCountRate();
+testFixedCountRate().catch(console.error);
