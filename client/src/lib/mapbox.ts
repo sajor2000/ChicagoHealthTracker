@@ -100,41 +100,139 @@ export function addDataLayer(
       min, q25, median, q75, q90, q95, max
     });
 
-    // Use enhanced color scaling for high-prevalence diseases
-    const isHighPrevalenceDisease = ['hypertension', 'obesity'].includes(selectedDisease);
+    // Disease-specific color gradients based on epidemiological characteristics
+    let colorStops;
     const range = max - min;
     
-    console.log(`Disease: ${selectedDisease}, IsHighPrevalence: ${isHighPrevalenceDisease}, Range: ${range}`);
+    console.log(`Applying disease-specific color gradient for ${selectedDisease}, Range: ${range}`);
     
-    // Always use enhanced scaling for hypertension and obesity to show geographic disparities
-    let colorStops;
-    
-    if (isHighPrevalenceDisease) {
-      // Enhanced scaling using full data range to maximize color contrast
-      const step = range / 6;
-      colorStops = [
-        min, '#16a34a',                    // Green - lowest actual values
-        min + step, '#22c55e',            // Light green
-        min + step * 2, '#65a30d',        // Yellow-green
-        min + step * 3, '#eab308',        // Yellow
-        min + step * 4, '#f97316',        // Orange
-        min + step * 5, '#dc2626',        // Red
-        max, '#7f1d1d'                    // Dark red - highest values
-      ];
-      console.log(`Enhanced color stops for ${selectedDisease}:`, colorStops);
-    } else {
-      // Standard quartile-based scaling for other diseases
-      colorStops = [
-        min, '#16a34a',        // Dark green - lowest values
-        q25, '#22c55e',        // Medium green - 25th percentile
-        median, '#eab308',     // Yellow - median
-        q75, '#f97316',        // Orange - 75th percentile
-        q90, '#dc2626',        // Red - 90th percentile
-        q95, '#b91c1c',        // Dark red - 95th percentile
-        max, '#7f1d1d'         // Very dark red - maximum values
-      ];
-      console.log(`Standard color stops for ${selectedDisease}:`, colorStops);
+    switch (selectedDisease) {
+      case 'diabetes':
+        // Diabetes: Blue-to-red gradient reflecting metabolic health
+        const diabetesStep = range / 6;
+        colorStops = [
+          min, '#1e40af',                      // Deep blue - excellent control
+          min + diabetesStep, '#3b82f6',       // Blue - good control
+          min + diabetesStep * 2, '#06b6d4',   // Cyan - moderate control
+          min + diabetesStep * 3, '#eab308',   // Yellow - concerning levels
+          min + diabetesStep * 4, '#f97316',   // Orange - poor control
+          min + diabetesStep * 5, '#dc2626',   // Red - dangerous levels
+          max, '#7f1d1d'                       // Dark red - crisis levels
+        ];
+        break;
+        
+      case 'hypertension':
+        // Hypertension: Green-to-red gradient reflecting blood pressure ranges
+        const htnStep = range / 6;
+        colorStops = [
+          min, '#059669',                      // Green - normal BP
+          min + htnStep, '#10b981',           // Light green - elevated
+          min + htnStep * 2, '#84cc16',       // Yellow-green - pre-hypertension
+          min + htnStep * 3, '#eab308',       // Yellow - stage 1 HTN
+          min + htnStep * 4, '#f97316',       // Orange - stage 2 HTN
+          min + htnStep * 5, '#dc2626',       // Red - severe HTN
+          max, '#991b1b'                      // Dark red - hypertensive crisis
+        ];
+        break;
+        
+      case 'heart_disease':
+        // Heart disease: Purple-to-red gradient reflecting cardiac risk
+        const hdStep = range / 6;
+        colorStops = [
+          min, '#7c3aed',                     // Purple - low cardiac risk
+          min + hdStep, '#a855f7',           // Light purple - mild risk
+          min + hdStep * 2, '#ec4899',       // Pink - moderate risk
+          min + hdStep * 3, '#f97316',       // Orange - elevated risk
+          min + hdStep * 4, '#dc2626',       // Red - high risk
+          min + hdStep * 5, '#b91c1c',       // Dark red - very high risk
+          max, '#7f1d1d'                     // Very dark red - critical risk
+        ];
+        break;
+        
+      case 'stroke':
+        // Stroke: Teal-to-red gradient reflecting stroke risk
+        const strokeStep = range / 6;
+        colorStops = [
+          min, '#0d9488',                     // Teal - low stroke risk
+          min + strokeStep, '#14b8a6',       // Light teal - mild risk
+          min + strokeStep * 2, '#22d3ee',   // Cyan - moderate risk
+          min + strokeStep * 3, '#fbbf24',   // Amber - elevated risk
+          min + strokeStep * 4, '#f97316',   // Orange - high risk
+          min + strokeStep * 5, '#dc2626',   // Red - very high risk
+          max, '#7f1d1d'                     // Dark red - extreme risk
+        ];
+        break;
+        
+      case 'asthma':
+        // Asthma: Light blue-to-red gradient reflecting respiratory health
+        const asthmaStep = range / 6;
+        colorStops = [
+          min, '#0ea5e9',                     // Sky blue - clear breathing
+          min + asthmaStep, '#38bdf8',       // Light blue - mild symptoms
+          min + asthmaStep * 2, '#67e8f9',   // Cyan - moderate symptoms
+          min + asthmaStep * 3, '#fde047',   // Yellow - concerning symptoms
+          min + asthmaStep * 4, '#fb923c',   // Orange - severe symptoms
+          min + asthmaStep * 5, '#dc2626',   // Red - dangerous symptoms
+          max, '#7f1d1d'                     // Dark red - life-threatening
+        ];
+        break;
+        
+      case 'copd':
+        // COPD: Gray-to-red gradient reflecting lung function decline
+        const copdStep = range / 6;
+        colorStops = [
+          min, '#64748b',                     // Gray - mild limitation
+          min + copdStep, '#94a3b8',         // Light gray - moderate limitation
+          min + copdStep * 2, '#cbd5e1',     // Very light gray - significant limitation
+          min + copdStep * 3, '#fbbf24',     // Amber - severe limitation
+          min + copdStep * 4, '#f97316',     // Orange - very severe
+          min + copdStep * 5, '#dc2626',     // Red - end-stage
+          max, '#7f1d1d'                     // Dark red - critical
+        ];
+        break;
+        
+      case 'obesity':
+        // Obesity: Orange-to-red gradient reflecting BMI categories
+        const obesityStep = range / 6;
+        colorStops = [
+          min, '#22c55e',                     // Green - normal weight
+          min + obesityStep, '#84cc16',      // Yellow-green - overweight
+          min + obesityStep * 2, '#eab308',  // Yellow - obese class I
+          min + obesityStep * 3, '#f97316',  // Orange - obese class II
+          min + obesityStep * 4, '#dc2626',  // Red - obese class III
+          min + obesityStep * 5, '#b91c1c',  // Dark red - morbidly obese
+          max, '#7f1d1d'                     // Very dark red - super obese
+        ];
+        break;
+        
+      case 'mental_health':
+        // Mental health: Indigo-to-red gradient reflecting psychological distress
+        const mhStep = range / 6;
+        colorStops = [
+          min, '#4338ca',                     // Indigo - good mental health
+          min + mhStep, '#6366f1',           // Light indigo - mild stress
+          min + mhStep * 2, '#8b5cf6',       // Purple - moderate distress
+          min + mhStep * 3, '#ec4899',       // Pink - significant distress
+          min + mhStep * 4, '#f97316',       // Orange - severe distress
+          min + mhStep * 5, '#dc2626',       // Red - crisis level
+          max, '#7f1d1d'                     // Dark red - emergency
+        ];
+        break;
+        
+      default:
+        // Fallback: Standard green-to-red gradient
+        colorStops = [
+          min, '#16a34a',        // Dark green - lowest values
+          q25, '#22c55e',        // Medium green - 25th percentile
+          median, '#eab308',     // Yellow - median
+          q75, '#f97316',        // Orange - 75th percentile
+          q90, '#dc2626',        // Red - 90th percentile
+          q95, '#b91c1c',        // Dark red - 95th percentile
+          max, '#7f1d1d'         // Very dark red - maximum values
+        ];
     }
+    
+    console.log(`Disease-specific color stops for ${selectedDisease}:`, colorStops);
 
     // Add fill layer with adaptive color scaling
     map.addLayer({
@@ -157,7 +255,7 @@ export function addDataLayer(
       }
     });
     
-    console.log(`✅ Added ${layerId}-fill layer with ${isHighPrevalenceDisease ? 'enhanced' : 'standard'} color scaling`);
+    console.log(`✅ Added ${layerId}-fill layer with disease-specific color scaling for ${selectedDisease}`);
 
     // Determine border style based on geographic level
     const getBorderStyle = (layerId: string) => {
