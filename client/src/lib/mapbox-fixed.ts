@@ -232,11 +232,14 @@ export function addDataLayer(
 }
 
 function cleanupLayers(map: mapboxgl.Map, layerId: string) {
-  // Clean up ALL existing layers from all views to prevent interference
+  // Only clean up OTHER view layers, not the current one (fixes production flickering)
   const allViewTypes = ['census-data', 'community-data', 'wards-data'];
   const layerSuffixes = ['-fill', '-line'];
   
   allViewTypes.forEach(viewType => {
+    // Skip cleanup for the layer we're about to add
+    if (viewType === layerId) return;
+    
     layerSuffixes.forEach(suffix => {
       const fullLayerId = `${viewType}${suffix}`;
       if (map.getLayer(fullLayerId)) {
@@ -248,7 +251,7 @@ function cleanupLayers(map: mapboxgl.Map, layerId: string) {
       }
     });
     
-    // Remove sources
+    // Remove sources for other views only
     if (map.getSource(viewType)) {
       try {
         map.removeSource(viewType);
@@ -257,6 +260,8 @@ function cleanupLayers(map: mapboxgl.Map, layerId: string) {
       }
     }
   });
+  
+  console.log(`🧹 Production-safe cleanup: preserved ${layerId}, removed others`);
 }
 
 export function createTooltip(): mapboxgl.Popup {
