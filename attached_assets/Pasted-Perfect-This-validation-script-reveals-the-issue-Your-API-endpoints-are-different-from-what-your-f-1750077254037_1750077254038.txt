@@ -1,0 +1,85 @@
+Perfect! This validation script reveals the issue. Your API endpoints are different from what your frontend is calling!
+🎯 The Problem
+Your frontend is calling:
+/api/data/census  ❌ (returns 404)
+But your backend actually serves:
+/api/chicago-areas/census  ✅ (correct endpoint)
+🔧 The Fix
+Option 1: Update Your Frontend (Recommended)
+Find where your map loads data and change the URL:
+javascript// In your frontend map code, find something like:
+const response = await fetch('/api/data/census');  // ❌ Wrong
+
+// Change it to:
+const response = await fetch('/api/chicago-areas/census');  // ✅ Correct
+Option 2: Add Route Aliases in Backend
+In your routes.ts, add these aliases:
+javascript// Add route aliases for backward compatibility
+app.get('/api/data/:viewMode', async (req, res) => {
+  const { viewMode } = req.params;
+  
+  // Redirect to the correct endpoints
+  const redirectMap = {
+    'census': '/api/chicago-areas/census',
+    'community': '/api/chicago-areas/community',
+    'wards': '/api/chicago-areas/wards'
+  };
+  
+  if (redirectMap[viewMode]) {
+    // Option A: Redirect
+    return res.redirect(redirectMap[viewMode]);
+    
+    // Option B: Proxy the request
+    const response = await fetch(`${req.protocol}://${req.get('host')}${redirectMap[viewMode]}`);
+    const data = await response.json();
+    return res.json(data);
+  }
+  
+  return res.status(404).json({ 
+    error: `Data not available for view mode: ${viewMode}` 
+  });
+});
+🔍 Quick Debug
+
+Test the correct endpoint directly:
+https://your-app.replit.app/api/chicago-areas/census
+
+Run the validation script:
+bashnode validation-script.js
+
+Check your frontend code for these patterns:
+javascript// Search for any of these:
+fetch('/api/data/
+fetch(`/api/data/
+fetch("/api/data/
+axios.get('/api/data/
+
+
+📝 Frontend Fix Example
+If your frontend has something like:
+javascript// map-data-loader.js
+const loadMapData = async (viewMode) => {
+  try {
+    const response = await fetch(`/api/data/${viewMode}`);  // ❌
+    // ...
+  } catch (error) {
+    console.error('Failed to load map data:', error);
+  }
+};
+Change it to:
+javascript// map-data-loader.js
+const loadMapData = async (viewMode) => {
+  try {
+    const response = await fetch(`/api/chicago-areas/${viewMode}`);  // ✅
+    // ...
+  } catch (error) {
+    console.error('Failed to load map data:', error);
+  }
+};
+🚀 Immediate Action
+
+Search your frontend code for /api/data/ and replace with /api/chicago-areas/
+Or add the route alias in your backend
+Redeploy and test
+
+The good news is your backend is working perfectly - it's just a simple URL mismatch! This should fix your 404 error immediately.RetryClaude can make mistakes. Please double-check responses.
