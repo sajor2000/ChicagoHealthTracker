@@ -44,11 +44,22 @@ export default function ProductionReadinessChecker() {
   const [diagnosticReport, setDiagnosticReport] = useState<DiagnosticReport | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
 
   useEffect(() => {
     // Auto-run diagnostics on mount
     runDiagnostics();
   }, []);
+
+  useEffect(() => {
+    // Auto-hide after 3 seconds if system is healthy
+    if (diagnosticReport && getOverallStatus() === 'healthy') {
+      const timer = setTimeout(() => {
+        setIsVisible(false);
+      }, 3000);
+      return () => clearTimeout(timer);
+    }
+  }, [diagnosticReport]);
 
   const runDiagnostics = async () => {
     setIsRunning(true);
@@ -84,6 +95,10 @@ export default function ProductionReadinessChecker() {
     return null; // Hide if no data and not running
   }
 
+  if (!isVisible) {
+    return null; // Hide when explicitly hidden
+  }
+
   const overallStatus = getOverallStatus();
   const configValidation = validateDeploymentConfig();
 
@@ -100,13 +115,23 @@ export default function ProductionReadinessChecker() {
               Production Status
             </span>
           </div>
-          <button
-            onClick={() => setShowDetails(!showDetails)}
-            className="text-xs px-2 py-1 rounded hover:bg-gray-100"
-            style={{ color: 'var(--text-secondary)' }}
-          >
-            {showDetails ? 'Hide' : 'Details'}
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setShowDetails(!showDetails)}
+              className="text-xs px-2 py-1 rounded hover:bg-gray-100"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              {showDetails ? 'Hide' : 'Details'}
+            </button>
+            <button
+              onClick={() => setIsVisible(false)}
+              className="text-xs px-2 py-1 rounded hover:bg-gray-100"
+              style={{ color: 'var(--text-secondary)' }}
+              title="Close"
+            >
+              ×
+            </button>
+          </div>
         </div>
 
         {isRunning && (
