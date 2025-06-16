@@ -125,8 +125,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const validation = await validateCensusGeoIds(combinedFeatures);
     console.log(`Census GEOID validation complete - ${validation.authenticity * 100}% authentic`);
     
+    // Filter out non-Chicago areas (water bodies, suburbs outside city limits)
+    const chicagoOnlyFeatures = combinedFeatures.filter((feature: any) => {
+      const props = feature.properties;
+      const geoid = props.GEOID || props.geoid || props.id;
+      
+      // Exclude water bodies and areas outside Chicago city limits
+      if (props.NAME && (props.NAME.includes('Water') || props.NAME.includes('Lake'))) {
+        return false;
+      }
+      
+      // Only include Cook County tracts (GEOID starts with 17031)
+      if (geoid && !geoid.toString().startsWith('17031')) {
+        return false;
+      }
+      
+      return true;
+    });
+    
+    console.log(`Filtered to ${chicagoOnlyFeatures.length} Chicago-only census tracts (removed ${combinedFeatures.length - chicagoOnlyFeatures.length} non-Chicago areas)`);
+
     // Process census tracts with health data (base authentic data layer)
-    processedCensusTracts = combinedFeatures.map((feature: any, index: number) => {
+    processedCensusTracts = chicagoOnlyFeatures.map((feature: any, index: number) => {
       try {
         // Extract and format Census GEOID to match 2020 Census API format (17031XXXXXX)
         const rawGeoid = feature.properties.GEOID || feature.properties.geoid || feature.properties.id;
