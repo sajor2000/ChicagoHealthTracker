@@ -35,21 +35,37 @@ export default function MapContainer({
 
   // Initialize map
   useEffect(() => {
-    if (!mapContainer.current) return;
+    if (!mapContainer.current || !hasMapboxToken) return;
 
     try {
       const containerElement = mapContainer.current;
-      containerElement.id = 'map';
+      
+      // Ensure container has proper dimensions
+      containerElement.style.width = '100%';
+      containerElement.style.height = '100%';
+      containerElement.style.position = 'relative';
       
       // Clear any existing content
       containerElement.innerHTML = '';
       
-      map.current = createMap('map');
+      // Create map directly on the container
+      map.current = createMap(containerElement);
       tooltip.current = createTooltip();
 
       // Add map load event listener
       map.current.on('load', () => {
         console.log('Mapbox map loaded successfully');
+        setMapStyleLoaded(true);
+        // Force resize to ensure proper rendering
+        setTimeout(() => {
+          if (map.current) {
+            map.current.resize();
+          }
+        }, 100);
+      });
+
+      map.current.on('style.load', () => {
+        console.log('Mapbox style loaded successfully');
         setMapStyleLoaded(true);
       });
 
@@ -72,7 +88,7 @@ export default function MapContainer({
       console.error('Error initializing map:', error);
       setUseMapboxFallback(true);
     }
-  }, []);
+  }, [hasMapboxToken]);
 
   // Clear all geographic layers to ensure only current view is shown
   const clearAllGeographicLayers = () => {

@@ -6,7 +6,20 @@ import { getMapboxToken } from './enhanced-deployment-config';
 const mapboxToken = getMapboxToken();
 if (mapboxToken) {
   mapboxgl.accessToken = mapboxToken;
-  console.log('Mapbox initialized with production-ready token');
+  console.log('Mapbox initialized with token:', mapboxToken.substring(0, 8) + '...');
+  
+  // Test token validity immediately
+  fetch(`https://api.mapbox.com/styles/v1/mapbox/dark-v11?access_token=${mapboxToken}`)
+    .then(response => {
+      if (response.ok) {
+        console.log('Mapbox token validation: SUCCESS');
+      } else {
+        console.error('Mapbox token validation failed:', response.status, response.statusText);
+      }
+    })
+    .catch(error => {
+      console.error('Mapbox token test failed:', error);
+    });
 } else {
   console.error('Mapbox token not found - check environment configuration');
 }
@@ -19,11 +32,34 @@ export const mapConfig = {
   maxZoom: 16,
 };
 
-export function createMap(container: string): mapboxgl.Map {
-  return new mapboxgl.Map({
+export function createMap(container: string | HTMLElement): mapboxgl.Map {
+  console.log('Creating Mapbox map with config:', mapConfig);
+  console.log('Current Mapbox token:', mapboxgl.accessToken ? mapboxgl.accessToken.substring(0, 8) + '...' : 'MISSING');
+  
+  const map = new mapboxgl.Map({
     container,
     ...mapConfig,
   });
+
+  // Add comprehensive error handling
+  map.on('error', (e) => {
+    console.error('Mapbox map error:', e);
+    console.error('Error details:', {
+      type: e.type,
+      error: e.error,
+      message: e.error?.message
+    });
+  });
+
+  map.on('load', () => {
+    console.log('Mapbox map loaded successfully');
+  });
+
+  map.on('style.load', () => {
+    console.log('Mapbox style loaded successfully');
+  });
+
+  return map;
 }
 
 export function addDataLayer(
