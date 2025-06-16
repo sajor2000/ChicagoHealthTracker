@@ -64,6 +64,15 @@ try {
   censusDemographics = {};
 }
 
+// Add data loading status tracking
+let dataLoadStatus = {
+  census: 'not-started',
+  community: 'not-started', 
+  wards: 'not-started',
+  timestamp: null as Date | null,
+  error: null as string | null
+};
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Declare data variables at function scope
   var chicagoCensusTractsData: any = null;
@@ -77,9 +86,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Load census tract data from database instead of file processing
   let processedCensusTracts: any[] = [];
 
+  console.log('🔄 Starting census data load...');
+  dataLoadStatus.census = 'loading';
+  
   try {
     const tractPath = path.join(__dirname, 'data', 'chicago-census-tracts.json');
-    const tractData = JSON.parse(fs.readFileSync(tractPath, 'utf8'));
+    console.log('Looking for census data at:', tractPath);
+    console.log('File exists:', fs.existsSync(tractPath));
+    
+    // Check alternative paths for Replit/production
+    const altPaths = [
+      path.join(process.cwd(), 'server/data/chicago-census-tracts.json'),
+      path.join(__dirname, '../data/chicago-census-tracts.json'),
+      '/app/server/data/chicago-census-tracts.json'
+    ];
+    
+    for (const p of altPaths) {
+      console.log(`Checking ${p}: ${fs.existsSync(p)}`);
+    }
+    
+    let finalPath = tractPath;
+    if (!fs.existsSync(tractPath)) {
+      const workingPath = altPaths.find(p => fs.existsSync(p));
+      if (workingPath) {
+        finalPath = workingPath;
+        console.log(`Using alternative path: ${finalPath}`);
+      } else {
+        throw new Error(`Census data file not found. Checked: ${[tractPath, ...altPaths].join(', ')}`);
+      }
+    }
+    
+    const tractData = JSON.parse(fs.readFileSync(finalPath, 'utf8'));
     let combinedFeatures = tractData.features || [];
     console.log(`Loaded authentic Chicago census tracts data: ${combinedFeatures.length} features`);
     
@@ -205,9 +242,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       type: 'FeatureCollection',
       features: processedCensusTracts
     };
-    console.log(`Processed ${chicagoCensusTractsData.features.length} authentic Chicago census tracts with health disparity patterns`);
+    dataLoadStatus.census = 'loaded';
+    dataLoadStatus.timestamp = new Date();
+    console.log(`✅ Processed ${chicagoCensusTractsData.features.length} authentic Chicago census tracts with health disparity patterns`);
   } catch (error) {
-    console.error('Failed to load Chicago census tracts data:', error);
+    dataLoadStatus.census = 'error';
+    dataLoadStatus.error = error instanceof Error ? error.message : String(error);
+    console.error('❌ Failed to load Chicago census tracts data:', error);
   }
 
   // Load authentic Chicago Community Areas data (boundaries only, data aggregated from tracts)
@@ -310,6 +351,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     chicagoWardsData = { type: 'FeatureCollection', features: [] };
   }
 
+  // Debug endpoint for data loading status
+  app.get('/api/debug/status', (req, res) => {
+    res.json({
+      dataLoadStatus,
+      currentTime: new Date(),
+      hasData: {
+        census: !!chicagoCensusTractsData,
+        censusFeatures: chicagoCensusTractsData?.features?.length || 0,
+        community: !!chicagoCommunitiesData,
+        communityFeatures: chicagoCommunitiesData?.features?.length || 0,
+        wards: !!chicagoWardsData,
+        wardsFeatures: chicagoWardsData?.features?.length || 0
+      }
+    });
+  });
+
   // Health check endpoints for production monitoring
   app.get('/api/health-check', (req, res) => {
     res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
@@ -341,6 +398,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { viewMode } = req.params;
       
+      console.log(`🔍 API called for viewMode: ${viewMode}`);
+      console.log(`📊 Data load status:`, dataLoadStatus);
+      
       if (!['census', 'community', 'wards'].includes(viewMode)) {
         return res.status(400).json({ error: 'Invalid view mode. Must be "census", "community", or "wards"' });
       }
@@ -350,17 +410,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       switch (viewMode) {
         case 'census':
           responseData = chicagoCensusTractsData;
+          console.log(`Census data check: exists=${!!chicagoCensusTractsData}, features=${chicagoCensusTractsData?.features?.length || 0}`);
           break;
         case 'community':
           responseData = chicagoCommunitiesData;
+          console.log(`Community data check: exists=${!!chicagoCommunitiesData}, features=${chicagoCommunitiesData?.features?.length || 0}`);
           break;
         case 'wards':
           responseData = chicagoWardsData;
+          console.log(`Wards data check: exists=${!!chicagoWardsData}, features=${chicagoWardsData?.features?.length || 0}`);
           break;
       }
 
-      if (!responseData) {
-        console.error(`Data missing for viewMode: ${viewMode}`, {
+      if (!responseData || !responseData.features || responseData.features.length === 0) {
+        console.error(`❌ Data missing for viewMode: ${viewMode}`, {
+          dataLoadStatus,
           censusExists: !!chicagoCensusTractsData,
           censusFeatures: chicagoCensusTractsData?.features?.length || 0,
           communityExists: !!chicagoCommunitiesData,
@@ -368,9 +432,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
           wardsExists: !!chicagoWardsData,
           wardsFeatures: chicagoWardsData?.features?.length || 0
         });
-        return res.status(404).json({ error: `Data not available for view mode: ${viewMode}` });
+        return res.status(404).json({ 
+          error: `Data not available for view mode: ${viewMode}`,
+          debug: {
+            status: dataLoadStatus,
+            hasFunction: typeof chicagoCensusTractsData,
+            timestamp: new Date()
+          }
+        });
       }
 
+      console.log(`✅ Returning ${responseData.features.length} features for ${viewMode}`);
       res.json(responseData);
     } catch (error) {
       console.error(`Error serving ${req.params.viewMode} data:`, error);

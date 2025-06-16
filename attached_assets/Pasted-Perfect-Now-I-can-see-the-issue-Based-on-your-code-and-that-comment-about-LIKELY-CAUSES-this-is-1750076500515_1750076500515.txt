@@ -1,0 +1,159 @@
+Perfect! Now I can see the issue. Based on your code and that comment about "LIKELY CAUSES", this is clearly a data loading race condition or initialization failure in production.
+🎯 The Problem
+Your census data isn't loaded when the API endpoint tries to access it. Looking at lines 80-210 (data loading) vs 340-380 (API endpoint), there's likely:
+
+Async loading not awaited properly
+Try/catch swallowing errors during data load
+File path issues in production (server/data/chicago-census-tracts.json)
+
+🔧 Immediate Fixes
+Fix 1: Add Debug Logging
+javascript// At the top of your routes file, add:
+let dataLoadStatus = {
+    census: 'not-started',
+    timestamp: null,
+    error: null
+};
+
+// In your data loading section (around line 80-210):
+export async function loadData() {
+    console.log('🔄 Starting data load...');
+    dataLoadStatus.census = 'loading';
+    
+    try {
+        // Your existing loadAllCensusData call
+        await loadAllCensusData();
+        dataLoadStatus.census = 'loaded';
+        dataLoadStatus.timestamp = new Date();
+        console.log('✅ Census data loaded successfully');
+    } catch (error) {
+        dataLoadStatus.census = 'error';
+        dataLoadStatus.error = error.message;
+        console.error('❌ Failed to load census data:', error);
+        // DON'T swallow the error - let it bubble up!
+        throw error;
+    }
+}
+
+// Add a debug endpoint:
+app.get('/api/debug/status', (req, res) => {
+    res.json({
+        dataLoadStatus,
+        currentTime: new Date(),
+        hasData: !!getAllCensusTractData()
+    });
+});
+Fix 2: Ensure Data Loads Before Server Starts
+javascript// In your server startup (where Express starts):
+async function startServer() {
+    try {
+        console.log('Loading data before starting server...');
+        await loadData(); // Make sure this completes!
+        
+        app.listen(PORT, () => {
+            console.log(`Server running on port ${PORT}`);
+        });
+    } catch (error) {
+        console.error('Failed to start server:', error);
+        process.exit(1);
+    }
+}
+Fix 3: Fix the Census Endpoint (around line 340-380)
+javascriptapp.get('/api/data/:viewMode', async (req, res) => {
+    const { viewMode } = req.params;
+    
+    // Add immediate debugging
+    console.log(`API called for viewMode: ${viewMode}`);
+    
+    if (viewMode === 'census') {
+        // Check if data exists
+        const censusData = getAllCensusTractData();
+        
+        if (!censusData) {
+            console.error('Census data is null/undefined');
+            return res.status(404).json({ 
+                error: `Data not available for view mode: ${viewMode}`,
+                debug: {
+                    status: dataLoadStatus,
+                    hasFunction: typeof getAllCensusTractData === 'function'
+                }
+            });
+        }
+        
+        return res.json(censusData);
+    }
+    
+    // Handle other view modes...
+});
+Fix 4: Check File Path
+javascript// In your loadAllCensusData function, add:
+const dataPath = path.join(__dirname, 'data', 'chicago-census-tracts.json');
+console.log('Looking for census data at:', dataPath);
+console.log('File exists:', fs.existsSync(dataPath));
+
+// For Replit, also try:
+const altPaths = [
+    path.join(process.cwd(), 'server/data/chicago-census-tracts.json'),
+    path.join(__dirname, '../data/chicago-census-tracts.json'),
+    '/app/server/data/chicago-census-tracts.json'
+];
+
+for (const p of altPaths) {
+    console.log(`Checking ${p}: ${fs.existsSync(p)}`);
+}
+Fix 5: Emergency In-Memory Fix
+If file loading is the issue:
+javascript// At the top of routes.ts:
+let cachedCensusData = null;
+
+// In your initialization:
+try {
+    // Try to load from file
+    const dataPath = path.join(__dirname, 'data', 'chicago-census-tracts.json');
+    cachedCensusData = JSON.parse(fs.readFileSync(dataPath, 'utf8'));
+} catch (error) {
+    console.error('Failed to load census file:', error);
+    // Fallback: Load from database
+    cachedCensusData = await getAllCensusTractData();
+}
+
+// In your API endpoint:
+if (viewMode === 'census') {
+    if (!cachedCensusData) {
+        // Try loading again
+        cachedCensusData = await getAllCensusTractData();
+    }
+    
+    if (!cachedCensusData) {
+        return res.status(404).json({ error: 'Census data not available' });
+    }
+    
+    return res.json(cachedCensusData);
+}
+🚀 Quick Actions
+
+Deploy with verbose logging:
+javascript// Add at the very top of routes.ts:
+console.log('Routes.ts loaded at:', new Date());
+console.log('Current directory:', __dirname);
+console.log('Process directory:', process.cwd());
+
+Check Replit logs for any startup errors
+Visit these URLs after deployment:
+
+/api/debug/status - Check data load status
+/api/data/census - See the actual error with debug info
+
+
+Verify file exists in Replit console:
+bashls -la server/data/
+cat server/data/chicago-census-tracts.json | head -n 5
+
+
+The key issue is that getAllCensusTractData() is returning null/undefined when your API is called. This means either:
+
+Data hasn't loaded yet (race condition)
+Data loading failed silently
+The file doesn't exist in production
+
+Share the results from the debug endpoint and we'll nail down the exact cause!RetryClaude can make mistakes. Please double-check responses.Researchbeta Opus 4
