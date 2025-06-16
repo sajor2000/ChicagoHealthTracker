@@ -47,10 +47,19 @@ export function addDataLayer(
         return;
       }
 
-      // Critical deployment fix: Ensure map style is fully loaded
+      // Production deployment fix: Ensure map style is fully loaded
       if (!map.loaded() || !map.isStyleLoaded()) {
-        console.log('Deployment fix: Map style not ready, waiting...');
-        setTimeout(attemptAddLayer, isDeploymentEnvironment() ? 800 : 200);
+        console.log('Production fix: Map style not ready, waiting for style load...');
+        const retryDelay = isDeploymentEnvironment() ? 1000 : 300;
+        setTimeout(attemptAddLayer, retryDelay);
+        return;
+      }
+
+      // Additional production safety check: verify map container exists
+      const mapContainer = map.getContainer();
+      if (!mapContainer || !mapContainer.offsetWidth || !mapContainer.offsetHeight) {
+        console.log('Production fix: Map container not ready, retrying...');
+        setTimeout(attemptAddLayer, 500);
         return;
       }
 
@@ -233,26 +242,48 @@ export function addDataLayer(
     
     console.log(`Disease-specific color stops for ${selectedDisease}:`, colorStops);
 
-    // Add fill layer with adaptive color scaling
-    map.addLayer({
-      id: `${layerId}-fill`,
-      type: 'fill',
-      source: layerId,
-      paint: {
-        'fill-color': [
-          'case',
-          ['>', ['get', propertyKey], 0],
-          ['interpolate', ['linear'], ['get', propertyKey], ...colorStops],
-          'rgba(107, 114, 128, 0.3)' // Suppressed data color
-        ],
-        'fill-opacity': [
-          'case',
-          ['>', ['get', propertyKey], 0],
-          0.85,  // Higher opacity for valid data
-          0.3    // Lower opacity for suppressed data
-        ]
-      }
-    });
+    // Production-safe layer addition with error handling
+    try {
+      map.addLayer({
+        id: `${layerId}-fill`,
+        type: 'fill',
+        source: layerId,
+        paint: {
+          'fill-color': [
+            'case',
+            ['>', ['get', propertyKey], 0],
+            ['interpolate', ['linear'], ['get', propertyKey], ...colorStops],
+            'rgba(107, 114, 128, 0.3)' // Suppressed data color
+          ],
+          'fill-opacity': [
+            'case',
+            ['>', ['get', propertyKey], 0],
+            0.85,  // Higher opacity for valid data
+            0.3    // Lower opacity for suppressed data
+          ]
+        }
+      });
+      console.log(`✅ Production: Successfully added ${layerId}-fill layer`);
+    } catch (error) {
+      console.error(`❌ Production error adding fill layer:`, error);
+      // Retry with simplified layer configuration
+      setTimeout(() => {
+        try {
+          map.addLayer({
+            id: `${layerId}-fill-simple`,
+            type: 'fill',
+            source: layerId,
+            paint: {
+              'fill-color': colorStops[colorStops.length - 1], // Use maximum color as fallback
+              'fill-opacity': 0.7
+            }
+          });
+          console.log(`✅ Production fallback: Added simplified ${layerId}-fill layer`);
+        } catch (fallbackError) {
+          console.error(`❌ Production fallback failed:`, fallbackError);
+        }
+      }, 200);
+    }
     
     console.log(`✅ Added ${layerId}-fill layer with disease-specific color scaling for ${selectedDisease}`);
 
@@ -270,30 +301,40 @@ export function addDataLayer(
 
     const borderStyle = getBorderStyle(layerId);
 
-    // Add border layer with distinct styling per geographic level
-    map.addLayer({
-      id: `${layerId}-border`,
-      type: 'line',
-      source: layerId,
-      paint: {
-        'line-color': borderStyle.color,
-        'line-width': borderStyle.width,
-        'line-opacity': borderStyle.opacity
-      }
-    });
+    // Production-safe border layer addition
+    try {
+      map.addLayer({
+        id: `${layerId}-border`,
+        type: 'line',
+        source: layerId,
+        paint: {
+          'line-color': borderStyle.color,
+          'line-width': borderStyle.width,
+          'line-opacity': borderStyle.opacity
+        }
+      });
+      console.log(`✅ Production: Successfully added ${layerId}-border layer`);
+    } catch (error) {
+      console.error(`❌ Production error adding border layer:`, error);
+    }
 
-    // Add hover layer
-    map.addLayer({
-      id: `${layerId}-hover`,
-      type: 'line',
-      source: layerId,
-      paint: {
-        'line-color': '#ffffff',
-        'line-width': 2,
-        'line-opacity': 0
-      },
-      filter: ['==', ['get', 'id'], '']
-    });
+    // Production-safe hover layer addition
+    try {
+      map.addLayer({
+        id: `${layerId}-hover`,
+        type: 'line',
+        source: layerId,
+        paint: {
+          'line-color': '#ffffff',
+          'line-width': 2,
+          'line-opacity': 0
+        },
+        filter: ['==', ['get', 'id'], '']
+      });
+      console.log(`✅ Production: Successfully added ${layerId}-hover layer`);
+    } catch (error) {
+      console.error(`❌ Production error adding hover layer:`, error);
+    }
 
     // Determine if this is community view for label sizing
     const isCommunityView = layerId.includes('community');
