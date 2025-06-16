@@ -216,11 +216,24 @@ export default function MapContainer({
       setHoveredFeatureId(null);
     }
 
-    // Ensure map controls remain interactive
-    map.current.dragPan.enable();
-    map.current.scrollZoom.enable();
-    map.current.boxZoom.enable();
-    map.current.doubleClickZoom.enable();
+    // Force enable ALL map controls to ensure zoom works
+    setTimeout(() => {
+      if (map.current) {
+        map.current.dragPan.enable();
+        map.current.scrollZoom.enable();
+        map.current.boxZoom.enable();
+        map.current.doubleClickZoom.enable();
+        map.current.touchZoomRotate.enable();
+        map.current.keyboard.enable();
+        
+        // Ensure canvas is interactive
+        const canvas = map.current.getCanvas();
+        canvas.style.pointerEvents = 'auto';
+        canvas.style.touchAction = 'none';
+        
+        console.log(`🎮 All map controls enabled for ${layerId}`);
+      }
+    }, 100);
 
     // Mouse enter event
     map.current.on('mouseenter', fillLayerId, (e) => {
@@ -282,7 +295,7 @@ export default function MapContainer({
       tooltip.current.remove();
     });
 
-    // Click event
+    // Click event for area selection AND zooming
     map.current.on('click', fillLayerId, (e) => {
       if (!map.current || !e.features?.length) return;
 
@@ -297,6 +310,17 @@ export default function MapContainer({
         }
       }
     });
+
+    // Final verification that all zoom controls are enabled
+    setTimeout(() => {
+      if (map.current && map.current.scrollZoom && map.current.doubleClickZoom) {
+        map.current.scrollZoom.enable();
+        map.current.doubleClickZoom.enable();
+        map.current.boxZoom.enable();
+        map.current.touchZoomRotate.enable();
+        console.log(`🔄 Zoom controls verified and enabled for ${layerId}`);
+      }
+    }, 200);
   };
 
   if (error) {
