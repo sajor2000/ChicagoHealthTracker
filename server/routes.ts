@@ -360,6 +360,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       if (!responseData) {
+        console.error(`Data missing for viewMode: ${viewMode}`, {
+          censusExists: !!chicagoCensusTractsData,
+          censusFeatures: chicagoCensusTractsData?.features?.length || 0,
+          communityExists: !!chicagoCommunitiesData,
+          communityFeatures: chicagoCommunitiesData?.features?.length || 0,
+          wardsExists: !!chicagoWardsData,
+          wardsFeatures: chicagoWardsData?.features?.length || 0
+        });
         return res.status(404).json({ error: `Data not available for view mode: ${viewMode}` });
       }
 

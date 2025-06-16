@@ -1,0 +1,160 @@
+Excellent! This error message reveals the exact issue. This is **not a Mapbox problem** - it's your application's data endpoint returning a 404.
+
+## 🎯 **The Problem**
+
+Your app is trying to load census data from an API endpoint that returns:
+```json
+{"error": "Data not available for view mode: census"}
+```
+
+This means your data backend/API isn't serving the census data in production.
+
+## 🔍 **Diagnosis**
+
+### 1. **Check Your Data Loading Code**
+Look for something like:
+```javascript
+// Your app is probably doing something like:
+const loadMapData = async (viewMode) => {
+    const response = await fetch(`/api/data/${viewMode}`);
+    // or
+    const response = await fetch(`/data/map-data?view=${viewMode}`);
+}
+```
+
+### 2. **Common Causes**
+
+**A. Data files not deployed:**
+```bash
+# Your local structure might have:
+/data/census-tracts.json
+/data/community-areas.json
+/data/wards.json
+
+# But these aren't in production
+```
+
+**B. API route not configured:**
+```javascript
+// If using Express/Node backend:
+app.get('/api/data/:viewMode', (req, res) => {
+    // This route might not be deployed
+});
+```
+
+**C. Environment-specific paths:**
+```javascript
+// Development might use:
+const DATA_PATH = './data/';
+
+// But production needs:
+const DATA_PATH = process.env.NODE_ENV === 'production' 
+    ? '/app/data/' 
+    : './data/';
+```
+
+## 🛠️ **Solutions**
+
+### Solution 1: **Check if data files exist in production**
+```bash
+# In your Replit shell, check:
+ls -la data/
+# or
+ls -la public/data/
+# or
+find . -name "*.json" -type f
+```
+
+### Solution 2: **Update your data loading logic**
+```javascript
+const loadCensusData = async () => {
+    try {
+        // Try multiple paths:
+        const paths = [
+            '/data/census-tracts.json',
+            './data/census-tracts.json',
+            '/public/data/census-tracts.json',
+            `${window.location.origin}/data/census-tracts.json`
+        ];
+        
+        for (const path of paths) {
+            try {
+                const response = await fetch(path);
+                if (response.ok) {
+                    console.log('Found data at:', path);
+                    return await response.json();
+                }
+            } catch (e) {
+                console.log('Failed at path:', path);
+            }
+        }
+        throw new Error('No valid data path found');
+    } catch (error) {
+        console.error('Failed to load census data:', error);
+    }
+};
+```
+
+### Solution 3: **For Replit deployment**
+Add a `replit.nix` or ensure your `.replit` file includes:
+```toml
+[deployment]
+include = ["data/**/*", "public/**/*"]
+```
+
+### Solution 4: **Static file serving**
+If using Express:
+```javascript
+// Make sure you're serving static files in production:
+app.use('/data', express.static(path.join(__dirname, 'data')));
+```
+
+### Solution 5: **Use public directory**
+Move your data files to the public directory:
+```
+public/
+  └── data/
+      ├── census-tracts.json
+      ├── community-areas.json
+      └── wards.json
+```
+
+Then load with:
+```javascript
+fetch('/data/census-tracts.json')
+```
+
+## 📋 **Quick Fix Checklist**
+
+1. **Find where your data files are stored locally**
+2. **Check if they're included in your build/deployment**
+3. **Update the fetch URLs to match production structure**
+4. **Ensure static file serving is configured**
+
+## 🚀 **Immediate Actions**
+
+1. **In Replit Console**, run:
+   ```bash
+   find . -name "census*.json" -type f 2>/dev/null
+   ```
+
+2. **Check your build output**:
+   Does it copy data files to the production build?
+
+3. **Try accessing directly**:
+   ```
+   https://your-app.replit.app/data/census-tracts.json
+   ```
+
+4. **Look for the API endpoint**:
+   Search your code for where this error message is defined:
+   ```
+   "Data not available for view mode"
+   ```
+
+**Can you share:**
+1. How you're loading the census data (the fetch code)?
+2. Where your JSON data files are located in your project?
+3. Whether you have a backend API or just static files?
+
+This will help pinpoint the exact fix needed!

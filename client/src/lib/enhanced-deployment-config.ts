@@ -46,13 +46,8 @@ class DeploymentManager {
   }
 
   private resolveApiBaseUrl(origin: string, environment: string): string {
-    // For production and preview, use the same origin
-    if (environment === 'production' || environment === 'preview') {
-      return origin;
-    }
-    
-    // For development, default to localhost
-    return 'http://localhost:5000';
+    // For all environments, use the current origin to avoid CORS issues
+    return origin;
   }
 
   private resolveMapboxToken(): string | null {
