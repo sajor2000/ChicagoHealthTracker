@@ -79,9 +79,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   var chicagoCommunitiesData: any = { type: 'FeatureCollection', features: [] };
   var chicagoWardsData: any = { type: 'FeatureCollection', features: [] };
 
-  // Initialize database with authentic 2020 Census data
-  console.log('Initializing database with authentic 2020 Census data...');
-  // await loadAllCensusData(); // Temporarily disabled for demographics aggregation fix
+  try {
+    // Initialize database with authentic 2020 Census data
+    console.log('Initializing database with authentic 2020 Census data...');
+    // await loadAllCensusData(); // Temporarily disabled for demographics aggregation fix
   
   // Load census tract data from database instead of file processing
   let processedCensusTracts: any[] = [];
@@ -349,6 +350,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     console.error('Failed to load and aggregate Chicago wards data:', error);
     // Ensure chicagoWardsData is properly initialized even on error
     chicagoWardsData = { type: 'FeatureCollection', features: [] };
+  }
+
+  } catch (error) {
+    console.error('❌ Fatal error during data initialization:', error);
+    // Set minimal error state to allow server to start
+    chicagoCensusTractsData = { type: 'FeatureCollection', features: [] };
+    chicagoCommunitiesData = { type: 'FeatureCollection', features: [] };
+    chicagoWardsData = { type: 'FeatureCollection', features: [] };
+    dataLoadStatus.error = error instanceof Error ? error.message : String(error);
   }
 
   // Debug endpoint for data loading status
