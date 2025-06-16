@@ -159,10 +159,10 @@ export function addDataLayer(
             'interpolate',
             ['linear'],
             ['get', propertyKey],
-            visualizationMode === 'count' ? min : 30, '#16a34a',    // Dark green
-            visualizationMode === 'count' ? q25 : 128, '#eab308',   // Yellow 
-            visualizationMode === 'count' ? q75 : 176, '#f97316',   // Orange
-            visualizationMode === 'count' ? max * 0.8 : 237, '#dc2626'  // Red
+            min, '#16a34a',    // Dark green - use actual data min
+            q25, '#eab308',    // Yellow - use actual data q25
+            q75, '#f97316',    // Orange - use actual data q75
+            max, '#dc2626'     // Red - use actual data max
           ],
           'fill-opacity': 0.8
         }
