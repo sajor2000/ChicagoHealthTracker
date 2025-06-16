@@ -4,6 +4,9 @@ import { createMap, addDataLayer, createTooltip, updateTooltipContent, fitBounds
 import { AreaData, ViewMode, DiseaseType, VisualizationMode } from '@/types';
 import { useChicagoGeoData } from '@/hooks/useMapData';
 import ChicagoDataVisualization from './ChicagoDataVisualization';
+import ProductionReadinessChecker from './ProductionReadinessChecker';
+import { getMapboxToken } from '@/lib/enhanced-deployment-config';
+import { runProductionDiagnostics } from '@/lib/production-diagnostics';
 
 interface MapContainerProps {
   activeView: ViewMode;
@@ -27,8 +30,8 @@ export default function MapContainer({
 
   const { data: geoData, isLoading, error } = useChicagoGeoData(activeView);
 
-  // Check if Mapbox token is available
-  const hasMapboxToken = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN;
+  // Check if Mapbox token is available using enhanced deployment config
+  const hasMapboxToken = getMapboxToken();
 
   // Initialize map
   useEffect(() => {
@@ -314,11 +317,14 @@ export default function MapContainer({
   }
 
   return (
-    <div 
-      id="map"
-      ref={mapContainer}
-      className={`fixed inset-0 top-32 ${isLoading ? 'loading' : ''}`}
-      style={{ background: 'var(--bg-base)' }}
-    />
+    <>
+      <ProductionReadinessChecker />
+      <div 
+        id="map"
+        ref={mapContainer}
+        className={`fixed inset-0 top-32 ${isLoading ? 'loading' : ''}`}
+        style={{ background: 'var(--bg-base)' }}
+      />
+    </>
   );
 }

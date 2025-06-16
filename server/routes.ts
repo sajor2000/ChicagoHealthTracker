@@ -310,6 +310,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     chicagoWardsData = { type: 'FeatureCollection', features: [] };
   }
 
+  // Health check endpoints for production monitoring
+  app.get('/api/health-check', (req, res) => {
+    res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
+  });
+
+  app.get('/api/health', async (req, res) => {
+    const healthStatus = {
+      status: 'healthy',
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development',
+      checks: {
+        data: {
+          censusTracts: chicagoCensusTractsData?.features?.length || 0,
+          communityAreas: chicagoCommunitiesData?.features?.length || 0,
+          wards: chicagoWardsData?.features?.length || 0,
+          hasGeoData: !!(chicagoCensusTractsData?.features?.length > 0)
+        },
+        api: {
+          endpoints: ['/api/chicago-areas/census', '/api/chicago-areas/community', '/api/chicago-areas/wards']
+        }
+      }
+    };
+
+    const statusCode = healthStatus.checks.data.censusTracts > 0 ? 200 : 503;
+    res.status(statusCode).json(healthStatus);
+  });
+
   app.get('/api/chicago-areas/:viewMode', async (req, res) => {
     try {
       const { viewMode } = req.params;

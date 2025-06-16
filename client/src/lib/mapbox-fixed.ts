@@ -1,14 +1,14 @@
 import mapboxgl from 'mapbox-gl';
 import type { MapFeature, TooltipData } from '@/types';
-import { getMapboxToken } from './deployment-config';
+import { getMapboxToken } from './enhanced-deployment-config';
 
-// Configure Mapbox
+// Configure Mapbox with enhanced deployment support
 const mapboxToken = getMapboxToken();
 if (mapboxToken) {
   mapboxgl.accessToken = mapboxToken;
-  console.log('Mapbox initialized successfully');
+  console.log('Mapbox initialized with production-ready token');
 } else {
-  console.error('Mapbox token missing');
+  console.error('Mapbox token not found - check environment configuration');
 }
 
 export const mapConfig = {
