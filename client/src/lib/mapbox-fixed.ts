@@ -27,9 +27,25 @@ if (mapboxToken) {
 export const mapConfig = {
   style: 'mapbox://styles/mapbox/dark-v11',
   center: [-87.6298, 41.8781] as [number, number],
-  zoom: 10,
-  minZoom: 8,
+  zoom: 10.5,
+  minZoom: 9,
   maxZoom: 16,
+};
+
+// View-specific zoom configurations for optimal display
+export const viewZoomConfig = {
+  census: {
+    zoom: 11.5,
+    bounds: [[-87.94, 41.64], [-87.52, 42.02]] as [[number, number], [number, number]]
+  },
+  community: {
+    zoom: 10.2,
+    bounds: [[-87.94, 41.64], [-87.52, 42.02]] as [[number, number], [number, number]]
+  },
+  wards: {
+    zoom: 10.0,
+    bounds: [[-87.94, 41.64], [-87.52, 42.02]] as [[number, number], [number, number]]
+  }
 };
 
 export function createMap(container: string | HTMLElement): mapboxgl.Map {
@@ -60,6 +76,22 @@ export function createMap(container: string | HTMLElement): mapboxgl.Map {
   });
 
   return map;
+}
+
+// Adjust map zoom based on view mode for optimal display
+export function adjustMapZoomForView(map: mapboxgl.Map, viewMode: string) {
+  if (!map || !viewZoomConfig[viewMode as keyof typeof viewZoomConfig]) return;
+  
+  const config = viewZoomConfig[viewMode as keyof typeof viewZoomConfig];
+  
+  // Smoothly transition to optimal zoom and bounds
+  map.fitBounds(config.bounds, {
+    padding: 20,
+    maxZoom: config.zoom,
+    duration: 1000
+  });
+  
+  console.log(`🔍 Adjusted zoom for ${viewMode}: zoom=${config.zoom}`);
 }
 
 export function addDataLayer(
