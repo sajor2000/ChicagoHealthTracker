@@ -78,18 +78,29 @@ export function createMap(container: string | HTMLElement): mapboxgl.Map {
   return map;
 }
 
-// Adjust map zoom based on view mode for optimal display
+// Adjust map zoom based on view mode for optimal display with stable controls
 export function adjustMapZoomForView(map: mapboxgl.Map, viewMode: string) {
   if (!map || !viewZoomConfig[viewMode as keyof typeof viewZoomConfig]) return;
   
   const config = viewZoomConfig[viewMode as keyof typeof viewZoomConfig];
   
-  // Smoothly transition to optimal zoom and bounds
-  map.fitBounds(config.bounds, {
-    padding: 20,
-    maxZoom: config.zoom,
-    duration: 1000
+  // Use flyTo for smoother, more stable zoom transitions
+  map.flyTo({
+    center: [-87.6298, 41.8781], // Chicago center coordinates
+    zoom: config.zoom,
+    duration: 1200,
+    essential: true
   });
+  
+  // Ensure map controls remain enabled after zoom
+  setTimeout(() => {
+    map.dragPan.enable();
+    map.scrollZoom.enable();
+    map.boxZoom.enable();
+    map.doubleClickZoom.enable();
+    map.touchZoomRotate.enable();
+    map.keyboard.enable();
+  }, 100);
   
   console.log(`🔍 Adjusted zoom for ${viewMode}: zoom=${config.zoom}`);
 }
@@ -223,22 +234,20 @@ export function addDataLayer(
         }
       });
 
-      // Force enable all map interaction controls after adding layers
-      setTimeout(() => {
-        map.dragPan.enable();
-        map.scrollZoom.enable();
-        map.boxZoom.enable();
-        map.doubleClickZoom.enable();
-        map.touchZoomRotate.enable();
-        map.keyboard.enable();
-        
-        // Ensure the map canvas is properly interactive
-        const canvas = map.getCanvas();
-        canvas.style.pointerEvents = 'auto';
-        canvas.style.touchAction = 'none';
-        
-        console.log(`🎮 Map controls reactivated for ${layerId}`);
-      }, 50);
+      // Immediately enable all map interaction controls
+      map.dragPan.enable();
+      map.scrollZoom.enable();
+      map.boxZoom.enable();
+      map.doubleClickZoom.enable();
+      map.touchZoomRotate.enable();
+      map.keyboard.enable();
+      
+      // Ensure the map canvas is properly interactive
+      const canvas = map.getCanvas();
+      canvas.style.pointerEvents = 'auto';
+      canvas.style.touchAction = 'none';
+      
+      console.log(`🎮 Map controls activated for ${layerId}`);
       
       console.log(`✅ Successfully added layers for ${layerId}`);
       

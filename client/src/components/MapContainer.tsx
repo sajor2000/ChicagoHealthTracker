@@ -199,12 +199,10 @@ export default function MapContainer({
       console.log('About to call addDataLayer:', { layerId, selectedDisease, mapboxMode, features: processedData.features.length });
       addDataLayer(map.current, processedData, layerId, selectedDisease, mapboxMode);
       
-      // Adjust zoom level for optimal viewing of the current view mode
-      setTimeout(() => {
-        if (map.current) {
-          adjustMapZoomForView(map.current, activeView);
-        }
-      }, 500);
+      // Adjust zoom level immediately for optimal viewing
+      if (map.current) {
+        adjustMapZoomForView(map.current, activeView);
+      }
       
       setupMapInteractions(layerId);
 
@@ -224,24 +222,22 @@ export default function MapContainer({
       setHoveredFeatureId(null);
     }
 
-    // Force enable ALL map controls to ensure zoom works
-    setTimeout(() => {
-      if (map.current) {
-        map.current.dragPan.enable();
-        map.current.scrollZoom.enable();
-        map.current.boxZoom.enable();
-        map.current.doubleClickZoom.enable();
-        map.current.touchZoomRotate.enable();
-        map.current.keyboard.enable();
-        
-        // Ensure canvas is interactive
-        const canvas = map.current.getCanvas();
-        canvas.style.pointerEvents = 'auto';
-        canvas.style.touchAction = 'none';
-        
-        console.log(`🎮 All map controls enabled for ${layerId}`);
-      }
-    }, 100);
+    // Immediately enable ALL map controls to ensure zoom works
+    if (map.current) {
+      map.current.dragPan.enable();
+      map.current.scrollZoom.enable();
+      map.current.boxZoom.enable();
+      map.current.doubleClickZoom.enable();
+      map.current.touchZoomRotate.enable();
+      map.current.keyboard.enable();
+      
+      // Ensure canvas is interactive
+      const canvas = map.current.getCanvas();
+      canvas.style.pointerEvents = 'auto';
+      canvas.style.touchAction = 'none';
+      
+      console.log(`🎮 All map controls enabled for ${layerId}`);
+    }
 
     // Mouse enter event
     map.current.on('mouseenter', fillLayerId, (e) => {
