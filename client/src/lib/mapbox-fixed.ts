@@ -32,18 +32,18 @@ export const mapConfig = {
   maxZoom: 16,
 };
 
-// View-specific zoom configurations for optimal display
+// Consistent zoom configurations for uniform appearance across all view modes
 export const viewZoomConfig = {
   census: {
     zoom: 11.5,
     bounds: [[-87.94, 41.64], [-87.52, 42.02]] as [[number, number], [number, number]]
   },
   community: {
-    zoom: 10.2,
+    zoom: 11.5,  // Same as census for consistent viewing
     bounds: [[-87.94, 41.64], [-87.52, 42.02]] as [[number, number], [number, number]]
   },
   wards: {
-    zoom: 10.0,
+    zoom: 11.5,  // Same as census for consistent viewing
     bounds: [[-87.94, 41.64], [-87.52, 42.02]] as [[number, number], [number, number]]
   }
 };
@@ -191,24 +191,27 @@ export function addDataLayer(
             'interpolate',
             ['linear'],
             ['get', propertyKey],
-            min, '#16a34a',    // Dark green - use actual data min
-            q25, '#eab308',    // Yellow - use actual data q25
-            q75, '#f97316',    // Orange - use actual data q75
-            max, '#dc2626'     // Red - use actual data max
+            min, '#16a34a',    // Dark green - consistent across all views
+            q25, '#eab308',    // Yellow - consistent across all views
+            q75, '#f97316',    // Orange - consistent across all views
+            max, '#dc2626'     // Red - consistent across all views
           ],
-          'fill-opacity': 0.8
+          'fill-opacity': 0.75  // Consistent opacity for all view modes
         }
       });
 
-      // Add border layer
+      // Add consistent border layer for all view modes
       map.addLayer({
         id: `${layerId}-line`,
         type: 'line',
         source: layerId,
+        layout: {
+          'visibility': 'visible'
+        },
         paint: {
-          'line-color': '#333333',
-          'line-width': 1.0,
-          'line-opacity': 0.9
+          'line-color': '#ffffff',  // White borders for better contrast
+          'line-width': 1.2,        // Slightly thicker for clarity
+          'line-opacity': 0.8       // High opacity for visibility
         }
       });
 
