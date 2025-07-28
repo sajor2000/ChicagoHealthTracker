@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
-import { createMap, addDataLayer, adjustMapZoomForView, createTooltip, updateTooltipContent, fitBoundsToFeature } from '@/lib/mapbox-fixed';
+import { createMap, addDataLayer, adjustMapZoomForView, createTooltip, updateTooltipContent, fitBoundsToFeature, enableAllMapControls } from '@/lib/mapbox-fixed';
 import { AreaData, ViewMode, DiseaseType, VisualizationMode } from '@/types';
 import { useChicagoGeoData } from '@/hooks/useMapData';
 import ChicagoDataVisualization from './ChicagoDataVisualization';
@@ -222,21 +222,9 @@ export default function MapContainer({
       setHoveredFeatureId(null);
     }
 
-    // Immediately enable ALL map controls to ensure zoom works
+    // Use helper function to enable all map controls
     if (map.current) {
-      map.current.dragPan.enable();
-      map.current.scrollZoom.enable();
-      map.current.boxZoom.enable();
-      map.current.doubleClickZoom.enable();
-      map.current.touchZoomRotate.enable();
-      map.current.keyboard.enable();
-      
-      // Ensure canvas is interactive
-      const canvas = map.current.getCanvas();
-      canvas.style.pointerEvents = 'auto';
-      canvas.style.touchAction = 'none';
-      
-      console.log(`🎮 All map controls enabled for ${layerId}`);
+      enableAllMapControls(map.current, `interactions-${layerId}`);
     }
 
     // Mouse enter event

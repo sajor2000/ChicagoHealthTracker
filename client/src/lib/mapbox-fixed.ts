@@ -78,31 +78,84 @@ export function createMap(container: string | HTMLElement): mapboxgl.Map {
   return map;
 }
 
-// Adjust map zoom based on view mode for optimal display with stable controls
+// Fix zoom controls and adjust view for optimal display
 export function adjustMapZoomForView(map: mapboxgl.Map, viewMode: string) {
   if (!map || !viewZoomConfig[viewMode as keyof typeof viewZoomConfig]) return;
   
   const config = viewZoomConfig[viewMode as keyof typeof viewZoomConfig];
   
-  // Use flyTo for smoother, more stable zoom transitions
-  map.flyTo({
-    center: [-87.6298, 41.8781], // Chicago center coordinates
-    zoom: config.zoom,
-    duration: 1200,
-    essential: true
+  // Debug current map state
+  console.log('🔧 Map zoom debug:', {
+    currentZoom: map.getZoom(),
+    targetZoom: config.zoom,
+    dragPanEnabled: map.dragPan.isEnabled(),
+    scrollZoomEnabled: map.scrollZoom.isEnabled(),
+    viewMode
   });
   
-  // Ensure map controls remain enabled after zoom
+  // Force enable ALL controls immediately
+  map.dragPan.enable();
+  map.scrollZoom.enable();
+  map.boxZoom.enable();
+  map.doubleClickZoom.enable();
+  map.touchZoomRotate.enable();
+  map.keyboard.enable();
+  
+  // Set the map style to ensure controls work
+  const canvas = map.getCanvas();
+  canvas.style.pointerEvents = 'auto';
+  canvas.style.cursor = 'grab';
+  canvas.style.touchAction = 'none';
+  
+  // Use setZoom instead of flyTo for immediate response
+  map.setCenter([-87.6298, 41.8781]);
+  map.setZoom(config.zoom);
+  
+  // Verify controls are working
   setTimeout(() => {
+    console.log('🔧 Post-zoom verification:', {
+      zoom: map.getZoom(),
+      dragPan: map.dragPan.isEnabled(),
+      scrollZoom: map.scrollZoom.isEnabled(),
+      canvasStyle: canvas.style.pointerEvents
+    });
+  }, 100);
+  
+  console.log(`🔍 Adjusted zoom for ${viewMode}: zoom=${config.zoom}`);
+}
+
+// Helper function to enable all map controls with debugging
+export function enableAllMapControls(map: mapboxgl.Map, context: string = '') {
+  try {
+    // Enable all interaction controls
     map.dragPan.enable();
     map.scrollZoom.enable();
     map.boxZoom.enable();
     map.doubleClickZoom.enable();
     map.touchZoomRotate.enable();
     map.keyboard.enable();
-  }, 100);
-  
-  console.log(`🔍 Adjusted zoom for ${viewMode}: zoom=${config.zoom}`);
+    
+    // Set canvas properties for interaction
+    const canvas = map.getCanvas();
+    canvas.style.pointerEvents = 'auto';
+    canvas.style.cursor = 'grab';
+    canvas.style.touchAction = 'none';
+    
+    // Debug control states
+    console.log(`🎮 Controls enabled for ${context}:`, {
+      dragPan: map.dragPan.isEnabled(),
+      scrollZoom: map.scrollZoom.isEnabled(),
+      boxZoom: map.boxZoom.isEnabled(),
+      doubleClickZoom: map.doubleClickZoom.isEnabled(),
+      touchZoomRotate: map.touchZoomRotate.isEnabled(),
+      canvasPointerEvents: canvas.style.pointerEvents
+    });
+    
+    return true;
+  } catch (error) {
+    console.error('Error enabling map controls:', error);
+    return false;
+  }
 }
 
 export function addDataLayer(
@@ -234,20 +287,8 @@ export function addDataLayer(
         }
       });
 
-      // Immediately enable all map interaction controls
-      map.dragPan.enable();
-      map.scrollZoom.enable();
-      map.boxZoom.enable();
-      map.doubleClickZoom.enable();
-      map.touchZoomRotate.enable();
-      map.keyboard.enable();
-      
-      // Ensure the map canvas is properly interactive
-      const canvas = map.getCanvas();
-      canvas.style.pointerEvents = 'auto';
-      canvas.style.touchAction = 'none';
-      
-      console.log(`🎮 Map controls activated for ${layerId}`);
+      // Force enable all map interaction controls with debugging
+      enableAllMapControls(map, layerId);
       
       console.log(`✅ Successfully added layers for ${layerId}`);
       
