@@ -152,30 +152,35 @@ export function addDataLayer(
         return;
       }
 
-      // Use percentile-based scaling for better color distribution
-      const min = values[Math.floor(values.length * 0.05)]; // Skip bottom 5% outliers
+      // Enhanced percentile-based scaling for better hot zone identification
+      const min = Math.min(...values);
+      const q10 = values[Math.floor(values.length * 0.10)];
       const q25 = values[Math.floor(values.length * 0.25)];
       const median = values[Math.floor(values.length * 0.5)];
       const q75 = values[Math.floor(values.length * 0.75)];
-      const max = values[Math.floor(values.length * 0.95)]; // Skip top 5% outliers
+      const q90 = values[Math.floor(values.length * 0.90)];
+      const max = Math.max(...values);
 
-      console.log(`Color scale for ${propertyKey}: ${min} → ${q25} → ${median} → ${q75} → ${max}`);
+      console.log(`Enhanced color scale for ${propertyKey}: ${min} → ${q10} → ${q25} → ${median} → ${q75} → ${q90} → ${max}`);
       console.log(`Sample feature values:`, data.features.slice(0, 3).map(f => ({ 
         name: f.properties?.name, 
         [propertyKey]: f.properties?.[propertyKey] 
       })));
 
-      // Set quartile data for Legend component
+      // Set enhanced quartile data for Legend component with hot zone identification
       (window as any).__CURRENT_QUARTILES__ = {
         disease: selectedDisease,
         mode: visualizationMode,
         quartiles: {
           min,
+          q10,
           q25,
           median,
           q75,
+          q90,
           max
-        }
+        },
+        hotZoneThreshold: q75  // Areas above q75 are considered hot zones
       };
 
       // Add fill layer with explicit layout properties
@@ -191,12 +196,15 @@ export function addDataLayer(
             'interpolate',
             ['linear'],
             ['get', propertyKey],
-            min, '#16a34a',    // Dark green - consistent across all views
-            q25, '#eab308',    // Yellow - consistent across all views
-            q75, '#f97316',    // Orange - consistent across all views
-            max, '#dc2626'     // Red - consistent across all views
+            min, '#065f46',     // Very dark green (lowest values)
+            q10, '#16a34a',     // Dark green (low values)
+            q25, '#22c55e',     // Medium green (below average)
+            median, '#fbbf24',  // Bright yellow (average)
+            q75, '#f97316',     // Orange (above average - hot zones emerging)
+            q90, '#ef4444',     // Bright red (high values - clear hot zones)
+            max, '#991b1b'      // Very dark red (extreme hot zones)
           ],
-          'fill-opacity': 0.75  // Consistent opacity for all view modes
+          'fill-opacity': 0.8   // Higher opacity for better hot zone visibility
         }
       });
 
@@ -209,9 +217,9 @@ export function addDataLayer(
           'visibility': 'visible'
         },
         paint: {
-          'line-color': '#ffffff',  // White borders for better contrast
-          'line-width': 1.2,        // Slightly thicker for clarity
-          'line-opacity': 0.8       // High opacity for visibility
+          'line-color': '#000000',  // Black borders for maximum hot zone contrast
+          'line-width': 0.8,        // Thinner lines to reduce visual noise
+          'line-opacity': 0.6       // Moderate opacity to maintain focus on fill colors
         }
       });
 
